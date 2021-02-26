@@ -1,0 +1,6 @@
+{
+    "title"     :       "[TTT2] Role Debugger",
+    "type"      :       "ServerContent",
+    "tags"      :       ["roleplay"],
+    "ignore"    :       ["*.git","txt", ".md", "LICENSE", ".bat"]
+}
