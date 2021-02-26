@@ -2,8 +2,8 @@ print("Client Side - Debugging Panel")
 local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging.png")
 
 local function PopulateRolesPanel(parent)
-    local form1 = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_player_roles"))
-    local form2 = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_bot_roles"))
+    local form1 = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_player_roles"))
+    local form2 = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_bot_roles"))
     local playerList = {}
     local botList = {}
 
