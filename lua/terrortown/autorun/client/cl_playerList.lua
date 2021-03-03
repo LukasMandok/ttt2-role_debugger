@@ -21,8 +21,10 @@ function PlayerList:getLen()
 end
 
 function PlayerList:getNames()
-    local len = self.index or #self.list
+    local len = self.index or self.exist_index or #self.list
     
+    print("Länge:", len)
+    print("self.index", self.index)
     local names = {}
     for i = 1, len do
         names[i] = self.list[i]:getName()
@@ -46,6 +48,7 @@ function PlayerList:getRoleByName(name)
             return self.list[i].role
         end
     end
+    return false
 end
 
 function PlayerList:getPlayerByName(name)
@@ -54,6 +57,21 @@ function PlayerList:getPlayerByName(name)
             return self.list[i]
         end
     end
+    return false
+end
+
+function PlayerList:updateRoles()
+    len = self.exist_index or #self.list
+    for i = 1, len do
+        self.list[i].role = roles:GetByIndex(self.list[i].ent:GetRole()).name
+        print("Player:", self.list[i].name, "hat role", self.list[i].role)
+    end
+end
+
+-- help functions
+function PlayerList:sortListByName()
+    local function namesort(a, b) return a.name:lower() < b.name:lower() end
+    table.sort(self.list, namesort)
 end
 
 -----------------------------------------------------
@@ -78,12 +96,26 @@ function HumanList:__init(init)
 
     local players = player.GetHumans()
     for i=1, #players do 
-        self.list[i] = PlayerEntry({
-            name = players[i]:Nick(),
-            ent = players[i],
-            role = roles:GetByIndex(players[i]:GetRole()).name
-        })
+        self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
     end
+end
+
+function HumanList:addPlayer(name, ent, role)
+    self.list[#self.list+1] = PlayerEntry({
+            name = name,
+            ent = ent,
+            role = role--roles:GetByIndex(players[i]:GetRole()).name
+        })
+end
+
+function HumanList:refresh()
+    local players = player.GetHumans()
+    for i=1, #players do 
+        if self:getPlayerByName(players[i]:Nick()) == false then
+            self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
+        end
+    end
+    self:sortListByName()
 end
 
 
@@ -124,7 +156,7 @@ function BotList:initExistingBots()
             self.list[i] = BotEntry({
                 name = bots[i]:Nick(),
                 ent = bots[i],
-                role = roles:GetByIndex(bots[i]:GetRole()).name,
+                role = ROLE_RANDOM.name, --roles:GetByIndex(bots[i]:GetRole()).name,
                 spawn = false,
                 delete = false})
         else 
@@ -146,7 +178,13 @@ function BotList:setLen(len)
     self.index = len
 end
 
-function BotList:update(start)
+function BotList:updateLen()
+    self.exist_index = #player:GetBots()
+    self.index = self.exist_index
+end
+
+function BotList:refresh(start)
+    self.exist_index = #player:GetBots()
     local start = start or 1
     for i = start, math.min(self.index, self.exist_index) do
         self.list[i]:Reset()
@@ -156,7 +194,7 @@ function BotList:update(start)
         for i = self.exist_index, self.index do
             self.list[i]:SetSpawn()
         end
-    elseif new_len < self.index then
+    elseif self.index < self.index then
         for i = self.index, new_len, -1 do
             self.list[i]:SetDelete()
         end

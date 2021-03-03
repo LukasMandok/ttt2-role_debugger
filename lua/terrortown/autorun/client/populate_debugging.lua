@@ -1,70 +1,63 @@
 local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging.png")
 
-local manager = manager or Manager()
+
+roleManager = roleManager or RoleManager()
 
 local function PopulateRolePanel(parent)
-    
-    manager:testing()
+    local roleList = roleManager:getRoleList()
 
-    local roleList = manager:getRoleList()
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------
     -----------------------------------------------
-    local playerList = manager:getPlayerList()
-    local playerRoles = manager:getPlayerRoles()
+    local playerList = roleManager:getPlayerList()
+    local playerRoles = roleManager:getPlayerRoles()
 
     local formPlayer = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_player_roles"))
     formPlayer:Dock(TOP)
     local formPlayerList = vgui.CreateTTT2Container_extended(formPlayer)
-    
-    --local playerList = player.GetHumans()
 
-    for i=1, #playerList do
-        --local playerRole = LANG.GetTranslation("submenu_debugging_random_role")
-
+    for i = 1, #playerList do
         formPlayerList:MakeComboBox({
             label = playerList[i],
             choices = roleList,
             data = roleList,
-            selectName = playerRoles[i],
-            default = LANG.GetTranslation("submenu_debugging_random_role"),
+            selectName = roleManager:getRoleOfPlayer(playerList[i]),
+            default = ROLE_RANDOM.name,
             OnChange = function(_, _, value, data)
                 print("Selected:", value)
             end
         })
-
     end
 
     formPlayer:AddItem(formPlayerList)
 
+
     ------------------------------------------------
     --------------------- BOTS ---------------------
     ------------------------------------------------
-    local botList = manager:getBotList()
-    local botRoleList = manager:getBotRoles()
-
+    local botList = roleManager:getBotList()
     local formBot = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_bot_roles"))
     formBot:Dock(TOP)
     local formBotList = vgui.CreateTTT2Container_extended(formBot)
 
-
     local function getBotLists(len)
-        local index = manager:getBotLen()
-        manager:changeBotList(len)
-        return {unpack(manager:getBotList(), index+1)}
+        local index = roleManager:getBotLen()
+        roleManager:changeBotList(len)
+
+        return {unpack(roleManager:getBotList(), index + 1)}
     end
 
     local function displayBotList(botList)
-        for i=1, #botList do
+        for i = 1, #botList do
             print("Bot Name:", botList[i])
-            print("Bot Role:", manager:getRoleOfBot(botList[i]))
+            print("Bot Role:", roleManager:getRoleOfBot(botList[i]))
 
             formBotList:MakeComboBox({
                 label = botList[i],
                 choices = roleList,
                 data = roleList,
-                selectName = manager:getRoleOfBot(botList[i]),
+                selectName = roleManager:getRoleOfBot(botList[i]),
                 default = ROLE_RANDOM.name,
                 OnChange = function(_, _, value, data)
                     print("Selected:", value)
@@ -78,34 +71,24 @@ local function PopulateRolePanel(parent)
         min = 0,
         max = game.MaxPlayers() - #playerList,
         decimal = 0,
-        initial = manager:getBotLen(),
+        initial = roleManager:getBotLen(),
         default = #player.GetBots(),
-        OnChange = function(_, value) --TODO: Ganz selten ist mal eine Zahl vertauscht
+        OnChange = function(_, value)
             botListChange = getBotLists(value)
-			formBotList:ClearAfter(value)
-			displayBotList(botListChange)
-        end,
-        OnClick = function(_)
-
-        end
+            formBotList:ClearAfter(value)
+            displayBotList(botListChange)
+        end, --TODO: Ganz selten ist mal eine Zahl vertauscht
+        OnClick = function(_) end
     })
 
     formBot:AddItem(formBotList)
-
-	displayBotList(botList)
-
+    displayBotList(botList)
 end
 
-
-
-
-
 local function PopulateClassPanel(parent)
-
 end
 
 local function PopulateWeaponPanel(parent)
-
 end
 
 HELPSCRN.populate["ttt2_debugging"] = function(helpData, id)
@@ -120,10 +103,12 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
     local roleData = helpData:PopulateSubMenu(id .. "_roles")
     roleData:SetTitle(LANG.GetTranslation("submenu_debugging_roles_title"))
     roleData:PopulatePanel(PopulateRolePanel)
+
     -- classes
     local classData = helpData:PopulateSubMenu(id .. "_classes")
     classData:SetTitle(LANG.GetTranslation("submenu_debugging_classes_title"))
     classData:PopulatePanel(PopulateClassPanel)
+
     -- weapons
     local wepData = helpData:PopulateSubMenu(id .. "_weapons")
     wepData:SetTitle(LANG.GetTranslation("submenu_debugging_weapons_title"))
