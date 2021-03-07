@@ -12,14 +12,14 @@ local roleManager
 local function PopulateRolePanel(parent)
 
     roleManager = roleManager or RoleManager()
-
-    print("Reversed PlayerList:", unpack(roleManager.playerList.revList))
-    print("Reversed BotList:", unpack(roleManager.botList.revList))
+    --roleManager:refresh()
 
     local roleList = roleManager:getRoleList()
     local translatedRoleList = roleManager:getTranslatedRoleList()
 
     print("translatedRoleList:", unpack(translatedRoleList))
+
+    roleManager:printRevList()
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------

@@ -17,24 +17,29 @@ function PlayerList:__init(init)
     EntityList.__init(self, init)
 end
 
-function PlayerList:getNames()
-    local len = self.index or self.exist_index or #self.list
+-- function PlayerList:getNames()
+--     local len = self.index or self.exist_index or #self.list
+--     -- TODO: mit revList umsetzen
 
-    print("Länge:", len)
-    print("self.index", self.index)
-    local names = {}
-    for i = 1, len do
-        names[i] = self.list[i]:getName()
-    end
-    return names
-end
+--     print("Länge:", len)
+--     print("self.index", self.index)
+--     local names = {}
+--     for i = 1, len do
+--         names[i] = self.list[i]:getName()
+--     end
+--     return names
+-- end
 
 function PlayerList:getRoles()
     local len = self.index or #self.list
+    -- TODO: mit revList umsetzen
 
     local roles = {}
-    for i = 1, len do
-        roles[i] = self.list[i]:getRole()
+    -- for i = 1, len do
+    --     roles[i] = self.list[i]:getRole()
+    -- end
+    for i, n, id in pairsByKey(self.revList, len) do
+        roles[i] = self.list[id]:getRole()
     end
     return roles
 end
@@ -72,12 +77,6 @@ function PlayerList:updateRoles()
     end
 end
 
--- help functions
-function PlayerList:sortListByName()
-    local function namesort(a, b) return a.name:lower() < b.name:lower() end
-    table.sort(self.list, namesort)
-end
-
 -----------------------------------------------------
 --------------------- HumanList ---------------------
 -----------------------------------------------------
@@ -106,28 +105,32 @@ function HumanList:__init(init)
         self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
     end
 
-    print("Init RevList of Human")
-    self:__initRevList()
+    --print("Init RevList of Human")
+    --self:__initRevList()
 end
 
+-- add Player to the HumanList and add entry in revList with given index
 function HumanList:addPlayer(name, ent, role)
     print("add Player:", name, "with role:", role)
-    self.list[#self.list + 1] = PlayerEntry({
-            name = name,
-            ent = ent,
-            role = role--roles:GetByIndex(players[i]:GetRole()).name
-        })
+    if not self.revList[name] then
+        local id = #self.list + 1
+        self.list[id] = PlayerEntry({
+                name = name,
+                ent = ent,
+                role = role--roles:GetByIndex(players[i]:GetRole()).name
+            })
+        self.revList[name] = id
+    end
 end
 
 function HumanList:refresh()
     self:__initRevList()
     local players = player.GetHumans()
-    for i = 1, #players do
-        if self:getByName(players[i]:Nick()) == false then
-            self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
+    for _,p in pairs(players) do
+        if not self.revList[p:Nick()] then
+            self:addPlayer(p:Nick(), p, ROLE_RANDOM.name)
         end
     end
-    self:sortListByName()
 end
 
 

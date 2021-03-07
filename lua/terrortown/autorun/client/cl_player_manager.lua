@@ -42,6 +42,20 @@ function RoleManager:refresh()
     self.roleList:refresh()
 end
 
+function RoleManager:updateRoles()
+    self.playerList:updateRoles()
+    self.botList:updateRoles()
+end
+
+function RoleManager:printRevList()
+    print("Player:")
+    print(self.playerList.revList)
+    print("Bots:")
+    print(self.botList.revList)
+    print("Roles:")
+    print(self.roleList.revList)
+end
+
 -- Player
 
 function RoleManager:getPlayerList()
