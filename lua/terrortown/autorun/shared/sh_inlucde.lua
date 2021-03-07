@@ -1,11 +1,8 @@
 --TTT2DIR_ext = "terrortown/gamemode/"
 
 local additionalTTTFiles = {
-    cl_vskin__default_skin_extension = {file = "cl_vskin/default_skin_extension.lua", on = "client"},
-    --cl_vskin__vgui__dextension = {file = "cl_vskin/vgui/dextension_ttt2.lua", on = "client"},
     cl_vskin__vgui__dcontainer = {file = "cl_vskin/vgui/dcontainer_ttt2.lua", on = "client"},
     cl_vskin__vgui__dform_extended = {file = "cl_vskin/vgui/dform_ttt2_extended.lua", on = "client"}
-    --cl_vskin__vgui__dcontainer_extended = {file = "cl_vskin/vgui/dcontainer_ttt2_extended.lua", on = "client"}
 }
 
 
@@ -20,12 +17,9 @@ if TTTFiles != nil then
                 AddCSLuaFile(TTT2DIR .. inc.on .. "/" .. inc.file)
             end
         end
-    else 
-        ttt_include("cl_vskin__default_skin_extension")
-        --ttt_include("cl_vskin__vgui__dextension")
+    else
         ttt_include("cl_vskin__vgui__dcontainer")
         ttt_include("cl_vskin__vgui__dform_extended")
-        --ttt_include("cl_vskin__vgui__dcontainer_extended")
     end
 end
 --end) 

@@ -1,5 +1,5 @@
-ROLE_RANDOM = {id = -1, name = LANG.GetTranslation("submenu_debugging_random_role")}
-CLASS_RANDOM = {id = -1, name = LANG.GetTranslation("submenu_debugging_random_role")}
+ROLE_RANDOM = {id = -1, name = "random"}
+CLASS_RANDOM = {id = -1, name = "random"}
 
 print("Creating Role")
 
@@ -19,14 +19,11 @@ function RoleManager:__init()
     self.playerList = HumanList()
     self.botList = BotList()
 
-    self.roleList = {[1] = {name = ROLE_RANDOM.name}}
-    self.roleList = {unpack(self.roleList), unpack(roles.GetList())}
+    self.roleList = RoleList()
 
-    gameevent.Listen( "player_connect" ) -- funkioniert nicht
     gameevent.Listen( "player_spawn" )
-    hook.Add( "player_spawn", "player_connect_example", function( data )
-        print("Hook got called: player_connect", data.bot)
-        self.botList:updateLen()
+    hook.Add( "player_spawn", "player_connect_example", function(  )
+        self.botList:resetIndex()
         self.playerList:refresh()
 
         -- if data.bot then
@@ -37,6 +34,12 @@ function RoleManager:__init()
         -- end
     end )
 
+end
+
+-- Refresh at Panel Opening
+function RoleManager:refresh()
+    self.playerList:refresh()
+    self.roleList:refresh()
 end
 
 -- Player
@@ -79,11 +82,11 @@ end
 -- Roles
 
 function RoleManager:getRoleList()
-    local names = {}
-    for i = 1, #self.roleList do
-        names[i] = self.roleList[i].name
-    end
-    return names
+    return self.roleList:getNames()
+end
+
+function RoleManager:getTranslatedRoleList()
+    return self.roleList:getTranslatedNames()
 end
 
 function RoleManager:getRoleIcons()

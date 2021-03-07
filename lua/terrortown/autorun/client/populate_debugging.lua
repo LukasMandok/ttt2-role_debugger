@@ -1,29 +1,25 @@
 local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging")
 
+
 -- Moved to end of cl_player_manager.lua 
 --include("cl_player_manager.lua")
 print("Initializing Role Manager")
---local roleManager
+--local roleManagerF
 
---[[ local Test = {}
 
-function Test:new()
-    obj = {}
-    self.__index = self 
-    setmetatable(obj, self)
-    return obj
-end
-
-local test = test or Test:new() ]]
+local roleManager
 
 local function PopulateRolePanel(parent)
-    local playerList = playerList or HumanList()
-    local botList = botList or BotList()
-end
 
---[[ local function PopulateRolePanel(parent)
     roleManager = roleManager or RoleManager()
+
+    print("Reversed PlayerList:", unpack(roleManager.playerList.revList))
+    print("Reversed BotList:", unpack(roleManager.botList.revList))
+
     local roleList = roleManager:getRoleList()
+    local translatedRoleList = roleManager:getTranslatedRoleList()
+
+    print("translatedRoleList:", unpack(translatedRoleList))
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------
@@ -102,7 +98,7 @@ end
     formBot:AddItem(formBotList)
     displayBotList(botList)
 end
- ]]
+
 
 local function PopulateClassPanel(parent)
 end

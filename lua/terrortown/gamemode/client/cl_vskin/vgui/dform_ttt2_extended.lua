@@ -328,7 +328,7 @@ end
 -- @ignore
 function PANEL:Init()
     self.items = {}
-    sself:SetSpacing(4)
+    self:SetSpacing(4)
     self:SetPadding(10)
     self:SetPaintBackground(true)
     self:SetMouseInputEnabled(true)

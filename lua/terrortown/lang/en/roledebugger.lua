@@ -10,6 +10,7 @@ L["menu_debugging_description"] = "Provides various debugging functions."
 -- Debugging Roles
 L["submenu_debugging_roles_title"] = "Roles"
 L["submenu_debugging_random_role"] = "Random"
+L["random"] = "Random"
 L["header_debugging_player_roles"] = "Player roles"
 L["header_debugging_bot_roles"] = "Bot roles"
 
