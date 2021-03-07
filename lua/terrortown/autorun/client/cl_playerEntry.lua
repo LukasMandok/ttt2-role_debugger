@@ -7,13 +7,14 @@ PlayerEntry.__index = PlayerEntry
 
 setmetatable(PlayerEntry, {
     __call = function (cls, ...)
-        local self = setmetatable({}, cls)
-        self:__init(...)
-        return self
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
     end,
 })
 
 function PlayerEntry:__init(data)
+    print("creating PlayerEntry with role", data.role)
     self.name = data.name
     self.ent = data.ent or nil
     self.role = data.role or ROLE_RANDOM.name
@@ -52,9 +53,9 @@ BotEntry.__index = BotEntry
 setmetatable(BotEntry, {
     __index = PlayerEntry,
     __call = function (cls, ...)
-        local self = setmetatable({}, cls)
-        self:__init(...)
-        return self
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
     end,
 })
 

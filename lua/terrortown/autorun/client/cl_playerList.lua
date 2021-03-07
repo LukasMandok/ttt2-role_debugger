@@ -6,9 +6,9 @@ PlayerList.__index = PlayerList
 
 setmetatable(PlayerList, {
     __call = function (cls, ...)
-        local self = setmetatable({}, cls)
-        self:__init(...)
-        return self
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
     end,
 })
 
@@ -22,7 +22,7 @@ end
 
 function PlayerList:getNames()
     local len = self.index or self.exist_index or #self.list
-    
+
     print("Länge:", len)
     print("self.index", self.index)
     local names = {}
@@ -34,7 +34,7 @@ end
 
 function PlayerList:getRoles()
     local len = self.index or #self.list
-    
+
     local roles = {}
     for i = 1, len do
         roles[i] = self.list[i]:getRole()
@@ -43,6 +43,7 @@ function PlayerList:getRoles()
 end
 
 function PlayerList:getRoleByName(name)
+    print("Get  Role ny name", name)
     for i = 1, #self.list do
         if self.list[i].name == name then
             return self.list[i].role
@@ -85,9 +86,9 @@ HumanList.__index = HumanList
 setmetatable(HumanList, {
     __index = PlayerList,
     __call = function (cls, ...)
-        local self = setmetatable({}, cls)
-        self:__init(...)
-        return self
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
     end,
 })
 
@@ -95,13 +96,14 @@ function HumanList:__init(init)
     PlayerList.__init(self, init)
 
     local players = player.GetHumans()
-    for i=1, #players do 
+    for i = 1, #players do
         self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
     end
 end
 
 function HumanList:addPlayer(name, ent, role)
-    self.list[#self.list+1] = PlayerEntry({
+    print("add Player:", name, "with role:", role)
+    self.list[#self.list + 1] = PlayerEntry({
             name = name,
             ent = ent,
             role = role--roles:GetByIndex(players[i]:GetRole()).name
@@ -110,7 +112,7 @@ end
 
 function HumanList:refresh()
     local players = player.GetHumans()
-    for i=1, #players do 
+    for i = 1, #players do
         if self:getPlayerByName(players[i]:Nick()) == false then
             self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
         end
@@ -130,9 +132,9 @@ BotList.__index = BotList
 setmetatable(BotList, {
     __index = PlayerList,
     __call = function (cls, ...)
-        local self = setmetatable({}, cls)
-        self:__init(...)
-        return self
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
     end,
 })
 
@@ -151,7 +153,7 @@ function BotList:initExistingBots()
     self.exist_index = #bots
     self.index = #bots
 
-    for i=1, self.max do
+    for i = 1, self.max do
         if i <= self.exist_index then
             self.list[i] = BotEntry({
                 name = bots[i]:Nick(),
@@ -159,7 +161,7 @@ function BotList:initExistingBots()
                 role = ROLE_RANDOM.name, --roles:GetByIndex(bots[i]:GetRole()).name,
                 spawn = false,
                 delete = false})
-        else 
+        else
             self.list[i] = BotEntry({
                 name = "Bot" .. string.format("%02d", i),
                 ent = nil,

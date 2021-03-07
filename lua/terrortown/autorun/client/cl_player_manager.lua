@@ -1,14 +1,16 @@
 ROLE_RANDOM = {id = -1, name = LANG.GetTranslation("submenu_debugging_random_role")}
 CLASS_RANDOM = {id = -1, name = LANG.GetTranslation("submenu_debugging_random_role")}
 
+print("Creating Role")
+
 RoleManager = {}
 RoleManager.__index = RoleManager
 
 setmetatable(RoleManager, {
     __call = function (cls)
-        local self = setmetatable({}, cls)
-        self:__init()
-        return self
+        local obj = setmetatable({}, cls)
+        obj:__init()
+        return obj
     end,
 })
 
@@ -78,17 +80,17 @@ end
 
 function RoleManager:getRoleList()
     local names = {}
-    for i=1, #self.roleList do
+    for i = 1, #self.roleList do
         names[i] = self.roleList[i].name
-    end 
+    end
     return names
 end
 
 function RoleManager:getRoleIcons()
     local icons = {}
-    for i=1, #self.roleList do
+    for i = 1, #self.roleList do
         icons[i] = self.roleList[i].icon
-    end 
+    end
     return icons
 end
 
@@ -97,4 +99,6 @@ end
 
 function RoleManager:testing()
     print("RoleManager Testausgang.")
-end 
+end
+
+-- Create global Object 

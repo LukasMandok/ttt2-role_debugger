@@ -168,7 +168,7 @@ end
 ---
 -- @realm client
 function PANEL:Toggle()
-	
+
 end
 
 ---

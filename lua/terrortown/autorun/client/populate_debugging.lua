@@ -1,17 +1,35 @@
-local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging.png")
+local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging")
 
+-- Moved to end of cl_player_manager.lua 
+--include("cl_player_manager.lua")
+print("Initializing Role Manager")
+--local roleManager
 
-roleManager = roleManager or RoleManager()
+--[[ local Test = {}
+
+function Test:new()
+    obj = {}
+    self.__index = self 
+    setmetatable(obj, self)
+    return obj
+end
+
+local test = test or Test:new() ]]
 
 local function PopulateRolePanel(parent)
-    local roleList = roleManager:getRoleList()
+    local playerList = playerList or HumanList()
+    local botList = botList or BotList()
+end
 
+--[[ local function PopulateRolePanel(parent)
+    roleManager = roleManager or RoleManager()
+    local roleList = roleManager:getRoleList()
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------
     -----------------------------------------------
     local playerList = roleManager:getPlayerList()
-    local playerRoles = roleManager:getPlayerRoles()
+    --local playerRoles = roleManager:getPlayerRoles()
 
     local formPlayer = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_player_roles"))
     formPlayer:Dock(TOP)
@@ -84,6 +102,7 @@ local function PopulateRolePanel(parent)
     formBot:AddItem(formBotList)
     displayBotList(botList)
 end
+ ]]
 
 local function PopulateClassPanel(parent)
 end
