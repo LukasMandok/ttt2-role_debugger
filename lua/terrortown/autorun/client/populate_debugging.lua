@@ -3,34 +3,33 @@ local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging")
 
 -- Moved to end of cl_player_manager.lua 
 --include("cl_player_manager.lua")
-print("Initializing Role Manager")
 --local roleManagerF
 
 
-local roleManager
+roleManager = nil
 
 local function PopulateRolePanel(parent)
 
+    -- create Role Manager Object if not created yet
     roleManager = roleManager or RoleManager()
-    --roleManager:refresh()
 
+    -- gets list with available Role Names and the translated one
     local roleList = roleManager:getRoleList()
     local translatedRoleList = roleManager:getTranslatedRoleList()
-
-    print("translatedRoleList:", unpack(translatedRoleList))
-
-    roleManager:printRevList()
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------
     -----------------------------------------------
-    local playerList = roleManager:getPlayerList()
-    --local playerRoles = roleManager:getPlayerRoles()
 
+    -- get list with human player Names
+    local playerList = roleManager:getPlayerList()
+
+    -- create Panel with List of human players
     local formPlayer = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_player_roles"))
     formPlayer:Dock(TOP)
     local formPlayerList = vgui.CreateTTT2Container_extended(formPlayer)
 
+    -- create ComboBox for every player to select a role from the roleList
     for i = 1, #playerList do
         formPlayerList:MakeComboBox({
             label = playerList[i],
@@ -50,55 +49,87 @@ local function PopulateRolePanel(parent)
     ------------------------------------------------
     --------------------- BOTS ---------------------
     ------------------------------------------------
+
+    -- get List with bots on the server
     local botList = roleManager:getBotList()
+
+    -- create Panel with List of bots
     local formBot = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_bot_roles"))
     formBot:Dock(TOP)
     local formBotList = vgui.CreateTTT2Container_extended(formBot)
 
-    local function getBotLists(len)
+    -- param:  len - len of the new botList 
+    --  updates the length of the bot list
+    --  and returns the entries that are visible now, if the length was extended
+    -- return: table (new botList) from the position of the (prev index + 1) on 
+    local function getAddedBotListsEntries(len)
         local index = roleManager:getBotLen()
-        roleManager:changeBotList(len)
+        roleManager:changeBotListLen(len)
 
         return {unpack(roleManager:getBotList(), index + 1)}
     end
 
-    local function displayBotList(botList)
-        for i = 1, #botList do
-            print("Bot Name:", botList[i])
-            print("Bot Role:", roleManager:getRoleOfBot(botList[i]))
-
-            formBotList:MakeComboBox({
-                label = botList[i],
+    -- param: (table) The Bot entries that need to be added to the already displayed ones.
+    --  Displays the given entries in the list in a panel and adds a Combo Selestion for 
+    --  each bot to select a role.
+    --  The current combobox selection is only extended.
+    --  The slider below is used to remove entries from the list.
+    local function displayBotList(newBotListEntries)
+        for i = 1, #newBotListEntries do
+            local right = formBotList:MakeComboBox({
+                label = newBotListEntries[i],
+                addition = roleManager:getCurrentBotName(newBotListEntries[i]),
                 choices = roleList,
                 data = roleList,
-                selectName = roleManager:getRoleOfBot(botList[i]),
+                selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
                 default = ROLE_RANDOM.name,
                 OnChange = function(_, _, value, data)
                     print("Selected:", value)
-                end
+                end,
             })
+
+            hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
+                local role = customRole or roleManager:getRoleOfBot(newBotListEntries[i])
+                print("!!!!!!! Update Selection of:", newBotListEntries[i], "to role:", role)
+                right:ChooseOptionName(role)
+            end)
+
         end
     end
 
+    -- Creates a slider that allows to change the amount of bots displayed in the 
+    -- List of Bots above.
+    -- Removes all entries above if the values of the slider is reduced.
+    --
+    -- TODO: Funktion des Buttons (vielleicht entfernen)
+    --
+    -- TODO: Reset Button vom SLider setzt auch Rollen zurück
     local botSlider = formBot:MakeButtonSlider({
-        label = "Spawn Bots",
+        label = "Update Bots",
         min = 0,
         max = game.MaxPlayers() - #playerList,
         decimal = 0,
         initial = roleManager:getBotLen(),
         default = #player.GetBots(),
         OnChange = function(_, value)
-            botListChange = getBotLists(value)
+            botListChange = getAddedBotListsEntries(value)
             formBotList:ClearAfter(value)
             displayBotList(botListChange)
-        end, --TODO: Ganz selten ist mal eine Zahl vertauscht
-        OnClick = function(_) end
+        end,
+        OnClick = function(_)
+            roleManager:setCurrentBotRoles() -- TODO: Nur vorübergehend zum testen
+            roleManager:applyBotRoles()
+        end,
+        OnReset = function(_)
+            -- TODO: Eine checkbox soll darüber entscheiden, ob die aktuellen Rollen gesetz werden, oder einfach nur Random 
+            roleManager:setCurrentBotRoles()
+        end,
     })
 
     formBot:AddItem(formBotList)
     displayBotList(botList)
-end
 
+end
 
 local function PopulateClassPanel(parent)
 end

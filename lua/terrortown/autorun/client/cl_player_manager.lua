@@ -1,8 +1,6 @@
 ROLE_RANDOM = {id = -1, name = "random"}
 CLASS_RANDOM = {id = -1, name = "random"}
 
-print("Creating Role")
-
 RoleManager = {}
 RoleManager.__index = RoleManager
 
@@ -15,15 +13,16 @@ setmetatable(RoleManager, {
 })
 
 function RoleManager:__init()
-    print("####### RoleManager Init()")
     self.playerList = HumanList()
     self.botList = BotList()
 
     self.roleList = RoleList()
 
+
+
     gameevent.Listen( "player_spawn" )
     hook.Add( "player_spawn", "player_connect_example", function(  )
-        self.botList:resetIndex()
+        self.botList:refresh()
         self.playerList:refresh()
 
         -- if data.bot then
@@ -34,6 +33,32 @@ function RoleManager:__init()
         -- end
     end )
 
+    net.Receive("RoleManagerPlayerConnected", function ()
+        local name = net.ReadString()
+        print("Client: Player " .. name .. " connected.")
+    end)
+
+    net.Receive("RoleManagerPlayerDisconnected", function ()
+        local name = net.ReadString()
+        print("Client: Player " .. name .. " disconnected.")
+    end)
+
+    net.Receive("RoleManagerBotConnected", function ()
+        local cur_name = net.ReadString()
+        timer.Simple(0.01, function ()
+            self.botList:addEntity(cur_name)
+        end)
+        print("Client: Bot " .. cur_name .. " connected.")
+    end)
+
+    net.Receive("RoleManagerBotDisconnected", function ()
+        local cur_name = net.ReadString()
+        --timer.Simple(0.01, function ()  -- Der Timer wird hier wahrscheinlich nicht gebraucht
+        self.botList:removeEntity(cur_name)
+        --end)
+        print("Client: Bot " .. cur_name .. " disconnected.")
+    end)
+
 end
 
 -- Refresh at Panel Opening
@@ -42,18 +67,10 @@ function RoleManager:refresh()
     self.roleList:refresh()
 end
 
-function RoleManager:updateRoles()
-    self.playerList:updateRoles()
-    self.botList:updateRoles()
-end
-
-function RoleManager:printRevList()
-    print("Player:")
-    print(self.playerList.revList)
-    print("Bots:")
-    print(self.botList.revList)
-    print("Roles:")
-    print(self.roleList.revList)
+function RoleManager:setCurrentRoles()
+    self.playerList:setCurrentRoles()
+    self.botList:setCurrentRoles()
+    hook.run("update_bot_role_entries")
 end
 
 -- Player
@@ -73,7 +90,11 @@ end
 
 -- Bots
 
-function RoleManager:changeBotList(len)
+function RoleManager:getCurrentBotName(name)
+    return self.botList:getCurrentName(name)
+end
+
+function RoleManager:changeBotListLen(len)
     self.botList:setLen(len)
 end
 
@@ -91,6 +112,15 @@ end
 
 function RoleManager:getRoleOfBot(name)
     return self.botList:getRoleByName(name)
+end
+
+function RoleManager:setCurrentBotRoles()
+    print("---- Setting current Bot Roles")
+    self.botList:setCurrentRoles()
+end
+
+function RoleManager:applyBotRoles()
+    self.botList:updateStatus()
 end
 
 -- Roles

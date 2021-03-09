@@ -2,6 +2,7 @@
 -------------------- PlayerEntry --------------------
 -----------------------------------------------------
 
+-- PlayerEntity Class (Base Class)
 PlayerEntry = {}
 PlayerEntry.__index = PlayerEntry
 
@@ -13,30 +14,38 @@ setmetatable(PlayerEntry, {
     end,
 })
 
+-- param: (table) data for initialization
+-- initializes a Player Entry with the given data (name, ent, role, class)
+-- stadnard values for ent = nil, role = random, class = random
 function PlayerEntry:__init(data)
-    print("creating PlayerEntry with role", data.role)
+    --print("creating PlayerEntry with role", data.role)
     self.name = data.name
     self.ent = data.ent or nil
     self.role = data.role or ROLE_RANDOM.name
     self.class = data.class or CLASS_RANDOM.name
 end
 
+-- return: Player Name
 function PlayerEntry:getName()
     return self.name
 end
 
+-- return: Player Role
 function PlayerEntry:getRole()
     return self.role
 end
 
+-- sets Role of the player in the list
 function PlayerEntry:setRole(role)
     self.role = role
 end
 
+-- applys role to the entity of the player 
 function PlayerEntry:applyRole(role)
     --
 end
 
+-- applys role to the entity of the player next round
 function PlayerEntry:applyRole_nr(role)
     --
 end
@@ -46,7 +55,7 @@ end
 ---------------------- BotEntry ----------------------
 ------------------------------------------------------
 
--- Inherits from PlayerEntry
+-- BotEntry Class  Inherits from PlayerEntry
 BotEntry = {}
 BotEntry.__index = BotEntry
 
@@ -59,44 +68,71 @@ setmetatable(BotEntry, {
     end,
 })
 
+-- initializes Bot entry with 2 additional entries
+-- the spawn status and the delete status 
 function BotEntry:__init(data)
     PlayerEntry.__init(self, data)
+    self.currentName = data.currentName or nil  -- TODO: Wahrscheinlich wieder entfernen, wird sowieso nicht richtig benutzt.
     self.spawn = data.spawn or false
-    self.delete = data.spawn or false
+    self.delete = data.delete or false
 end
 
-function BotEntry:Reset()
+-- reset status of the bot to the default values 
+-- (spawn = false, delete = false)
+function BotEntry:resetStatus()
     self.spawn = false
     self.delete = false
 end
 
+-- set spawn status to true and delete to false
 function BotEntry:setSpawn()
     self.spawn = true
     self.delete = false
 end
 
+-- set spawn status to false and delete to true
 function BotEntry:setDelete()
     self.spawn = false
     self.delete = true
 end
 
+-- adds a new entity to the entry and sets the Current name
+function BotEntry:addEntity(ent, cur_name)
+    self:resetStatus()
+    self.ent = ent
+    self.currentName = cur_name
+end
 
+-- adds a new entity to the entry and sets the Current name
+function BotEntry:removeEntity()
+    self:resetStatus()
+    self.ent = nil
+    self.currentName = nil
+end
+
+-- spawns a new entity of the bot
+-- TODO: muss noch implementiert werden
 function BotEntry:spawn()
     print("Spawn Bot:", self.name)
     -- send Hook, to create nextbot 
     --self.ent = player.CreateNextBot( self.name )
 
     -- TODO: Rolle setzen
-    self:Reset()
+    -- TODO: Current Name setzen
+    self:resetStatus()
 end
 
+-- deletes the entity of the bot entry
+-- TODO: muss noch implementiert werden
 function BotEntry:delete()
     print("Remove Bot:", self.name)
     -- send Hook, to delete nextbot
 
-    self:Reset()
+    self:resetStatus()
 end
 
-function BotEntry:disableMoving()
+-- enables or disables the moving status of a bot 
+-- TODO: status and function need to be implemented
+function BotEntry:setMoving()
 
 end

@@ -53,7 +53,12 @@ end
 function PANEL:MakeComboBox(data)
     local left = vgui.Create("DLabelTTT2", self)
 
-    left:SetText(data.label)
+    local label = data.label
+    if (data.addition and data.addition != label) then
+        label = label .. string.format("\t(%s)", data.addition)
+    end
+
+    left:SetText(label)
 
     left.Paint = function(slf, w, h)
         derma.SkinHook("Paint", "FormLabelTTT2", slf, w, h)
@@ -91,6 +96,15 @@ function PANEL:MakeComboBox(data)
             end
         end)
     end
+
+    if isfunction(data.UpdateSelection) then
+        data.UpdateSelection(right)
+    end
+
+    hook.Add("ComboBoxTest", "Testing Hook ComboBox", function()
+        print("Name:", data.name)
+        print("right:", right)
+    end)
 
     right:SetConVar(data.convar)
     right:SetTall(32)
@@ -183,6 +197,11 @@ function PANEL:MakeButtonSlider(data)
 
             if default == nil then
                 default = tonumber(GetConVar(data.convar):GetDefault())
+            end
+
+            if isfunction(data.OnReset) then
+                -- TODO: choose correct parameters in the function
+                data.OnReset()
             end
 
             right:SetValue(default)
