@@ -21,7 +21,9 @@ function PlayerEntry:__init(data)
     --print("creating PlayerEntry with role", data.role)
     self.name = data.name
     self.ent = data.ent or nil
+    self.currentRole = nil
     self.role = data.role or ROLE_RANDOM.name
+    self.currentClass = nil
     self.class = data.class or CLASS_RANDOM.name
 end
 
@@ -108,6 +110,7 @@ function BotEntry:removeEntity()
     self:resetStatus()
     self.ent = nil
     self.currentName = nil
+    self.currentRole = nil
 end
 
 -- spawns a new entity of the bot

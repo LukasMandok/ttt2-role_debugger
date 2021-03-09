@@ -13,6 +13,9 @@ local function PopulateRolePanel(parent)
     -- create Role Manager Object if not created yet
     roleManager = roleManager or RoleManager()
 
+    -- request new Role list from Server
+    roleManager:requestCurrentRoleList()
+
     -- gets list with available Role Names and the translated one
     local roleList = roleManager:getRoleList()
     local translatedRoleList = roleManager:getTranslatedRoleList()
@@ -90,7 +93,7 @@ local function PopulateRolePanel(parent)
 
             hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
                 local role = customRole or roleManager:getRoleOfBot(newBotListEntries[i])
-                print("!!!!!!! Update Selection of:", newBotListEntries[i], "to role:", role)
+                print("Update role to", role)
                 right:ChooseOptionName(role)
             end)
 
