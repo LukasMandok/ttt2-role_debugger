@@ -20,18 +20,20 @@ function RoleManager:__init()
 
 
 
-    gameevent.Listen( "player_spawn" )
-    hook.Add( "player_spawn", "player_connect_example", function(  )
-        self.botList:refresh()
-        self.playerList:refresh()
+    -- gameevent.Listen( "player_spawn" )
+    -- hook.Add( "player_spawn", "player_connect_example", function(  )
+    --     self.botList:refresh()
+    --     self.playerList:refresh()
 
-        -- if data.bot then
-        --     RoleManager.botList:updateLen()
-        --     print("Updating Bot List Länge")
-        -- else
-        --     RoleManager.playerList:refresh()
-        -- end
-    end )
+    --     -- if data.bot then
+    --     --     RoleManager.botList:updateLen()
+    --     --     print("Updating Bot List Länge")
+    --     -- else
+    --     --     RoleManager.playerList:refresh()
+    --     -- end
+    -- end )
+
+    -- Player Connecting / Disconnecting
 
     net.Receive("RoleManagerPlayerConnected", function ()
         local name = net.ReadString()
@@ -59,6 +61,35 @@ function RoleManager:__init()
         print("Client: Bot " .. cur_name .. " disconnected.")
     end)
 
+    -- Role List
+    net.Receive("RoleManagerCurrentRolesPlayer", function ()
+        local len = net.ReadInt(10)
+        local current_roles = {}
+        for i = 1, len do
+            --current_roles[net.ReadString()] = net.ReadString()
+            local name = net.ReadString()
+            local cur_role = net.ReadString()
+
+            self.playerList:updateCurrentRole(name, cur_role)
+        end
+    end)
+
+    net.Receive("RoleManagerCurrentRolesBot", function ()
+        local len = net.ReadInt(10)
+        local current_roles = {}
+        for i = 1, len do
+            -- current_roles[net.ReadString()] = net.ReadString()
+            local cur_name = net.ReadString()
+            local cur_role = net.ReadString()
+            
+            -- todo: ändere CurrenNameList in zuordnung von Namen, nicht der Indice.
+            local name = self.botList:getCurrentNameList()[cur_name]
+            print("Recive Role: ", cur_role, "for", cur_name, "which is:", id)
+            print(self.botList[id])
+            self.botList:updateCurrentRole(name, cur_role)
+        end
+    end)
+
 end
 
 -- Refresh at Panel Opening
@@ -72,6 +103,18 @@ function RoleManager:setCurrentRoles()
     self.botList:setCurrentRoles()
     hook.run("update_bot_role_entries")
 end
+
+function RoleManager:updateCurrentRoles()
+    self.playerList:updateCurrentRoles()
+    self.botList:updateCurrentRoles()
+end
+
+function RoleManager:requestCurrentRoleList()
+    print("Cliend: Sending Role Request")
+    net.Start("RoleManagerCurrentRolesRequest")
+    net.SendToServer()
+end
+
 
 -- Player
 
