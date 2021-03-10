@@ -18,7 +18,7 @@ function RoleManager:__init()
 
     self.roleList = RoleList()
 
-
+    self.auto_apply = true
 
     -- gameevent.Listen( "player_spawn" )
     -- hook.Add( "player_spawn", "player_connect_example", function(  )

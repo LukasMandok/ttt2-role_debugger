@@ -44,6 +44,12 @@ local function MakeReset(parent)
     return reset
 end
 
+local function MakeDummy(parent)
+    local dummy = vgui.Create("Panel", parent)
+    dummy:SetSize(32,32)
+    return dummy
+end
+
 --
 -- Adds a combobox to the form with support for different data and values
 -- @param table data The data for the combobox
@@ -54,8 +60,8 @@ function PANEL:MakeComboBox(data)
     local left = vgui.Create("DLabelTTT2", self)
 
     local label = data.label
-    if (data.addition and data.addition != label) then
-        label = label .. string.format("\t(%s)", data.addition)
+    if (data.addition) then --and data.addition != label
+        label = label .. string.format("\t\t(%s)", data.addition)
     end
 
     left:SetText(label)
@@ -97,14 +103,14 @@ function PANEL:MakeComboBox(data)
         end)
     end
 
-    if isfunction(data.UpdateSelection) then
-        data.UpdateSelection(right)
+    if isfunction(data.OnRemove) then
+        right.OnRemove = data.OnRemove
     end
 
-    hook.Add("ComboBoxTest", "Testing Hook ComboBox", function()
-        print("Name:", data.name)
-        print("right:", right)
-    end)
+    -- TODO: sollte so nochaml versucht werden zu verwenden.
+    if isfunction(data.UpdateSelection) then
+        right.UpdateSelection = data.UpdateSelection
+    end
 
     right:SetConVar(data.convar)
     right:SetTall(32)
@@ -210,7 +216,7 @@ function PANEL:MakeButtonSlider(data)
         reset.noDefault = true
     end
 
-    self:AddItem(left, right, reset)
+    self:AddItem(left, right, reset, true)
 
     if IsValid(data.master) and isfunction(data.master.AddSlave) then
         data.master:AddSlave(left)
@@ -219,6 +225,42 @@ function PANEL:MakeButtonSlider(data)
     end
 
     return left
+end
+
+
+function PANEL:MakeDoubleButton(data)
+    local left = vgui.Create("DButtonTTT2", self)
+
+    left:SetText(data.label1)
+
+    left.DoClick = function(slf)
+        if isfunction(data.OnClick1) then
+            data.OnClick1(slf)
+        end
+    end
+
+
+    local right = vgui.Create("DButtonTTT2", self)
+
+    right:SetText(data.label2)
+
+    right.DoClick = function(slf)
+        if isfunction(data.OnClick2) then
+            data.OnClick2(slf)
+        end
+    end
+
+    right:SetTall(32)
+    right:Dock(TOP)
+
+    local dummy = MakeDummy(self)
+
+    self:AddItem(left, right, dummy, true, false)
+
+    if IsValid(data.master) and isfunction(data.master.AddSlave) then
+        data.master:AddSlave(left)
+        data.master:AddSlave(right)
+    end
 end
 
 
@@ -380,7 +422,7 @@ end
 -- @param Panel right
 -- @param Panel reset
 -- @realm client
-function PANEL:AddItem(left, right, reset)
+function PANEL:AddItem(left, right, reset, separate, symmetric )
     self:InvalidateLayout()
 
     local panel = vgui.Create("DSizeToContents", self)
@@ -389,6 +431,11 @@ function PANEL:AddItem(left, right, reset)
     panel:Dock(TOP)
     panel:DockPadding(10, 10, 10, 0)
     panel:InvalidateLayout()
+
+    local size = 350
+    if symmetric and not IsValid(reset) then
+        size = 370
+    end
 
     if IsValid(reset) then
         reset:SetParent(panel)
@@ -399,9 +446,17 @@ function PANEL:AddItem(left, right, reset)
         left:SetParent(panel)
         left:Dock(LEFT)
         left:InvalidateLayout(true)
-        left:SetSize(350, 20)
+        left:SetSize(size, 20) -- 350*xscale
         right:SetParent(panel)
-        right:SetPos(350, 0)
+        if separate then
+            left:DockMargin(0, 0, 5, 0) --700*(1-xscale)/2
+            right:DockMargin(5, 0, 0, 0) --700*(1-xscale)/2
+        	--self:DockMargin(0, 5, 0, 0)
+	        --self:DockPadding(0, 0, 0, 0)
+        end
+        --right:Dock(LEFT)
+        --right:SetSize(300, 20)
+        right:SetPos(size, 0) --350*xscale+350*(1-xscale)
         right:InvalidateLayout(true)
     elseif IsValid(left) then
         left:SetParent(panel)
@@ -426,7 +481,7 @@ end
 -- @param table data The data for the checkbox
 -- @return Panel The created checkbox
 -- @realm client
---[[ 
+
 function PANEL:MakeCheckBox(data)
 	local left = vgui.Create("DCheckBoxLabelTTT2", self)
 
@@ -467,7 +522,6 @@ function PANEL:MakeCheckBox(data)
 
 	return left
 end
- ]]
 
 ---
 -- Adds a slider to the form

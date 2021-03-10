@@ -302,13 +302,13 @@ function BotList:updateStatus() -- oder updateSpawn oder refresh
     -- If the index is larger than the amount of existing bots,
     -- the status of all bots in between is set to spawning
     if self.index > self.exist_index then
-        for i = self.exist_index, self.index do
+        for i = math.max(self.exist_index,1), self.index do
             self.list[i]:setSpawn()
         end
     -- if the index is smaller than the amount of existing bots,
     -- flag the bots in between with the delete status
     elseif self.index < self.exist_index then
-        for i = self.index, new_len, -1 do
+        for i = self.index, math.max(self.exist_index, 1), -1 do
             self.list[i]:setDelete()
         end
     end

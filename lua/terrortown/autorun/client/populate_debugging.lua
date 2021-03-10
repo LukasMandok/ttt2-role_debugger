@@ -16,6 +16,7 @@ local function PopulateRolePanel(parent)
     -- request new Role list from Server
     roleManager:requestCurrentRoleList()
 
+
     -- gets list with available Role Names and the translated one
     local roleList = roleManager:getRoleList()
     local translatedRoleList = roleManager:getTranslatedRoleList()
@@ -89,6 +90,10 @@ local function PopulateRolePanel(parent)
                 OnChange = function(_, _, value, data)
                     print("Selected:", value)
                 end,
+                OnRemove = function()
+                    print("Removing hook for", newBotListEntries[i] )
+                    hook.Remove("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i])
+                end,
             })
 
             hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
@@ -100,12 +105,24 @@ local function PopulateRolePanel(parent)
         end
     end
 
+    local spawnButton = formBot:MakeDoubleButton({
+        label1 = "Spawn Bots",
+        OnClick1 = function(_)
+            print("Spawn Bots")
+        end,
+
+        label2 = "Spawn Bots next round",
+        OnClick2 = function(_)
+            print("Spawn Bots next round")
+        end,
+    })
+
     -- Creates a slider that allows to change the amount of bots displayed in the 
     -- List of Bots above.
     -- Removes all entries above if the values of the slider is reduced.
     --
     -- TODO: Funktion des Buttons (vielleicht entfernen)
-    --
+    -- TODO: Übersetzung einfügen
     -- TODO: Reset Button vom SLider setzt auch Rollen zurück
     local botSlider = formBot:MakeButtonSlider({
         label = "Update Bots",
@@ -131,6 +148,41 @@ local function PopulateRolePanel(parent)
 
     formBot:AddItem(formBotList)
     displayBotList(botList)
+
+    ------------------------------------------------
+    ------------------- Settings -------------------
+    ------------------------------------------------
+
+    -- create Panel with List of bots
+    local formSettings = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_roles_settings"))
+    formSettings:Dock(TOP)
+
+    -- creates some options
+    formSettings:MakeHelp({
+		label = LANG.GetTranslation("debugging_settings_auto_apply_help")
+	})
+
+    formSettings:MakeCheckBox({
+		label = LANG.GetTranslation("debugging_settings_auto_apply"),
+		initial = roleManager.auto_apply,
+        default = roleManager.auto_apply,
+		OnChange = function(_, value)
+			roleManager.auto_apply = value
+		end,
+	})
+
+    formSettings:MakeHelp({
+		label = LANG.GetTranslation("debugging_settings_auto_refresh_help")
+	})
+
+    formSettings:MakeCheckBox({
+		label = LANG.GetTranslation("debugging_settings_auto_refresh"),
+		initial = roleManager.auto_apply,
+        default = roleManager.auto_apply,
+		OnChange = function(_, value)
+			roleManager.auto_apply = value
+		end,
+	})
 
 end
 
