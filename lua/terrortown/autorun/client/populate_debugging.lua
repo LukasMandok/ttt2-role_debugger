@@ -17,6 +17,10 @@ local function PopulateRolePanel(parent)
     roleManager:requestCurrentRoleList()
 
 
+    -- update List Entries
+    roleManager:refresh()
+
+
     -- gets list with available Role Names and the translated one
     local roleList = roleManager:getRoleList()
     local translatedRoleList = roleManager:getTranslatedRoleList()
@@ -42,10 +46,28 @@ local function PopulateRolePanel(parent)
             selectName = roleManager:getRoleOfPlayer(playerList[i]),
             default = ROLE_RANDOM.name,
             OnChange = function(_, _, value, data)
-                print("Selected:", value)
-            end
+                    if roleManager.auto_apply == true then
+                        roleManager.set_next_round = true
+                    end
+                    roleManager:setPlayerRole(playerList[i], value)
+                end,
+            OnRemove = function()
+                print("Removing hook for", playerList[i] )
+                hook.Remove("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i])
+            end,
         })
+
+        -- TODO: Die Updates funktionieren noch nicht immer zuverlässig!
+        print("[ ] Adding Hook for", playerList[i])
+        hook.Add("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i], function(customRole)
+            local role = customRole or roleManager:getRoleOfPlayer(playerList[i])
+            print("Update role to", role)
+            --right:ChooseOptionName(role)
+            right:SelectOptionName(role)
+        end)
+
     end
+
 
     formPlayer:AddItem(formPlayerList)
 
@@ -88,7 +110,10 @@ local function PopulateRolePanel(parent)
                 selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
                 default = ROLE_RANDOM.name,
                 OnChange = function(_, _, value, data)
-                    print("Selected:", value)
+                    if roleManager.auto_apply == true then
+                        roleManager.set_next_round = true
+                    end
+                    roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnRemove = function()
                     print("Removing hook for", newBotListEntries[i] )
@@ -96,10 +121,13 @@ local function PopulateRolePanel(parent)
                 end,
             })
 
+            -- TODO: Die Updates funktionieren noch nicht immer zuverlässig!
+            print("[ ] Adding Hook for", newBotListEntries[i])
             hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
                 local role = customRole or roleManager:getRoleOfBot(newBotListEntries[i])
                 print("Update role to", role)
-                right:ChooseOptionName(role)
+                --right:ChooseOptionName(role)
+                right:SelectOptionName(role)
             end)
 
         end
@@ -109,11 +137,13 @@ local function PopulateRolePanel(parent)
         label1 = "Spawn Bots",
         OnClick1 = function(_)
             print("Spawn Bots")
+            roleManager:applyBotRoles()
         end,
 
         label2 = "Spawn Bots next round",
         OnClick2 = function(_)
             print("Spawn Bots next round")
+            roleManager:applyBotRolesNextRound()
         end,
     })
 
@@ -137,12 +167,12 @@ local function PopulateRolePanel(parent)
             displayBotList(botListChange)
         end,
         OnClick = function(_)
-            roleManager:setCurrentBotRoles() -- TODO: Nur vorübergehend zum testen
-            roleManager:applyBotRoles()
+            roleManager:setCurrentBotRoles()
         end,
         OnReset = function(_)
+            roleManager:resetBotRoles()
             -- TODO: Eine checkbox soll darüber entscheiden, ob die aktuellen Rollen gesetz werden, oder einfach nur Random 
-            roleManager:setCurrentBotRoles()
+            --roleManager:setCurrentBotRoles()
         end,
     })
 

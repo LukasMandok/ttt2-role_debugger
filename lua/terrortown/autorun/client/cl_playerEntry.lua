@@ -39,17 +39,37 @@ end
 
 -- sets Role of the player in the list
 function PlayerEntry:setRole(role)
+    print("         Setting role: " .. role .. " for player: " .. self.name )
     self.role = role
 end
 
 -- applys role to the entity of the player 
-function PlayerEntry:applyRole(role)
-    --
+-- TODO: Was passiert mit Random Roles
+function PlayerEntry:applyRole()
+    local role_name = self.role
+
+    print("Apply Role: " .. role_name .. " to player " .. self.name .. " with current role: " .. self.currentRole)
+    if not IsValid(self.ent) then
+        print("Entity von Player " .. self.name .. " existiert nicht.")
+    elseif GetRoundState() == 1 or GetRoundState() == 2 then
+        print("The Round has not yet been started! Applying role next round.")
+        self.applyRole_nr(role_name)
+    elseif not self.ent:Alive() then
+        print("Player is not alive.")
+    elseif self.currentRole == role_name then
+        print("Der Spieler hat bereits diese Rolle")
+    else
+        net.Start("RoleManagerApplyRole")
+        net.WriteEntity(self.ent)
+        net.WriteString(role_name)
+        net.SendToServer()
+    end
+    
 end
 
 -- applys role to the entity of the player next round
-function PlayerEntry:applyRole_nr(role)
-    --
+function PlayerEntry:applyRole_nr()
+    
 end
 
 
@@ -105,6 +125,7 @@ function BotEntry:addEntity(ent, cur_name)
     self.currentName = cur_name
 end
 
+
 -- adds a new entity to the entry and sets the Current name
 function BotEntry:removeEntity()
     self:resetStatus()
@@ -115,6 +136,7 @@ end
 
 -- spawns a new entity of the bot
 -- TODO: muss noch implementiert werden
+-- TODO Funktion schreiben (vielleicht sollte addEntity nicht ausgeführt werden, da diese funktion durch das COnnecten des Bots ausgelöst wird)
 function BotEntry:spawn()
     print("Spawn Bot:", self.name)
     -- send Hook, to create nextbot 

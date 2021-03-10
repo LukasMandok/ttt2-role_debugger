@@ -129,7 +129,7 @@ function RoleList:__init(init)
     EntryList.__init(self, init)
 
     self.list = {[1] = {name = ROLE_RANDOM.name}}
-    self.list = {unpack(self.list), unpack(roles.GetList())}
+    self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
 
     self:__initRevList()
     self:__initTranslation()
@@ -146,7 +146,7 @@ end
 -- initializes the RoleList again
 function RoleList:refresh()
     self.list = {[1] = {name = ROLE_RANDOM.name}}
-    self.list = {unpack(self.list), unpack(roles.GetList())}
+    self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
 
     print("Refresh RevList of Roles")
     self:__initRevList()
@@ -165,5 +165,14 @@ function RoleList:getTranslatedNames()
         names[i] = self.list[self.revList[n]].translated
     end
     return names
+end
+
+function RoleList:getRolesWithCategory()
+
+end
+
+-- TODO: GetRole Category: Innocent, Traitor, Neutral, Killers
+function RoleList:getRoleCategory()
+
 end
 

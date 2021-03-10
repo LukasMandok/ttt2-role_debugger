@@ -19,6 +19,7 @@ function RoleManager:__init()
     self.roleList = RoleList()
 
     self.auto_apply = true
+    self.set_next_round = false
 
     -- gameevent.Listen( "player_spawn" )
     -- hook.Add( "player_spawn", "player_connect_example", function(  )
@@ -50,7 +51,7 @@ function RoleManager:__init()
         timer.Simple(0.01, function ()
             self.botList:addEntity(cur_name)
         end)
-        print("Client: Bot " .. cur_name .. " connected.")
+        
     end)
 
     net.Receive("RoleManagerBotDisconnected", function ()
@@ -90,11 +91,20 @@ function RoleManager:__init()
         end
     end)
 
+    -- Hook to update currentroles at round start
+    hook.Add("TTTBeginRound", "Update Roles at round start", function ()
+        self.requestCurrentRoleList()
+    end)
+
 end
 
--- Refresh at Panel Opening
+-----------------------------------------------------
+---------------------- General ----------------------
+-----------------------------------------------------
+
 function RoleManager:refresh()
     self.playerList:refresh()
+    self.botList:refresh()
     self.roleList:refresh()
 end
 
@@ -116,7 +126,13 @@ function RoleManager:requestCurrentRoleList()
 end
 
 
--- Player
+-----------------------------------------------------
+---------------------- Player -----------------------
+-----------------------------------------------------
+
+function RoleManager:setPlayerRole(name, role)
+    self.playerList:setRole(name, role)
+end
 
 function RoleManager:getPlayerList()
     self.playerList:refresh()
@@ -131,7 +147,30 @@ function RoleManager:getRoleOfPlayer(name)
     return self.playerList:getRoleByName(name)
 end
 
--- Bots
+function  RoleManager:resetPlayerRoles()
+    self.playerList:setAllRoles("random")
+    self.playerList:displayAllRoles()
+end
+
+function RoleManager:applyPlayerRoles(name)
+    print("Applying Player Roles")
+    self.playerList:applyRoles(name)
+end
+
+function RoleManager:applyPlayerRolesNextRound(name)
+    print("Applying Player Roles next Round")
+    self.playerList:applyRoles_nr(name)
+end
+
+
+-----------------------------------------------------
+------------------------ Bots -----------------------
+-----------------------------------------------------
+
+function RoleManager:setBotRole(name, role)
+    print("   Rollen:", unpack(self.botList:getRoles()))
+    self.botList:setRole(name, role)
+end
 
 function RoleManager:getCurrentBotName(name)
     return self.botList:getCurrentName(name)
@@ -157,16 +196,33 @@ function RoleManager:getRoleOfBot(name)
     return self.botList:getRoleByName(name)
 end
 
-function RoleManager:setCurrentBotRoles()
-    print("---- Setting current Bot Roles")
-    self.botList:setCurrentRoles()
+function  RoleManager:resetBotRoles()
+    self.botList:setAllRoles("random")
+    self.botList:displayAllRoles()
 end
 
-function RoleManager:applyBotRoles()
+function RoleManager:setCurrentBotRoles()
+    print("---- Setting current Bot Roles")
+    -- TODO: zählt nicht als selectiert -> Rollen müssen isgesamt gesetz werden.
+    self.botList:setCurrentRoles()
     self.botList:updateStatus()
 end
 
--- Roles
+-- TODO: add name for updateStatus?
+function RoleManager:applyBotRoles(name)
+    print("Applying Bot Roles")
+    self.botList:updateStatus()
+    self.botList:applyRoles(name)
+end
+
+function RoleManager:applyBotRolesNextRound(name)
+    print("Applying Player Roles next Round")
+    self.botList:applyRoles_nr(name)
+end
+
+-----------------------------------------------------
+----------------------- Roles -----------------------
+-----------------------------------------------------
 
 function RoleManager:getRoleList()
     return self.roleList:getNames()
@@ -176,6 +232,7 @@ function RoleManager:getTranslatedRoleList()
     return self.roleList:getTranslatedNames()
 end
 
+-- TODO: RoleIcons in die RoleListe einfügen
 function RoleManager:getRoleIcons()
     local icons = {}
     for i = 1, #self.roleList do

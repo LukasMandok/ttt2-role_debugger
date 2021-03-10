@@ -67,9 +67,21 @@ function PlayerList:getRoleByName(name)
     -- return false
 end
 
+function PlayerList:setRole(name, role)
+    print("Calling setRole Funktion")
+    self.list[self.revList[name]]:setRole(role)
+end
+
+function PlayerList:setAllRoles(role)
+    local role = role or "random"
+    for _,entry in pairs(self.list) do
+        entry:setRole(role)
+    end
+end
+
 -- set Roles in the list Player List to the current roles of the player this round
 function PlayerList:setCurrentRoles()
-    local len = self.exist_index
+    local len = self.exist_index or #self.list
     --for i = 1, #self.list do
     --    print("Bot List:", self.list[i].name)
     --end
@@ -80,9 +92,23 @@ function PlayerList:setCurrentRoles()
         --self.list[i].role = roles:GetByIndex(self.list[i].ent:GetSubRole()).name
         self.list[i].role = self.list[i].currentRole
         if old_role != self.list[i].role then
-            hook.Run("UpdateRoleSelection_" .. self.list[i].name)
+            self:displayRole(self.list[i].name)
         end
     end
+end
+
+-- TODO: Aus der PlayerList woanders hin verschieben
+-- displays currently selected role for alle Player activ in the 
+function PlayerList:displayAllRoles()
+    local len = self.index or #self.list
+    for i = 1, len do
+        self:displayRole(self.list[i].name)
+    end
+end
+
+-- TODO: Aus der PlayerList woanders hin verschieben
+function PlayerList:displayRole(name)
+    hook.Run("UpdateRoleSelection_" .. name)
 end
 
 -- updates currentRole in the Player List Entry
@@ -91,6 +117,26 @@ end
 function PlayerList:updateCurrentRole(name, cur_role)
     print("Set Current Role:", cur_role, "for player:", name)
     self.list[self.revList[name]].currentRole = cur_role
+end
+
+function PlayerList:applyRoles(name)
+    if IsValid(name) then
+        self.list[self.revList[name]]:applyRole()
+    else
+        for i = 1, self.index do
+            self.list[i]:applyRole()
+        end
+    end
+end
+
+function PlayerList:applyRoles_nr(name)
+    if IsValid(name) then
+        self.list[self.revList[name]]:applyRole_nr()
+    else
+        for i = 1, self.index do
+            self.list[i]:applyRole_nr()
+        end
+    end
 end
 
 -----------------------------------------------------
@@ -316,6 +362,7 @@ end
 
 -- updates the current existing bot index
 function BotList:refresh()
+    print("Updating BotList indices")
     self.exist_index = #player:GetBots()
     self.index = self.exist_index
 end
@@ -345,7 +392,7 @@ function BotList:addEntity(cur_name)
     if not self.currentNameList[cur_name] and ent != nil then
         local i = getArrayLen(self.currentNameList) + 1
         print("neuer Index:", i)
-        if i > 0 then
+        if i > 1 then
             print("Entity of previous bot:", self.list[i-1].ent)
         end
         self.list[i]:addEntity(ent, cur_name)
@@ -366,3 +413,16 @@ function BotList:removeEntity(cur_name)
         self.currentNameList[cur_name] = nil -- remove index from current name list
     end
 end
+
+-- TODO: Update Names bevor creating new entities.
+function BotList:updateNames()
+
+end
+
+-- TODO: Create non existing entities
+-- If the name of the entities is not changed, a bot name must be choosen, that is not in currentNames
+function BotList:createEntities()
+
+end
+
+

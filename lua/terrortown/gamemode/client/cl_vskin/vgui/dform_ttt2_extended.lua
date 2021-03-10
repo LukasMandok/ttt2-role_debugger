@@ -50,6 +50,11 @@ local function MakeDummy(parent)
     return dummy
 end
 
+-- TODO: Button implementieren
+local function MakeLock(parent)
+
+end
+
 --
 -- Adds a combobox to the form with support for different data and values
 -- @param table data The data for the combobox
@@ -87,6 +92,13 @@ function PANEL:MakeComboBox(data)
         right:ChooseOptionId(data.selectId)
     elseif data.selectName then
         right:ChooseOptionName(data.selectName)
+    end
+
+    right.SelectOptionName = function(slf, name)
+        print("------- Neue Selection Option")
+        local index = slf:GetOptionId(name)
+        right:ChooseOptionName(name)
+        data.OnChange(slf, index, name, data.data[index])
     end
 
     right.OnSelect = function(slf, index, value, rawdata)
