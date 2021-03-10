@@ -95,10 +95,10 @@ function PANEL:MakeComboBox(data)
     end
 
     right.SelectOptionName = function(slf, name)
-        print("------- Neue Selection Option")
+        print("------- Update Selection")
         local index = slf:GetOptionId(name)
         right:ChooseOptionName(name)
-        data.OnChange(slf, index, name, data.data[index])
+        data.OnChange(slf, index, name, data.data[index], true)
     end
 
     right.OnSelect = function(slf, index, value, rawdata)
@@ -110,6 +110,7 @@ function PANEL:MakeComboBox(data)
         -- one frame to update the convar if one is set.
         timer.Simple(0, function()
             if data and isfunction(data.OnChange) then
+                print("++++++ Real Selection")
                 data.OnChange(slf, index, value, rawdata)
             end
         end)

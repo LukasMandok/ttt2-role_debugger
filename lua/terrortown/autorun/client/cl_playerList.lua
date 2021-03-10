@@ -121,19 +121,26 @@ end
 
 function PlayerList:applyRoles(name)
     if IsValid(name) then
+        print("Apply Role for:  " .. name )
         self.list[self.revList[name]]:applyRole()
     else
-        for i = 1, self.index do
+        local len = self.index or #self.list
+        print("Apply Role next round for all.")
+        for i = 1, len do
             self.list[i]:applyRole()
         end
     end
 end
 
 function PlayerList:applyRoles_nr(name)
-    if IsValid(name) then
+    print(name)
+    if name then
+        print("Apply Role next round for:  " .. name )
         self.list[self.revList[name]]:applyRole_nr()
     else
-        for i = 1, self.index do
+        local len = self.index or #self.list
+        print("Apply Role next round for all.")
+        for i = 1, len do
             self.list[i]:applyRole_nr()
         end
     end

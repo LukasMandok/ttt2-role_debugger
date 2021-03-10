@@ -45,9 +45,11 @@ local function PopulateRolePanel(parent)
             data = roleList,
             selectName = roleManager:getRoleOfPlayer(playerList[i]),
             default = ROLE_RANDOM.name,
-            OnChange = function(_, _, value, data)
-                    if roleManager.auto_apply == true then
-                        roleManager.set_next_round = true
+            OnChange = function(_, _, value, data, flag)
+                    -- TODO: 
+                    if roleManager.auto_apply == true and flag ~= true then
+                        --roleManager.set_next_round = true
+                        roleManager:applyPlayerRolesNextRound(playerList[i])
                     end
                     roleManager:setPlayerRole(playerList[i], value)
                 end,
@@ -109,10 +111,11 @@ local function PopulateRolePanel(parent)
                 data = roleList,
                 selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
                 default = ROLE_RANDOM.name,
-                OnChange = function(_, _, value, data)
-                    if roleManager.auto_apply == true then
-                        roleManager.set_next_round = true
-                    end
+                OnChange = function(_, _, value, data, flag)
+                    if roleManager.auto_apply == true and flag ~= true then
+                        --roleManager.set_next_round = tru
+                        roleManager:applyBotRolesNextRound(newBotListEntries[i])
+                    end 
                     roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnRemove = function()
@@ -134,15 +137,15 @@ local function PopulateRolePanel(parent)
     end
 
     local spawnButton = formBot:MakeDoubleButton({
-        label1 = "Spawn Bots",
+        label1 = "Apply Roles",
         OnClick1 = function(_)
-            print("Spawn Bots")
+            print("Apply Roles")
             roleManager:applyBotRoles()
         end,
 
-        label2 = "Spawn Bots next round",
+        label2 = "Apply Roles next round",
         OnClick2 = function(_)
-            print("Spawn Bots next round")
+            print("Apply Roles next round")
             roleManager:applyBotRolesNextRound()
         end,
     })

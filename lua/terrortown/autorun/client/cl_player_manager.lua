@@ -1,3 +1,4 @@
+-- TODO: in eine shared file, damit der Server das auch kennt.
 ROLE_RANDOM = {id = -1, name = "random"}
 CLASS_RANDOM = {id = -1, name = "random"}
 
@@ -216,7 +217,8 @@ function RoleManager:applyBotRoles(name)
 end
 
 function RoleManager:applyBotRolesNextRound(name)
-    print("Applying Player Roles next Round")
+    print("+Applying Bot Roles next Round+", name)
+    self.botList:updateStatus()
     self.botList:applyRoles_nr(name)
 end
 

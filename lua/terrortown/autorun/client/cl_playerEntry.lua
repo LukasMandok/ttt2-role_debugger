@@ -53,7 +53,7 @@ function PlayerEntry:applyRole()
         print("Entity von Player " .. self.name .. " existiert nicht.")
     elseif GetRoundState() == 1 or GetRoundState() == 2 then
         print("The Round has not yet been started! Applying role next round.")
-        self.applyRole_nr(role_name)
+        self.applyRole_nr()
     elseif not self.ent:Alive() then
         print("Player is not alive.")
     elseif self.currentRole == role_name then
@@ -69,7 +69,16 @@ end
 
 -- applys role to the entity of the player next round
 function PlayerEntry:applyRole_nr()
-    
+    local role_name = self.role
+    print("Apply Role: " .. role_name .. " to player " .. self.name .. " with current role: " .. self.currentRole)
+    if not IsValid(self.ent) then
+        print("Entity von Player " .. self.name .. " existiert nicht.")
+    else
+        net.Start("RoleManagerApplyRoleNextRound")
+        net.WriteEntity(self.ent)
+        net.WriteString(role_name)
+        net.SendToServer()
+    end
 end
 
 
