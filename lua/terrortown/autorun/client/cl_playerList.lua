@@ -100,15 +100,16 @@ function PlayerList:updateCurrentRole(name, cur_role)
     self.list[self.revList[name]].currentRole = cur_role
 end
 
-function PlayerList:applyRoles(name)
+function PlayerList:applyRoles(name, separateList)
+    local list = separateList or self.list
     if IsValid(name) then
         --print("Apply Role for:  " .. name )
-        self.list[self.revList[name]]:applyRole()
+        list[self.revList[name]]:applyRole()
     else
-        local len = self.index or #self.list
-        --print("Apply Role next round for all.")
+        local len = self.index or #list
+        print("-------- Apply Role next round for all.")
         for i = 1, len do
-            self.list[i]:applyRole()
+            list[i]:applyRole()
         end
     end
 end
@@ -220,6 +221,7 @@ function BotList:__init(init)
 
     self.currentNameList = {}
     self.addNewEntity = {}
+    self.processNextRound = {}
 
     self:__initExistingBots()
     self:__initRevList()
@@ -407,11 +409,12 @@ end
 
 -- TODO: add Name Parameter
 -- If the name of the entities is not changed, a bot name must be choosen, that is not in currentNames
-function BotList:spawnEntities()
-    for i = 1, #self.list do
-        print(self.list[i].name, "Spawn:", self.list[i].spawn, "Delete:", self.list[i].delete)
-        if self.list[i].spawn == true then
-            local spawn_name = self.list[i].name
+function BotList:spawnEntities(name, this_round, separateList)
+    list = separateList or self.list
+    for i = 1, #list do
+        print(list[i].name, "Spawn:", list[i].spawn, "Delete:", list[i].delete)
+        if list[i].spawn == true then
+            local spawn_name = list[i].name
 
             -- Change Bot Name, if it already exists
             num = getArrayLen(self.currentNameList) + 1
@@ -420,15 +423,16 @@ function BotList:spawnEntities()
                 num = num + 1
             end
 
-            print("######## Add entry to entity list: " .. spawn_name .. " = " .. self.list[i].name)
-            self.addNewEntity[spawn_name] = self.list[i].name
-            self.list[i]:spawnEntity(spawn_name)
+            print("######## Add entry to entity list: " .. spawn_name .. " = " .. list[i].name)
+            self.addNewEntity[spawn_name] = list[i].name
+            list[i]:spawnEntity(spawn_name, this_round)
             -- If the Name is already in the currentNameList, the addEntry function is not called: (if not self.currentNameList[cur_name] and ent ~= nil)
-            self.currentNameList[spawn_name] = self.name
+            self.currentNameList[spawn_name] = list[i].name
 
-        elseif self.list[i].delete == true then
-            self.currentNameList[self.list[i].currentName] = nil
-            self.list[i]:deleteEntity()
+        elseif list[i].delete == true then
+            print("###### Rrmove Entry:" .. list[i].name)
+            self.currentNameList[list[i].currentName] = nil
+            list[i]:deleteEntity()
         end
     end
 end
@@ -450,16 +454,29 @@ end
 
 -- Setzt analog zum Player die Rollen für nächste Rund, falls die entities existieren.
 -- Ansonsten wird eine Liste aufgefüllt, die zu begin der nächsten Vorbereitungsphase abgearbeitet wird.
--- TODO: Liste anlegen, mit der Bots zu begin der folgeneden Rounde erzeugt werden
 function BotList:applyRoles_nr(name)
     if name then
-        --print("Apply Role next round for:  " .. name )
-        self.list[self.revList[name]]:applyRole_nr()
+        -- TODO: hier muss überprüft werden, ob der eintrag schon in der liste ist
+        local i = self.revList[name]
+        if IsValid(self.list[i].ent) then
+            print("Apply Role next round for:  " .. name )
+            self.list[i]:applyRole_nr()
+        else
+            print("Entity not created yet: store in table for next round for: " .. name)
+            self.processNextRound[#self.processNextRound + 1] = self.list[i]
+        end
     else
+        self.processNextRound = {}
         local len = self.index or #self.list
         --print("Apply Role next round for all.")
         for i = 1, len do
-            self.list[i]:applyRole_nr()
+            if IsValid(self.list[i].ent) then
+                print("Apply Role next round")
+                self.list[i]:applyRole_nr()
+            else
+                print("Entity not created yet: store in table for next round.")
+                self.processNextRound[#self.processNextRound + 1] = self.list[i]
+            end
         end
     end
 end

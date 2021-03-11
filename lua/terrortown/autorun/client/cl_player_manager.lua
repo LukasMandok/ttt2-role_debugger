@@ -98,10 +98,22 @@ function RoleManager:__init()
     hook.Add("TTTPrepareRound", "Create Bots before round start", function()
         print("Hook: Preparation")
         if self.apply_next_round == true then
-            self.botList():spawnEntities()
+            self.botList:spawnEntities(self.botList.processNextRound)
+
+            print("Applying Bot Roles")
+            self.botList:updateStatus()
+
+            timer.Simple(2, function ()
+                print("?????????????????? Apply Roles")
+                self.botList:applyRoles(self.botList.processNextRound)
+                self.botList.processNextRound = {}
+            end)
+            timer.Simple(2, function ()   -- TODO: Timer anpassen
+                print("??????????????????? Request CUrrent Role List")
+                self:requestCurrentRoleList()
+            end)
         end
     end)
-
 end
 
 -----------------------------------------------------
@@ -217,21 +229,33 @@ end
 
 -- TODO: add name for updateStatus?
 function RoleManager:applyBotRoles(name)
-    self.botList:spawnEntities(name)
+    self:clearBotRolesNextRound()
+    self.botList:spawnEntities(name, true)
 
     -- too 
     print("Applying Bot Roles")
     self.botList:updateStatus()
-    --self.botList:applyRoles(name)
-    -- timer.Simple(0.1, function ()   -- TODO: Timer anpassen
-    --     self:requestCurrentRoleList()
-    -- end)
+
+    timer.Simple(1, function ()
+        print("?????????????????? Apply Roles")
+        self.botList:applyRoles(name)
+    end)
+    timer.Simple(1, function ()   -- TODO: Timer anpassen
+        print("??????????????????? Request CUrrent Role List")
+        self:requestCurrentRoleList()
+    end)
 end
 
 function RoleManager:applyBotRolesNextRound(name)
     print("+Applying Bot Roles next Round+", name)
     self.botList:updateStatus()
     self.botList:applyRoles_nr(name)
+end
+
+function RoleManager:clearBotRolesNextRound()
+    net.Start("RoleManagerClearRolesNextRound")
+    net.SendToServer()
+    self.apply_next_round = false
 end
 
 -----------------------------------------------------

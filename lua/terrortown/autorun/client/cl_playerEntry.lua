@@ -48,12 +48,13 @@ end
 function PlayerEntry:applyRole()
     local role_name = self.role
 
-    print("Apply Role: " .. role_name .. " to player " .. self.name .. " with current role: " .. self.currentRole)
+    print("Apply Role: " .. role_name .. " to player " .. self.name)
+    print("Current role:", self.currentRole)
     if not IsValid(self.ent) then
         print("Entity von Player " .. self.name .. " existiert nicht.")
     elseif GetRoundState() == 1 or GetRoundState() == 2 then
         print("The Round has not yet been started! Applying role next round.")
-        self.applyRole_nr()
+        self:applyRole_nr()
     elseif not self.ent:Alive() then
         print("Player is not alive.")
     elseif self.currentRole == role_name then
@@ -155,12 +156,18 @@ end
 -- spawns a new entity of the bot
 -- TODO: muss noch implementiert werden
 -- TODO Funktion schreiben (vielleicht sollte addEntity nicht ausgeführt werden, da diese funktion durch das COnnecten des Bots ausgelöst wird)
-function BotEntry:spawnEntity(spawn_name)
+function BotEntry:spawnEntity(spawn_name, this_round)
     print("Spawn Bot:", spawn_name)
     self.currentName = spawn_name
-    net.Start("RoleManagerSpawnBot")
-        net.WriteString(spawn_name)
-    net.SendToServer()
+    if this_round == false then
+        net.Start("RoleManagerSpawnBot")
+            net.WriteString(spawn_name)
+        net.SendToServer()
+    else
+        net.Start("RoleManagerSpawnBotThisRound")
+            net.WriteString(spawn_name)
+        net.SendToServer()
+    end
 
     self:resetStatus()
 end
