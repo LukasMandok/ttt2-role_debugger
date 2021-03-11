@@ -39,20 +39,24 @@ local function PopulateRolePanel(parent)
 
     -- create ComboBox for every player to select a role from the roleList
     for i = 1, #playerList do
-        formPlayerList:MakeComboBox({
+        formPlayerList:MakeComboBox_Roles({
             label = playerList[i],
             choices = roleList,
             data = roleList,
             selectName = roleManager:getRoleOfPlayer(playerList[i]),
             default = ROLE_RANDOM.name,
             OnChange = function(_, _, value, data, flag)
-                    -- TODO: 
-                    if roleManager.auto_apply == true and flag ~= true then
-                        --roleManager.set_next_round = true
-                        roleManager:applyPlayerRolesNextRound(playerList[i])
-                    end
-                    roleManager:setPlayerRole(playerList[i], value)
-                end,
+                -- TODO: 
+                if roleManager.auto_apply == true then
+                    --roleManager.set_next_round = true
+                    roleManager:applyPlayerRolesNextRound(playerList[i])
+                end
+                roleManager:setPlayerRole(playerList[i], value)
+            end,
+            OnUpdate = function(_, _, value, data)
+                print("value", value)
+                roleManager:setPlayerRole(playerList[i], value)
+            end,
             OnRemove = function()
                 print("Removing hook for", playerList[i] )
                 hook.Remove("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i])
@@ -65,7 +69,7 @@ local function PopulateRolePanel(parent)
             local role = customRole or roleManager:getRoleOfPlayer(playerList[i])
             print("Update role to", role)
             --right:ChooseOptionName(role)
-            right:SelectOptionName(role)
+            right:UpdateOptionName(role)
         end)
 
     end
@@ -104,18 +108,22 @@ local function PopulateRolePanel(parent)
     --  The slider below is used to remove entries from the list.
     local function displayBotList(newBotListEntries)
         for i = 1, #newBotListEntries do
-            local right = formBotList:MakeComboBox({
+            local right = formBotList:MakeComboBox_Roles({
                 label = newBotListEntries[i],
                 addition = roleManager:getCurrentBotName(newBotListEntries[i]),
                 choices = roleList,
                 data = roleList,
                 selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
                 default = ROLE_RANDOM.name,
-                OnChange = function(_, _, value, data, flag)
-                    if roleManager.auto_apply == true and flag ~= true then
+                OnChange = function(_, _, value, data)
+                    if roleManager.auto_apply == true then
                         --roleManager.set_next_round = tru
                         roleManager:applyBotRolesNextRound(newBotListEntries[i])
                     end 
+                    roleManager:setBotRole(newBotListEntries[i], value)
+                end,
+                OnUpdate = function(_, _, value, data)
+                    print("On Update:", value)
                     roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnRemove = function()
@@ -130,7 +138,7 @@ local function PopulateRolePanel(parent)
                 local role = customRole or roleManager:getRoleOfBot(newBotListEntries[i])
                 print("Update role to", role)
                 --right:ChooseOptionName(role)
-                right:SelectOptionName(role)
+                right:UpdateOptionName(role)
             end)
 
         end
@@ -141,6 +149,7 @@ local function PopulateRolePanel(parent)
         OnClick1 = function(_)
             print("Apply Roles")
             roleManager:applyBotRoles()
+
         end,
 
         label2 = "Apply Roles next round",
@@ -154,7 +163,7 @@ local function PopulateRolePanel(parent)
     -- List of Bots above.
     -- Removes all entries above if the values of the slider is reduced.
     --
-    -- TODO: Funktion des Buttons (vielleicht entfernen)
+    -- TODO: Update funktioniert nicht richtig, wenn der apply Button gedrückt wurde.
     -- TODO: Übersetzung einfügen
     -- TODO: Reset Button vom SLider setzt auch Rollen zurück
     local botSlider = formBot:MakeButtonSlider({
@@ -174,7 +183,6 @@ local function PopulateRolePanel(parent)
         end,
         OnReset = function(_)
             roleManager:resetBotRoles()
-            -- TODO: Eine checkbox soll darüber entscheiden, ob die aktuellen Rollen gesetz werden, oder einfach nur Random 
             --roleManager:setCurrentBotRoles()
         end,
     })

@@ -98,7 +98,108 @@ function PANEL:MakeComboBox(data)
         print("------- Update Selection")
         local index = slf:GetOptionId(name)
         right:ChooseOptionName(name)
-        data.OnChange(slf, index, name, data.data[index], true)
+        data.OnChange(slf, index, name, data.data[index])
+    end
+
+    right.OnSelect = function(slf, index, value, rawdata)
+        if slf.m_strConVar then
+            RunConsoleCommand(slf.m_strConVar, tostring(rawdata or value))
+        end
+
+        -- run the callback function in the next frame since it takes
+        -- one frame to update the convar if one is set.
+        timer.Simple(0, function()
+            if data and isfunction(data.OnChange) then
+                print("++++++ Real Selection")
+                data.OnChange(slf, index, value, rawdata)
+            end
+        end)
+    end
+
+    if isfunction(data.OnRemove) then
+        right.OnRemove = data.OnRemove
+    end
+
+    -- TODO: sollte so nochaml versucht werden zu verwenden.
+    if isfunction(data.UpdateSelection) then
+        right.UpdateSelection = data.UpdateSelection
+    end
+
+    right:SetConVar(data.convar)
+    right:SetTall(32)
+    right:Dock(TOP)
+
+    local reset = MakeReset(self)
+
+    if ConVarExists(data.convar or "") or data.default ~= nil then
+        reset.DoClick = function(slf)
+            local default = data.default
+
+            if default == nil then
+                default = GetConVar(data.convar):GetDefault()
+            end
+
+            right:ChooseOptionName(default)
+        end
+    else
+        reset.noDefault = true
+    end
+
+    self:AddItem(left, right, reset)
+
+    if IsValid(data.master) and isfunction(data.master.AddSlave) then
+        data.master:AddSlave(left)
+        data.master:AddSlave(right)
+        data.master:AddSlave(reset)
+    end
+
+    return right, left
+end
+
+--
+-- Adds a combobox to the form with support for different data and values
+-- @param table data The data for the combobox
+-- @return Panel The created combobox
+-- @return Panel The created label
+-- @realm client
+function PANEL:MakeComboBox_Roles(data)
+    local left = vgui.Create("DLabelTTT2", self)
+
+    local label = data.label
+    if (data.addition) then --and data.addition != label
+        label = label .. string.format("\t\t(%s)", data.addition)
+    end
+
+    left:SetText(label)
+
+    left.Paint = function(slf, w, h)
+        derma.SkinHook("Paint", "FormLabelTTT2", slf, w, h)
+
+        return true
+    end
+
+    local right = vgui.Create("DComboBoxTTT2_roles", self)
+
+    data.data = data.data or data.choices
+    data.icons = data.icons or ""
+
+    if data.choices then
+        for i = 1, #data.choices do
+            right:AddChoice(data.choices[i], data.data[i]) --, false , data.icons[i]
+        end
+    end
+
+    if data.selectId then
+        right:ChooseOptionId(data.selectId)
+    elseif data.selectName then
+        right:ChooseOptionName(data.selectName)
+    end
+
+    right.OnUpdate = function(slf, index, value, rawdata)
+        print("------- Update Selection")
+        -- local index = slf:GetOptionId(value)
+        -- right:ChooseOptionName(value)
+        data.OnUpdate(slf, index, value, rawdata)
     end
 
     right.OnSelect = function(slf, index, value, rawdata)

@@ -112,7 +112,6 @@ end
 function RoleManager:setCurrentRoles()
     self.playerList:setCurrentRoles()
     self.botList:setCurrentRoles()
-    hook.run("update_bot_role_entries")
 end
 
 function RoleManager:updateCurrentRoles()
@@ -214,6 +213,9 @@ function RoleManager:applyBotRoles(name)
     print("Applying Bot Roles")
     self.botList:updateStatus()
     self.botList:applyRoles(name)
+    timer.Simple(0.1, function ()   -- TODO: Timer anpassen
+        self:requestCurrentRoleList()
+    end)
 end
 
 function RoleManager:applyBotRolesNextRound(name)

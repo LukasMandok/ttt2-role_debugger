@@ -91,7 +91,7 @@ function PlayerList:setCurrentRoles()
         print("Player:", self.list[i].name, "hat role", self.list[i].role, "ingame:", self.list[i].currentRole, "number:", self.list[i].ent:GetSubRole())
         --self.list[i].role = roles:GetByIndex(self.list[i].ent:GetSubRole()).name
         self.list[i].role = self.list[i].currentRole
-        if old_role != self.list[i].role then
+        if old_role ~= self.list[i].role then
             self:displayRole(self.list[i].name)
         end
     end
@@ -396,7 +396,7 @@ function BotList:addEntity(cur_name)
     -- TODO: vielleicht muss man hier noch ein bisschen mehr machen, 
     -- als einfach nur den nächsten exist_index + 1 zu verwenden 
     -- z.B. prüfen, ob der Bot schon besetzt ist.
-    if not self.currentNameList[cur_name] and ent != nil then
+    if not self.currentNameList[cur_name] and ent ~= nil then
         local i = getArrayLen(self.currentNameList) + 1
         print("neuer Index:", i)
         if i > 1 then

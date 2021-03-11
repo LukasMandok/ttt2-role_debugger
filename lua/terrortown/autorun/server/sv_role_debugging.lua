@@ -74,7 +74,7 @@ net.Receive("RoleManagerApplyRole", function (len, calling_ply)
         local role_name = net.ReadString()
 
         local role = roles.GetByName(role_name)
-        if role.name != role_name then
+        if role.name ~= role_name then
             print("Server: Rolle " .. role_name .. " wurde nicht gefunden. Statdesse: " .. role.name)
         end
         local role_index = role.index
