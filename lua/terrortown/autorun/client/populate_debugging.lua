@@ -54,20 +54,18 @@ local function PopulateRolePanel(parent)
                 roleManager:setPlayerRole(playerList[i], value)
             end,
             OnUpdate = function(_, _, value, data)
-                print("value", value)
                 roleManager:setPlayerRole(playerList[i], value)
             end,
             OnRemove = function()
-                print("Removing hook for", playerList[i] )
+                --print("Removing hook for", playerList[i] )
                 hook.Remove("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i])
             end,
         })
 
         -- TODO: Die Updates funktionieren noch nicht immer zuverlässig!
-        print("[ ] Adding Hook for", playerList[i])
         hook.Add("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i], function(customRole)
             local role = customRole or roleManager:getRoleOfPlayer(playerList[i])
-            print("Update role to", role)
+            --print("Update role to", role)
             --right:ChooseOptionName(role)
             right:UpdateOptionName(role)
         end)
@@ -117,26 +115,24 @@ local function PopulateRolePanel(parent)
                 default = ROLE_RANDOM.name,
                 OnChange = function(_, _, value, data)
                     if roleManager.auto_apply == true then
-                        --roleManager.set_next_round = tru
+                        roleManager.apply_next_round = true
                         roleManager:applyBotRolesNextRound(newBotListEntries[i])
-                    end 
+                    end
                     roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnUpdate = function(_, _, value, data)
-                    print("On Update:", value)
                     roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnRemove = function()
-                    print("Removing hook for", newBotListEntries[i] )
+                    --print("Removing hook for", newBotListEntries[i] )
                     hook.Remove("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i])
                 end,
             })
 
             -- TODO: Die Updates funktionieren noch nicht immer zuverlässig!
-            print("[ ] Adding Hook for", newBotListEntries[i])
             hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
                 local role = customRole or roleManager:getRoleOfBot(newBotListEntries[i])
-                print("Update role to", role)
+                --print("Update role to", role)
                 --right:ChooseOptionName(role)
                 right:UpdateOptionName(role)
             end)
@@ -200,31 +196,30 @@ local function PopulateRolePanel(parent)
 
     -- creates some options
     formSettings:MakeHelp({
-		label = LANG.GetTranslation("debugging_settings_auto_apply_help")
-	})
+        label = LANG.GetTranslation("debugging_settings_auto_apply_help")
+    })
 
     formSettings:MakeCheckBox({
-		label = LANG.GetTranslation("debugging_settings_auto_apply"),
-		initial = roleManager.auto_apply,
+        label = LANG.GetTranslation("debugging_settings_auto_apply"),
+        initial = roleManager.auto_apply,
         default = roleManager.auto_apply,
-		OnChange = function(_, value)
-			roleManager.auto_apply = value
-		end,
-	})
+        OnChange = function(_, value)
+            roleManager.auto_apply = value
+        end,
+    })
 
     formSettings:MakeHelp({
-		label = LANG.GetTranslation("debugging_settings_auto_refresh_help")
-	})
+        label = LANG.GetTranslation("debugging_settings_auto_refresh_help")
+    })
 
     formSettings:MakeCheckBox({
-		label = LANG.GetTranslation("debugging_settings_auto_refresh"),
-		initial = roleManager.auto_apply,
+        label = LANG.GetTranslation("debugging_settings_auto_refresh"),
+        initial = roleManager.auto_apply,
         default = roleManager.auto_apply,
-		OnChange = function(_, value)
-			roleManager.auto_apply = value
-		end,
-	})
-
+        OnChange = function(_, value)
+            roleManager.auto_apply = value
+        end,
+    })
 end
 
 local function PopulateClassPanel(parent)

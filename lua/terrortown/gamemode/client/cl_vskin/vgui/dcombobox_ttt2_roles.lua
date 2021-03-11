@@ -142,8 +142,6 @@ function PANEL:UpdateOption(value, index)
 	self:SetText(value)
 
 	self.selected = index
-	print("data: ", self.data[index])
-	print("value", value)
 	self:OnUpdate(index, value, self.data[index])
 end
 
@@ -151,7 +149,6 @@ end
 -- @param string name
 -- @realm client
 function PANEL:UpdateOptionName(name)
-	print("Update Option", name, self:GetOptionId(name))
 	self:UpdateOption(name, self:GetOptionId(name))
 end
 

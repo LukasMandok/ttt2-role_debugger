@@ -95,7 +95,7 @@ function PANEL:MakeComboBox(data)
     end
 
     right.SelectOptionName = function(slf, name)
-        print("------- Update Selection")
+        --print("------- Update Selection")
         local index = slf:GetOptionId(name)
         right:ChooseOptionName(name)
         data.OnChange(slf, index, name, data.data[index])
@@ -110,7 +110,7 @@ function PANEL:MakeComboBox(data)
         -- one frame to update the convar if one is set.
         timer.Simple(0, function()
             if data and isfunction(data.OnChange) then
-                print("++++++ Real Selection")
+                --print("++++++ Real Selection")
                 data.OnChange(slf, index, value, rawdata)
             end
         end)
@@ -196,7 +196,7 @@ function PANEL:MakeComboBox_Roles(data)
     end
 
     right.OnUpdate = function(slf, index, value, rawdata)
-        print("------- Update Selection")
+        --print("------- Update Selection")
         -- local index = slf:GetOptionId(value)
         -- right:ChooseOptionName(value)
         data.OnUpdate(slf, index, value, rawdata)
@@ -211,7 +211,7 @@ function PANEL:MakeComboBox_Roles(data)
         -- one frame to update the convar if one is set.
         timer.Simple(0, function()
             if data and isfunction(data.OnChange) then
-                print("++++++ Real Selection")
+                --print("++++++ Real Selection")
                 data.OnChange(slf, index, value, rawdata)
             end
         end)
@@ -566,7 +566,7 @@ function PANEL:AddItem(left, right, reset, separate, symmetric )
             left:DockMargin(0, 0, 5, 0) --700*(1-xscale)/2
             right:DockMargin(5, 0, 0, 0) --700*(1-xscale)/2
         	--self:DockMargin(0, 5, 0, 0)
-	        --self:DockPadding(0, 0, 0, 0)
+            --self:DockPadding(0, 0, 0, 0)
         end
         --right:Dock(LEFT)
         --right:SetSize(300, 20)
@@ -597,44 +597,44 @@ end
 -- @realm client
 
 function PANEL:MakeCheckBox(data)
-	local left = vgui.Create("DCheckBoxLabelTTT2", self)
+    local left = vgui.Create("DCheckBoxLabelTTT2", self)
 
-	left:SetText(data.label)
-	left:SetConVar(data.convar)
+    left:SetText(data.label)
+    left:SetConVar(data.convar)
 
-	left:SetTall(32)
+    left:SetTall(32)
 
-	left:SetValue(data.initial)
+    left:SetValue(data.initial)
 
-	left.OnChange = function(slf, value)
-		if isfunction(data.OnChange) then
-			data.OnChange(slf, value)
-		end
-	end
+    left.OnChange = function(slf, value)
+        if isfunction(data.OnChange) then
+            data.OnChange(slf, value)
+        end
+    end
 
-	local reset = MakeReset(self)
+    local reset = MakeReset(self)
 
-	if ConVarExists(data.convar or "") or data.default ~= nil then
-		reset.DoClick = function(slf)
-			local default = data.default
-			if default == nil then
-				default = tobool(GetConVar(data.convar):GetDefault())
-			end
+    if ConVarExists(data.convar or "") or data.default ~= nil then
+        reset.DoClick = function(slf)
+        local default = data.default
+            if default == nil then
+                default = tobool(GetConVar(data.convar):GetDefault())
+            end
 
-			left:SetValue(default)
-		end
-	else
-		reset.noDefault = true
-	end
+            left:SetValue(default)
+        end
+    else
+        reset.noDefault = true
+    end
 
-	self:AddItem(left, nil, reset)
+    self:AddItem(left, nil, reset)
 
-	if IsValid(data.master) and isfunction(data.master.AddSlave) then
-		data.master:AddSlave(left)
-		data.master:AddSlave(reset)
-	end
+    if IsValid(data.master) and isfunction(data.master.AddSlave) then
+        data.master:AddSlave(left)
+        data.master:AddSlave(reset)
+    end
 
-	return left
+    return left
 end
 
 ---

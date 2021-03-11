@@ -39,7 +39,7 @@ end
 
 -- sets Role of the player in the list
 function PlayerEntry:setRole(role)
-    print("         Setting role: " .. role .. " for player: " .. self.name )
+    --print("         Setting role: " .. role .. " for player: " .. self.name )
     self.role = role
 end
 
@@ -64,19 +64,20 @@ function PlayerEntry:applyRole()
         net.WriteString(role_name)
         net.SendToServer()
     end
-    
+
 end
 
 -- applys role to the entity of the player next round
 function PlayerEntry:applyRole_nr()
     local role_name = self.role
-    print("Apply Role: " .. role_name .. " to player " .. self.name .. " with current role: " .. self.currentRole)
+    print("Apply Role: " .. role_name .. " to player " .. self.name)
+    print("Current role:", self.currentRole)
     if not IsValid(self.ent) then
         print("Entity von Player " .. self.name .. " existiert nicht.")
     else
         net.Start("RoleManagerApplyRoleNextRound")
-        net.WriteEntity(self.ent)
-        net.WriteString(role_name)
+            net.WriteEntity(self.ent)
+            net.WriteString(role_name)
         net.SendToServer()
     end
 end
@@ -143,27 +144,49 @@ function BotEntry:removeEntity()
     self.currentRole = nil
 end
 
+-- function BotEntry:updateName()
+--     print("Update Bot Entry Name")
+--     net.Start("RoleManagerChangeBotName")
+--         net.WriteEntity(self.ent)
+--         net.WriteString(self.name)
+--     net.SendToServer()
+-- end
+
 -- spawns a new entity of the bot
 -- TODO: muss noch implementiert werden
 -- TODO Funktion schreiben (vielleicht sollte addEntity nicht ausgeführt werden, da diese funktion durch das COnnecten des Bots ausgelöst wird)
-function BotEntry:spawn()
-    print("Spawn Bot:", self.name)
-    -- send Hook, to create nextbot 
-    --self.ent = player.CreateNextBot( self.name )
+function BotEntry:spawnEntity(spawn_name)
+    print("Spawn Bot:", spawn_name)
+    self.currentName = spawn_name
+    net.Start("RoleManagerSpawnBot")
+        net.WriteString(spawn_name)
+    net.SendToServer()
 
-    -- TODO: Rolle setzen
-    -- TODO: Current Name setzen
     self:resetStatus()
+end
+
+
+function BotEntry:respawnEntity()
+    --self.currentName = spawn_name TODO: Muss an das machen? Eigentlich wird die Current Name List beim Spawn gesetzt.
+    print("Repawn Bot:", self.name)
+    net.Start("RoleManagerRespawnBot")
+        net.WriteEntity(self.ent)
+        net.WriteString(spawn_name)
+    net.SendToServer()
 end
 
 -- deletes the entity of the bot entry
 -- TODO: muss noch implementiert werden
-function BotEntry:delete()
+function BotEntry:deleteEntity()
     print("Remove Bot:", self.name)
-    -- send Hook, to delete nextbot
+    self.currentName = nil
+    net.Start("RoleManagerDeleteBot")
+        net.WriteEntity(self.ent)
+    net.SendToServer()
 
     self:resetStatus()
 end
+
 
 -- enables or disables the moving status of a bot 
 -- TODO: status and function need to be implemented

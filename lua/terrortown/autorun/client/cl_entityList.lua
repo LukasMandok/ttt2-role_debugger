@@ -61,11 +61,6 @@ function EntryList:__initRevList()
     end
 end
 
--- TODO: Function löschen, funcktioniert sowieso nicht
-function EntryList:printRevList()
-    print("++++++++ RevList:", unpack(self.revList))
-end
-
 -- get index value if it exists or the length of the array
 -- return: (int) length of arrys
 function EntryList:getLen()
@@ -138,7 +133,6 @@ end
 -- adds a translated name to every role entry 
 function RoleList:__initTranslation()
     for i = 1, #self.list do
-        print("get Translation of:", self.list[i].name)
         self.list[i].translated = LANG.GetTranslation(self.list[i].name)
     end
 end
@@ -148,7 +142,6 @@ function RoleList:refresh()
     self.list = {[1] = {name = ROLE_RANDOM.name}}
     self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
 
-    print("Refresh RevList of Roles")
     self:__initRevList()
     self:__initTranslation()
 end
