@@ -16,10 +16,14 @@ L["header_debugging_bot_roles"] = "Bot roles"
 
 -- Settings
 L["header_debugging_roles_settings"] = "Settings"
-L["debugging_settings_auto_apply"] = "Apply roles automatically"
-L["debugging_settings_auto_apply_help"] = [[Automatically activates the roles on the next round if a value is changed.]]
+L["debugging_settings_auto_apply_testing"] = "Apply roles automatically"
+L["debugging_settings_auto_apply_help"] = [[
+Automatically activates the roles on the next round if a value is changed.]]
+
 L["debugging_settings_auto_refresh"] = "Refresh roles automatically"
-L["debugging_settings_auto_refresh_help"] = [[Automatically refreshes the roles to the current assigned ones,\n if the debug menu is opened.]]
+L["debugging_settings_auto_refresh_help"] = [[
+Automatically refreshes the roles to the current assigned ones, 
+if the debug menu is opened.]]
 
 -- Debugging Classes
 L["submenu_debugging_classes_title"] = "Classes"
@@ -28,3 +32,8 @@ L["submenu_debugging_classes_title"] = "Classes"
 
 -- Debugging Weapons
 L["submenu_debugging_weapons_title"] = "Weappons"
+
+
+
+-- Debugging Bots - Settings
+L["submenu_debugging_bots_title"] = "Bots"

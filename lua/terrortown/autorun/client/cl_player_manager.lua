@@ -24,7 +24,7 @@ function RoleManager:__init()
 
     -- Settings
     self.auto_apply = true
-    self.set_next_round = false
+    self.auto_refresh = false
 
 
     -------------- Communication
@@ -124,11 +124,19 @@ function RoleManager:refresh()
     self.playerList:refresh()
     self.botList:refresh()
     self.roleList:refresh()
+
+    if self.auto_refresh then
+        roleManager:setCurrentRoles()
+    end
+
+    --self.botList:displayAllRoles()
+    --self.playerList:displayAllRoles()
 end
 
 function RoleManager:setCurrentRoles()
     self.playerList:setCurrentRoles()
     self.botList:setCurrentRoles()
+    self.botList:updateStatus()
 end
 
 function RoleManager:updateCurrentRoles()
@@ -167,6 +175,10 @@ end
 function  RoleManager:resetPlayerRoles()
     self.playerList:setAllRoles("random")
     self.playerList:displayAllRoles()
+end
+
+function RoleManager:setCurrentPlayerRoles()
+    self.playerList:setCurrentRoles()
 end
 
 function RoleManager:applyPlayerRoles(name)

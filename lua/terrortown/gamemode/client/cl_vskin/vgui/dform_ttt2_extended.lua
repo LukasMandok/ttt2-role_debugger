@@ -23,8 +23,10 @@ AccessorFunc(PANEL, "m_iSpacing", "Spacing")
 AccessorFunc(PANEL, "m_Padding", "Padding")
 
 
-local materialReset = Material("vgui/ttt/vskin/icon_reset")
-local materialDisable = Material("vgui/ttt/vskin/icon_disable")
+local materialLock_closed = Material( "vgui/ttt/vskin/icon_lock_closed" ) --Material("vgui/ttt/vskin/helpscreen/debugging") -- 
+local materialLock_open = Material( "vgui/ttt/vskin/icon_lock_open" ) --Material("vgui/ttt/vskin/helpscreen/debugging_large") --
+local materialReset = Material( "vgui/ttt/vskin/icon_reset" )
+local materialDisable = Material( "vgui/ttt/vskin/icon_disable" )
 
 
 local function MakeReset(parent)
@@ -44,15 +46,31 @@ local function MakeReset(parent)
     return reset
 end
 
+-- TODO: Button implementieren
+local function MakeLock(parent)
+    local lock = vgui.Create("DButtonTTT2_toggle", parent)
+
+    lock:SetText("TODO")
+    lock:SetSize(32, 32)
+
+    lock.Paint = function(slf, w, h)
+        derma.SkinHook("Paint", "FormButtonIconTTT2", slf, w, h)
+
+        return true
+    end
+
+    lock.material_on = materialLock_closed
+    lock.material_off = materialLock_open
+
+    lock.material = materialLock_open -- initial material
+
+    return lock
+end
+
 local function MakeDummy(parent)
     local dummy = vgui.Create("Panel", parent)
     dummy:SetSize(32,32)
     return dummy
-end
-
--- TODO: Button implementieren
-local function MakeLock(parent)
-
 end
 
 --
@@ -353,23 +371,40 @@ function PANEL:MakeDoubleButton(data)
         end
     end
 
+    local right
+    if data.label2 then
+        right = vgui.Create("DButtonTTT2", self)
 
-    local right = vgui.Create("DButtonTTT2", self)
+        right:SetText(data.label2)
 
-    right:SetText(data.label2)
-
-    right.DoClick = function(slf)
-        if isfunction(data.OnClick2) then
-            data.OnClick2(slf)
+        right.DoClick = function(slf)
+            if isfunction(data.OnClick2) then
+                data.OnClick2(slf)
+            end
         end
+    else
+        right = vgui.Create("DPanel", self)
     end
 
     right:SetTall(32)
     right:Dock(TOP)
 
-    local dummy = MakeDummy(self)
+    local reset 
+    if isfunction(data.OnReset) then
+        reset = MakeReset(self)
+    else
+        reset = MakeLock(self) --MakeDummy(self)
+    end
 
-    self:AddItem(left, right, dummy, true, false)
+    --reset.noDefault = true
+    reset.DoClick = function(slf)
+        if isfunction(data.OnReset) then
+             -- TODO: choose correct parameters in the function
+            data.OnReset()
+        end
+    end
+
+    self:AddItem(left, right, reset, true, false)
 
     if IsValid(data.master) and isfunction(data.master.AddSlave) then
         data.master:AddSlave(left)

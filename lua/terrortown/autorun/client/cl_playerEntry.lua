@@ -21,10 +21,14 @@ function PlayerEntry:__init(data)
     --print("creating PlayerEntry with role", data.role)
     self.name = data.name
     self.ent = data.ent or nil
+
     self.currentRole = nil
     self.role = data.role or ROLE_RANDOM.name
+    self.role_locked = false
+
     self.currentClass = nil
     self.class = data.class or CLASS_RANDOM.name
+    self.class_locked = false
 end
 
 -- return: Player Name
