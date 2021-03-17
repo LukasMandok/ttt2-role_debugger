@@ -139,9 +139,9 @@ function PANEL:MakeComboBox(data)
     end
 
     -- TODO: sollte so nochaml versucht werden zu verwenden.
-    if isfunction(data.UpdateSelection) then
-        right.UpdateSelection = data.UpdateSelection
-    end
+    -- if isfunction(data.UpdateSelection) then
+    --     right.UpdateSelection = data.UpdateSelection
+    -- end
 
     right:SetConVar(data.convar)
     right:SetTall(32)
@@ -240,14 +240,19 @@ function PANEL:MakeComboBox_Roles(data)
     end
 
     -- TODO: sollte so nochaml versucht werden zu verwenden.
-    if isfunction(data.UpdateSelection) then
-        right.UpdateSelection = data.UpdateSelection
-    end
+    -- if isfunction(data.UpdateSelection) then
+    --     right.UpdateSelection = data.UpdateSelection
+    -- end
 
     right:SetConVar(data.convar)
     right:SetTall(32)
     right:Dock(TOP)
 
+    -----------------------------------------------
+    ---------- Add Reset and Lock Button ----------
+    -----------------------------------------------
+
+    -- Reset
     local reset = MakeReset(self)
 
     if ConVarExists(data.convar or "") or data.default ~= nil then
@@ -264,7 +269,31 @@ function PANEL:MakeComboBox_Roles(data)
         reset.noDefault = true
     end
 
-    self:AddItem(left, right, reset)
+    -- Lock
+    local lock
+
+    if isfunction(data.OnLocked) and isfunction(data.OnUnlocked) then
+        print("!! Adding lock.")
+        lock = MakeLock(self)
+
+        lock.OnLocked = data.OnLocked
+        lock.OnUnlocked = data.OnUnlocked
+
+        lock.setLocked = function(slf, bool)
+            if bool == true then
+                lock:DoLock()
+            else
+                lock:DoUnlock()
+            end
+        end
+
+        if data.locked ~= nil then
+            print("Set Initial of: " .. label .. "  to: " .. tostring(data.locked))
+            lock:SetIntitial(data.locked)
+        end
+    end
+
+    self:AddItem(left, right, reset, lock)
 
     if IsValid(data.master) and isfunction(data.master.AddSlave) then
         data.master:AddSlave(left)
@@ -272,7 +301,7 @@ function PANEL:MakeComboBox_Roles(data)
         data.master:AddSlave(reset)
     end
 
-    return right, left
+    return right, lock
 end
 
 -- Size ist in AddItem Function!!!!
@@ -327,6 +356,12 @@ function PANEL:MakeButtonSlider(data)
     right:SetTall(32)
     right:Dock(TOP)
 
+    -----------------------------------------------
+    ---------- Add Reset and Lock Button ----------
+    -----------------------------------------------
+
+    -- Reset
+
     local reset = MakeReset(self)
 
     if ConVarExists(data.convar or "") or data.default ~= nil then
@@ -348,7 +383,29 @@ function PANEL:MakeButtonSlider(data)
         reset.noDefault = true
     end
 
-    self:AddItem(left, right, reset, true)
+    -- Lock
+    local lock
+
+    if isfunction(data.OnLocked) and isfunction(data.OnUnlocked) then
+        lock = MakeLock(self)
+
+        lock.OnLocked = data.OnLocked
+        lock.OnUnlocked = data.OnUnlocked
+
+        lock.setLocked = function(slf, bool)
+            if bool == true then
+                lock:DoLock()
+            else
+                lock:DoUnlock()
+            end
+        end
+
+        if data.locked ~= nil then
+            lock:SetIntitial(data.locked)
+        end
+    end
+
+    self:AddItem(left, right, reset, lock, true)
 
     if IsValid(data.master) and isfunction(data.master.AddSlave) then
         data.master:AddSlave(left)
@@ -356,7 +413,7 @@ function PANEL:MakeButtonSlider(data)
         data.master:AddSlave(reset)
     end
 
-    return left
+    return left, lock
 end
 
 
@@ -389,27 +446,55 @@ function PANEL:MakeDoubleButton(data)
     right:SetTall(32)
     right:Dock(TOP)
 
-    local reset 
+    -----------------------------------------------
+    ---------- Add Reset and Lock Button ----------
+    -----------------------------------------------
+
+    -- Reset
+    local reset
     if isfunction(data.OnReset) then
         reset = MakeReset(self)
-    else
-        reset = MakeLock(self) --MakeDummy(self)
-    end
 
-    --reset.noDefault = true
-    reset.DoClick = function(slf)
-        if isfunction(data.OnReset) then
-             -- TODO: choose correct parameters in the function
+        reset.DoClick = function(slf)
+            -- TODO: choose correct parameters in the function
             data.OnReset()
         end
     end
 
-    self:AddItem(left, right, reset, true, false)
+    --reset.noDefault = true
+
+
+    -- Lock
+    local lock
+
+    if isfunction(data.OnLocked) and isfunction(data.OnUnlocked) then
+        lock = MakeLock(self)
+
+        lock.OnLocked = data.OnLocked
+        lock.OnUnlocked = data.OnUnlocked
+
+        print("!!!!!!!!!!!!!!!! ADD DOUBLE BUTTON setLocked function")
+        lock.setLocked = function(slf, bool)
+            if bool == true then
+                lock:DoLock()
+            else
+                lock:DoUnlock()
+            end
+        end
+
+        if data.locked ~= nil then
+            lock:SetIntitial(data.locked)
+        end
+    end
+
+    self:AddItem(left, right, reset, lock, true, true)
 
     if IsValid(data.master) and isfunction(data.master.AddSlave) then
         data.master:AddSlave(left)
         data.master:AddSlave(right)
     end
+
+    return left, right, lock
 end
 
 
@@ -571,7 +656,7 @@ end
 -- @param Panel right
 -- @param Panel reset
 -- @realm client
-function PANEL:AddItem(left, right, reset, separate, symmetric )
+function PANEL:AddItem(left, right, reset, lock, separate, separate_lock )
     self:InvalidateLayout()
 
     local panel = vgui.Create("DSizeToContents", self)
@@ -582,13 +667,18 @@ function PANEL:AddItem(left, right, reset, separate, symmetric )
     panel:InvalidateLayout()
 
     local size = 350
-    if symmetric and not IsValid(reset) then
-        size = 370
-    end
+    -- if symmetric and not IsValid(reset) then
+    --     size = 370
+    -- end
 
     if IsValid(reset) then
         reset:SetParent(panel)
         reset:Dock(RIGHT)
+    end
+
+    if IsValid(lock) then
+        lock:SetParent(panel)
+        lock:Dock(RIGHT)
     end
 
     if IsValid(right) then
@@ -602,6 +692,9 @@ function PANEL:AddItem(left, right, reset, separate, symmetric )
             right:DockMargin(5, 0, 0, 0) --700*(1-xscale)/2
         	--self:DockMargin(0, 5, 0, 0)
             --self:DockPadding(0, 0, 0, 0)
+        end
+        if separate_lock then
+            lock:DockMargin(10, 0, 0, 0)
         end
         --right:Dock(LEFT)
         --right:SetSize(300, 20)

@@ -50,21 +50,47 @@ function PANEL:IsDown()
 	return self.Depressed
 end
 
-
----
--- @realm client
-function PANEL:OnReleased()
-	self:Toggle()
+function PANEL:SetIntitial(bool)
+	self:SetToggle(bool)
 end
 
 
+-- function PANEL:Toggle()
+-- 	if not self:GetIsToggle() then return end
+
+-- 	self:SetToggle(not self:GetToggle())
+-- 	self:OnToggled(self:GetToggle())
+-- end
+
+-- Switches the state of the button to the given state,
+-- but only if it has a different state at the moment
+-- @param boolean state: the state the button should be switched into
 function PANEL:OnToggled(state)
+	print("Current State:", self:GetToggle(), "New state:", state)
 	if state == false then
-		print("Of State")
+		print("Toggled OFF")
+		self:OnUnlocked()
 		self.material = self.material_off
-	else
-		print("On State")
+	elseif state == true then
+		print("Toggled ON")
+		self:OnLocked()
 		self.material = self.material_on
+	else
+		print("Toggled but state did not change!")
+	end
+end
+
+function PANEL:DoUnlock()
+	if self:GetToggle() != false then
+		--self:OnToggled(false)
+		self:Toggle()
+	end
+end
+
+function PANEL:DoLock()
+	if self:GetToggle() != true then
+		--self:OnToggled(true)
+		self:Toggle()
 	end
 end
 

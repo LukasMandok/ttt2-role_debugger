@@ -21,6 +21,9 @@ function RoleManager:__init()
 
     -- Status
     self.apply_next_round = false
+    self.all_roles_locked = false
+    self.player_roles_locked = false
+    self.bot_roles_locked = false 
 
     -- Settings
     self.auto_apply = true
@@ -97,6 +100,11 @@ function RoleManager:__init()
     -- Hook to create Players if self.apply_next_round ist set before the roles are distributed
     hook.Add("TTTPrepareRound", "Create Bots before round start", function()
         print("Hook: Preparation")
+        -- Apply Roles of locked Player
+        self:applyPlayerLockedRoles()
+        self:applyBotLockedRoles()
+
+        -- Apply Roles of newly created bots
         if self.apply_next_round == true then
             self.botList:spawnEntities(self.botList.processNextRound)
 
@@ -104,8 +112,8 @@ function RoleManager:__init()
             self.botList:updateStatus()
 
             timer.Simple(2, function ()
-                print("?????????????????? Apply Roles")
-                self.botList:applyRoles(self.botList.processNextRound)
+                print("???? Apply Roles to newly created bots")
+                self.botList:applySeparateRoles(self.botList.processNextRound)
                 self.botList.processNextRound = {}
             end)
             timer.Simple(2, function ()   -- TODO: Timer anpassen
@@ -113,6 +121,12 @@ function RoleManager:__init()
                 self:requestCurrentRoleList()
             end)
         end
+    end)
+
+
+    hook.Add("TTTEndRound", "Apply Locked Roles at round end", function()
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! END ROUND")
+        
     end)
 end
 
@@ -182,6 +196,7 @@ function RoleManager:setCurrentPlayerRoles()
 end
 
 function RoleManager:applyPlayerRoles(name)
+    self:clearRolesNextRound()
     print("Applying Player Roles")
     -- Apply
     self.playerList:applyRoles(name)
@@ -190,6 +205,18 @@ end
 function RoleManager:applyPlayerRolesNextRound(name)
     print("Applying Player Roles next Round")
     self.playerList:applyRoles_nr(name)
+end
+
+function RoleManager:setPlayerLocked(name, bool)
+    self.playerList:setLocked(name, bool)
+end
+
+function RoleManager:getPlayerLocked(name)
+    return self.playerList:getLocked(name)
+end
+
+function RoleManager:applyPlayerLockedRoles()
+    self.playerList:applyLockedRoles()
 end
 
 
@@ -241,7 +268,7 @@ end
 
 -- TODO: add name for updateStatus?
 function RoleManager:applyBotRoles(name)
-    self:clearBotRolesNextRound()
+    self:clearRolesNextRound()
     self.botList:spawnEntities(name, true)
 
     -- too 
@@ -249,7 +276,7 @@ function RoleManager:applyBotRoles(name)
     self.botList:updateStatus()
 
     timer.Simple(1, function ()
-        print("?????????????????? Apply Roles")
+        print("?????????????????? Apply Roles", name)
         self.botList:applyRoles(name)
     end)
     timer.Simple(1, function ()   -- TODO: Timer anpassen
@@ -264,10 +291,22 @@ function RoleManager:applyBotRolesNextRound(name)
     self.botList:applyRoles_nr(name)
 end
 
-function RoleManager:clearBotRolesNextRound()
+function RoleManager:clearRolesNextRound()
     net.Start("RoleManagerClearRolesNextRound")
     net.SendToServer()
     self.apply_next_round = false
+end
+
+function RoleManager:setBotLocked(name, bool)
+    self.botList:setLocked(name, bool)
+end
+
+function RoleManager:getBotLocked(name)
+    return self.botList:getLocked(name)
+end
+
+function RoleManager:applyBotLockedRoles()
+    self.botList:applyLockedRoles()
 end
 
 -----------------------------------------------------

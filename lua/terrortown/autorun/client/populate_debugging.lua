@@ -13,6 +13,38 @@ local function PopulateRolePanel(parent)
     roleManager:requestCurrentRoleList()
 
 
+    -- functions to cycle through comboboxes
+    local playerComboboxes = {}
+    local botComboboxes = {}
+    local playerLock = nil
+    local botLock = nil
+
+    local function setPlayerComboboxesLocked(bool)
+        roleManager.player_roles_locked = bool -- TODO: Funktion dafür schreiben
+        for i,entry in pairs(playerComboboxes) do
+            entry["lock"]:setLocked(bool)
+        end
+    end
+
+
+    local function setBotComboboxesLocked(bool)
+        roleManager.bot_roles_locked = bool -- TODO: Funktion dafür schreiben
+        for i,entry in pairs(botComboboxes) do
+            entry["lock"]:setLocked(bool)
+        end
+    end
+
+
+    local function setAllComboboxesLocked(bool)
+        roleManager.all_roles_locked = bool -- TODO: function dafür schreiben
+        playerLock:setLocked(bool)
+        botLock:setLocked(bool)
+
+        --setPlayerComboboxesLocked(bool)
+        --setBotComboboxesLocked(bool)
+    end
+
+
     -- gets list with available Role Names and the translated one
     local roleList = roleManager:getRoleList()
     local translatedRoleList = roleManager:getTranslatedRoleList()
@@ -37,18 +69,37 @@ local function PopulateRolePanel(parent)
             roleManager:applyPlayerRolesNextRound()
             roleManager:applyBotRolesNextRound()
         end,
-    })
-
-    local updateButton = formControl:MakeDoubleButton({
-        label1 = "Update Player Roles",
-        OnClick1 = function(_)
-            roleManager:setCurrentRoles()
-        end,
         OnReset = function(_)
             roleManager:resetPlayerRoles()
             roleManager:resetBotRoles()
         end,
+        locked = roleManager.all_roles_locked,
+        OnLocked =  function(slf)
+            print("Lock All")
+            setAllComboboxesLocked(true)
+        end,
+        OnUnlocked =  function(slf)
+            print("Unlock All")
+            setAllComboboxesLocked(false)
+        end,
     })
+
+    -- local updateButton = formControl:MakeDoubleButton({
+    --     label1 = "Update Player Roles",
+    --     OnClick1 = function(_)
+    --         roleManager:setCurrentRoles()
+    --     end,
+    --     OnReset = function(_)
+    --         roleManager:resetPlayerRoles()
+    --         roleManager:resetBotRoles()
+    --     end,
+    --     OnLocked =  function(slf)
+    --         print("OnLocked Funktion")
+    --     end,
+    --     OnUnlocked =  function(slf)
+    --         print("OnUnlocked Funktion")
+    --     end,
+    -- })
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------
@@ -64,12 +115,13 @@ local function PopulateRolePanel(parent)
 
     -- create ComboBox for every player to select a role from the roleList
     for i = 1, #playerList do
-        local combobox = formPlayerList:MakeComboBox_Roles({
+        local combobox, lock = formPlayerList:MakeComboBox_Roles({
             label = playerList[i],
             choices = roleList,
             data = roleList,
             selectName = roleManager:getRoleOfPlayer(playerList[i]),
             default = ROLE_RANDOM.name,
+            locked = roleManager:getPlayerLocked(playerList[i]),
             OnChange = function(_, _, value, data, flag)
                 -- TODO: 
                 if roleManager.auto_apply == true then
@@ -81,11 +133,23 @@ local function PopulateRolePanel(parent)
             OnUpdate = function(_, _, value, data)
                 roleManager:setPlayerRole(playerList[i], value)
             end,
+            OnLocked =  function(slf)
+                print("Lock Player:", playerList[i])
+                roleManager:setPlayerLocked(playerList[i], true)
+            end,
+            OnUnlocked =  function(slf)
+                print("Unlock Player:", playerList[i])
+                roleManager:setPlayerLocked(playerList[i], false)
+            end,
             OnRemove = function()
+                --roleManager:setPlayerLocked(playerList[i], false)
                 --print("Removing hook for", playerList[i] )
                 hook.Remove("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i])
             end,
         })
+
+        -- Fill up List with comboboxes
+        playerComboboxes[playerList[i]] = {["combo"] = combobox, ["lock"] = lock}
 
         hook.Add("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i], function(customRole)
             local role = customRole or roleManager:getRoleOfPlayer(playerList[i])
@@ -96,7 +160,7 @@ local function PopulateRolePanel(parent)
 
     end
 
-    local updateButton = formPlayer:MakeDoubleButton({
+    local updateButton, _, lock = formPlayer:MakeDoubleButton({
         label1 = "Update Player Roles",
         OnClick1 = function(_)
             roleManager:setCurrentPlayerRoles()
@@ -104,9 +168,18 @@ local function PopulateRolePanel(parent)
         OnReset = function(_)
             roleManager:resetPlayerRoles()
         end,
+        locked = roleManager.player_roles_locked,
+        OnLocked =  function(slf)
+            print("Lock All Players")
+            setPlayerComboboxesLocked(true)
+        end,
+        OnUnlocked =  function(slf)
+            print("Unlock All Players")
+            setPlayerComboboxesLocked(false)
+        end,
     })
 
-
+    playerLock = lock
 
     formPlayer:AddItem(formPlayerList)
 
@@ -141,13 +214,14 @@ local function PopulateRolePanel(parent)
     --  The slider below is used to remove entries from the list.
     local function displayBotList(newBotListEntries)
         for i = 1, #newBotListEntries do
-            local combobox = formBotList:MakeComboBox_Roles({
+            local combobox, lock = formBotList:MakeComboBox_Roles({
                 label = newBotListEntries[i],
                 addition = roleManager:getCurrentBotName(newBotListEntries[i]),
                 choices = roleList,
                 data = roleList,
                 selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
                 default = ROLE_RANDOM.name,
+                locked = roleManager:getBotLocked(newBotListEntries[i]),
                 OnChange = function(_, _, value, data)
                     if roleManager.auto_apply == true then
                         roleManager.apply_next_round = true
@@ -158,11 +232,24 @@ local function PopulateRolePanel(parent)
                 OnUpdate = function(_, _, value, data)
                     roleManager:setBotRole(newBotListEntries[i], value)
                 end,
+                OnLocked =  function(slf)
+                    print("Lock Bot:", newBotListEntries[i])
+                    roleManager:setBotLocked(newBotListEntries[i], true)
+                end,
+                OnUnlocked =  function(slf)
+                    print("Unlock Bot:", newBotListEntries[i])
+                    roleManager:setBotLocked(newBotListEntries[i], false)
+                end,
                 OnRemove = function()
+                    --roleManager:setBotLocked(newBotListEntries[i], false)
+                    print("deleting entry", newBotListEntries[i])
+                    botComboboxes[newBotListEntries[i]] = nil
                     --print("Removing hook for", newBotListEntries[i] )
                     hook.Remove("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i])
                 end,
             })
+
+            botComboboxes[newBotListEntries[i]] = {["combo"] = combobox, ["lock"] = lock}
 
             -- TODO: Die Updates funktionieren noch nicht immer zuverlässig!
             hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
@@ -182,7 +269,7 @@ local function PopulateRolePanel(parent)
     -- TODO: Update funktioniert nicht richtig, wenn der apply Button gedrückt wurde.
     -- TODO: Übersetzung einfügen
     -- TODO: Reset Button vom SLider setzt auch Rollen zurück
-    local botSlider = formBot:MakeButtonSlider({
+    local botSlider, lock = formBot:MakeButtonSlider({
         label = "Update Bots",
         min = 0,
         max = game.MaxPlayers() - #playerList,
@@ -201,7 +288,18 @@ local function PopulateRolePanel(parent)
             roleManager:resetBotRoles()
             --roleManager:setCurrentBotRoles()
         end,
+        locked = roleManager.bot_roles_locked,
+        OnLocked =  function(slf)
+            print("Lock All Bots")
+            setBotComboboxesLocked(true)
+        end,
+        OnUnlocked =  function(slf)
+            print("Unlock All Bots")
+            setBotComboboxesLocked(false)
+        end,
     })
+
+    botLock = lock
 
     formBot:AddItem(formBotList)
     displayBotList(botList)

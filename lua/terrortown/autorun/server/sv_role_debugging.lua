@@ -182,7 +182,6 @@ end
 function getRandomRole(avoidRoles)
     local availablePlayers = roleselection.GetSelectablePlayers(player.GetAll())
     local allAvailableRoles = roleselection.GetAllSelectableRolesList(#availablePlayers)
-    print(unpack(allAvailableRoles))
     local selectableRoles = roleselection.GetSelectableRolesList(#availablePlayers, allAvailableRoles)
     local availableRoles = {}
     local roleCount = {}

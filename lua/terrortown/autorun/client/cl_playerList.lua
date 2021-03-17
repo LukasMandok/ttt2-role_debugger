@@ -16,6 +16,7 @@ setmetatable(PlayerList, {
 })
 
 function PlayerList:__init(init)
+    print("Creating PlayerList")
     EntryList.__init(self, init)
 end
 
@@ -94,23 +95,26 @@ function PlayerList:updateCurrentRole(name, cur_role)
     -- for n_c, n in pairs(self.currentNameList) do
     --     print("current Name:", n_c, "name:", n)
     -- end
-    print("Name:", name)
-    print("Index:", self.revList[name])
-    print("Eintrag:", self.list[self.revList[name]])
+    --print("Name:", name)
+    --print("Index:", self.revList[name])
     self.list[self.revList[name]].currentRole = cur_role
 end
 
-function PlayerList:applyRoles(name, separateList)
-    local list = separateList or self.list
+function PlayerList:applyRoles(name)
     if IsValid(name) then
-        --print("Apply Role for:  " .. name )
-        list[self.revList[name]]:applyRole()
+        self.list[self.revList[name]]:applyRole()
     else
-        local len = self.index or #list
-        print("-------- Apply Role next round for all.")
+        local len = self.index or #self.list
         for i = 1, len do
-            list[i]:applyRole()
+            self.list[i]:applyRole()
         end
+    end
+end
+
+function PlayerList:applySeparateRoles(list)
+    for i,entry in pairs(list) do
+        print("Name:", entry.name, i)
+        entry:applyRole()
     end
 end
 
@@ -123,6 +127,32 @@ function PlayerList:applyRoles_nr(name)
         --print("Apply Role next round for all.")
         for i = 1, len do
             self.list[i]:applyRole_nr()
+        end
+    end
+end
+
+function PlayerList:setLocked(name, bool)
+    self.list[self.revList[name]]:setLocked(bool)
+end
+
+function PlayerList:getLocked(name)
+    return self.list[self.revList[name]]:getLocked()
+end
+
+function PlayerList:applyLockedRoles(name)
+    if name then
+        if self.list[self.revList[name]]:getLocked() == true then
+            print("Apply Locked Rote to:", name)
+            self.list[self.revList[name]]:applyRole_nr()
+        end
+    else
+        local len = self.index or #self.list
+        print("Apply LOCKED Role next round for all!!!!")
+        for i = 1, len do
+            if self.list[i]:getLocked() == true then
+                print("Apply Locked Rote to:", self.list[i].name)
+                self.list[i]:applyRole_nr()
+            end
         end
     end
 end

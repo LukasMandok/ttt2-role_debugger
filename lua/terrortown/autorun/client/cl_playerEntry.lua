@@ -24,11 +24,11 @@ function PlayerEntry:__init(data)
 
     self.currentRole = nil
     self.role = data.role or ROLE_RANDOM.name
-    self.role_locked = false
+    self.role_locked = data.role_locked or false
 
     self.currentClass = nil
     self.class = data.class or CLASS_RANDOM.name
-    self.class_locked = false
+    self.class_locked = data.class_locked or false
 end
 
 -- return: Player Name
@@ -75,8 +75,7 @@ end
 -- applys role to the entity of the player next round
 function PlayerEntry:applyRole_nr()
     local role_name = self.role
-    print("Apply Role: " .. role_name .. " to player " .. self.name)
-    print("Current role:", self.currentRole)
+    print("Apply Role: " .. role_name .. " to player " .. self.name .. "Current role:", tostring(self.currentRole))
     if not IsValid(self.ent) then
         print("Entity von Player " .. self.name .. " existiert nicht.")
     else
@@ -87,6 +86,15 @@ function PlayerEntry:applyRole_nr()
     end
 end
 
+function PlayerEntry:setLocked(bool)
+    print("Set Locked of: " .. self.name .. " to: " .. tostring(bool))
+    self.role_locked = bool
+end
+
+function PlayerEntry:getLocked()
+    print("Get Locked of " .. self.name, tostring(self.role_locked))
+    return self.role_locked
+end
 
 ------------------------------------------------------
 ---------------------- BotEntry ----------------------
