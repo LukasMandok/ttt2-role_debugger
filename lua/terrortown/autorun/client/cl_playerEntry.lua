@@ -87,12 +87,12 @@ function PlayerEntry:applyRole_nr()
 end
 
 function PlayerEntry:setLocked(bool)
-    print("Set Locked of: " .. self.name .. " to: " .. tostring(bool))
+    --print("Set Locked of: " .. self.name .. " to: " .. tostring(bool))
     self.role_locked = bool
 end
 
 function PlayerEntry:getLocked()
-    print("Get Locked of " .. self.name, tostring(self.role_locked))
+    --print("Get Locked of " .. self.name, tostring(self.role_locked))
     return self.role_locked
 end
 
@@ -184,7 +184,7 @@ function BotEntry:spawnEntity(spawn_name, this_round)
     self:resetStatus()
 end
 
-
+-- TODO: Funktion schreien und implementieren
 function BotEntry:respawnEntity()
     --self.currentName = spawn_name TODO: Muss an das machen? Eigentlich wird die Current Name List beim Spawn gesetzt.
     print("Repawn Bot:", self.name)

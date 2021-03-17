@@ -8,6 +8,7 @@ if SERVER then
 end
 
 local additionalTTTFiles = {
+    cl_vskin__default_skin_extended = {file = "cl_vskin/default_skin_extended.lua", on = "client"},
     cl_vskin__vgui__dbutton_toggle = {file = "cl_vskin/vgui/dbutton_ttt2_toggle.lua", on = "client"},
     cl_vskin__vgui__dcombobox_roles = {file = "cl_vskin/vgui/dcombobox_ttt2_roles.lua", on = "client"},
     cl_vskin__vgui__dcontainer = {file = "cl_vskin/vgui/dcontainer_ttt2.lua", on = "client"},
@@ -27,6 +28,7 @@ if TTTFiles ~= nil then
             end
         end
     else
+        ttt_include( "cl_vskin__default_skin_extended" )
         ttt_include( "cl_vskin__vgui__dbutton_toggle" )
         ttt_include( "cl_vskin__vgui__dcombobox_roles" )
         ttt_include( "cl_vskin__vgui__dcontainer" )

@@ -29,15 +29,18 @@ local materialReset = Material( "vgui/ttt/vskin/icon_reset" )
 local materialDisable = Material( "vgui/ttt/vskin/icon_disable" )
 
 
-local function MakeReset(parent)
+local function MakeReset(parent, separate)
     local reset = vgui.Create("DButtonTTT2", parent)
 
     reset:SetText("button_default")
     reset:SetSize(32, 32)
 
+    if separate == true then
+        reset:SetSkin("ttt2_default_extended")
+    end
+
     reset.Paint = function(slf, w, h)
         derma.SkinHook("Paint", "FormButtonIconTTT2", slf, w, h)
-
         return true
     end
 
@@ -47,14 +50,17 @@ local function MakeReset(parent)
 end
 
 -- TODO: Button implementieren
-local function MakeLock(parent)
+local function MakeLock(parent, separate)
     local lock = vgui.Create("DButtonTTT2_toggle", parent)
+    lock:SetSkin("ttt2_default_extended")
 
-    lock:SetText("TODO")
+    lock.separate = separate
+
+    lock:SetText("Lock")
     lock:SetSize(32, 32)
 
     lock.Paint = function(slf, w, h)
-        derma.SkinHook("Paint", "FormButtonIconTTT2", slf, w, h)
+        derma.SkinHook("Paint", "FormButtonLockTTT2", slf, w, h)
 
         return true
     end
@@ -453,7 +459,7 @@ function PANEL:MakeDoubleButton(data)
     -- Reset
     local reset
     if isfunction(data.OnReset) then
-        reset = MakeReset(self)
+        reset = MakeReset(self, true)
 
         reset.DoClick = function(slf)
             -- TODO: choose correct parameters in the function
@@ -468,12 +474,11 @@ function PANEL:MakeDoubleButton(data)
     local lock
 
     if isfunction(data.OnLocked) and isfunction(data.OnUnlocked) then
-        lock = MakeLock(self)
+        lock = MakeLock(self, true)
 
         lock.OnLocked = data.OnLocked
         lock.OnUnlocked = data.OnUnlocked
 
-        print("!!!!!!!!!!!!!!!! ADD DOUBLE BUTTON setLocked function")
         lock.setLocked = function(slf, bool)
             if bool == true then
                 lock:DoLock()

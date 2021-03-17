@@ -75,11 +75,9 @@ local function PopulateRolePanel(parent)
         end,
         locked = roleManager.all_roles_locked,
         OnLocked =  function(slf)
-            print("Lock All")
             setAllComboboxesLocked(true)
         end,
         OnUnlocked =  function(slf)
-            print("Unlock All")
             setAllComboboxesLocked(false)
         end,
     })
@@ -134,11 +132,9 @@ local function PopulateRolePanel(parent)
                 roleManager:setPlayerRole(playerList[i], value)
             end,
             OnLocked =  function(slf)
-                print("Lock Player:", playerList[i])
                 roleManager:setPlayerLocked(playerList[i], true)
             end,
             OnUnlocked =  function(slf)
-                print("Unlock Player:", playerList[i])
                 roleManager:setPlayerLocked(playerList[i], false)
             end,
             OnRemove = function()
@@ -170,11 +166,9 @@ local function PopulateRolePanel(parent)
         end,
         locked = roleManager.player_roles_locked,
         OnLocked =  function(slf)
-            print("Lock All Players")
             setPlayerComboboxesLocked(true)
         end,
         OnUnlocked =  function(slf)
-            print("Unlock All Players")
             setPlayerComboboxesLocked(false)
         end,
     })
@@ -233,11 +227,9 @@ local function PopulateRolePanel(parent)
                     roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnLocked =  function(slf)
-                    print("Lock Bot:", newBotListEntries[i])
                     roleManager:setBotLocked(newBotListEntries[i], true)
                 end,
                 OnUnlocked =  function(slf)
-                    print("Unlock Bot:", newBotListEntries[i])
                     roleManager:setBotLocked(newBotListEntries[i], false)
                 end,
                 OnRemove = function()
@@ -290,11 +282,9 @@ local function PopulateRolePanel(parent)
         end,
         locked = roleManager.bot_roles_locked,
         OnLocked =  function(slf)
-            print("Lock All Bots")
             setBotComboboxesLocked(true)
         end,
         OnUnlocked =  function(slf)
-            print("Unlock All Bots")
             setBotComboboxesLocked(false)
         end,
     })
@@ -339,6 +329,19 @@ local function PopulateRolePanel(parent)
         end,
     })
 
+    formSettings:MakeHelp({
+        label = "debugging_settings_auto_refresh_help"
+    })
+
+    formSettings:MakeCheckBox({
+        label = "Show Role Icons above player Heads",
+        initial = roleManager.overhead_role_icons,
+        default = roleManager.overhead_role_icons,
+        OnChange = function(_, value)
+            roleManager.overhead_role_icons = value
+        end,
+    })
+
     -- update List Entries
     roleManager:refresh()
 end
@@ -350,6 +353,12 @@ local function PopulateWeaponPanel(parent)
 end
 
 local function PopulateBotPanel(parent)
+   	local form = vgui.CreateTTT2Form(parent, "test")
+
+    form:MakeCheckBox({
+		label = "test",
+		convar = "bot_zombie"
+	})
 end
 
 HELPSCRN.populate["ttt2_debugging"] = function(helpData, id)

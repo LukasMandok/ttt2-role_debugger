@@ -24,8 +24,17 @@ function PANEL:Init()
 	self:SetCursor("hand")
 	self:SetFont("DermaTTT2Button")
 
+	--self:SetPaintBackgroundEnabled(false)
+	--self:SetPaintBorderEnabled(false)
+
+
+	-- local test = self:GetSkin()
+	-- for i,k in pairs(test) do
+	-- 	print(i, k)
+	-- end
+	-- print("\nSetting new Skin" )
+
 	self.text = ""
-	--self.state = false
 
 	--self.material = material_off
 
@@ -66,13 +75,12 @@ end
 -- but only if it has a different state at the moment
 -- @param boolean state: the state the button should be switched into
 function PANEL:OnToggled(state)
-	print("Current State:", self:GetToggle(), "New state:", state)
 	if state == false then
-		print("Toggled OFF")
+		--print("Toggled OFF")
 		self:OnUnlocked()
 		self.material = self.material_off
 	elseif state == true then
-		print("Toggled ON")
+		--print("Toggled ON")
 		self:OnLocked()
 		self.material = self.material_on
 	else
@@ -94,24 +102,6 @@ function PANEL:DoLock()
 	end
 end
 
--- function PANEL:Toggle()
--- 	print("Toggle Status:", self:GetToggle())
--- end
-
--- function PANEL:ToggleState()
--- 	if self.state == false then
--- 		self.state = true
--- 		self.material = self.material_on
--- 	else
--- 		self.state = false
--- 		self.material = self.material_off
--- 	end
--- end
-
-
--- function PANEL:SetState(state)
-
--- end
 
 ---
 -- @ignore

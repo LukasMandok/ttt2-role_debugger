@@ -16,7 +16,6 @@ setmetatable(PlayerList, {
 })
 
 function PlayerList:__init(init)
-    print("Creating PlayerList")
     EntryList.__init(self, init)
 end
 
@@ -113,7 +112,6 @@ end
 
 function PlayerList:applySeparateRoles(list)
     for i,entry in pairs(list) do
-        print("Name:", entry.name, i)
         entry:applyRole()
     end
 end
@@ -390,8 +388,6 @@ end
 
 -- TODO: die funktion wird aufgerufen, bevor der Spieler überhaupt vom Bot zur verfügung steht.
 function BotList:addEntity(cur_name)
-    print("++++++++++ Adding new Bot to the list.", cur_name)
-
     --local old_exist_index = self.exist_index
     self.exist_index = #player:GetBots()
 

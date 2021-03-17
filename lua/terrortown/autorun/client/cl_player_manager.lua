@@ -29,6 +29,8 @@ function RoleManager:__init()
     self.auto_apply = true
     self.auto_refresh = false
 
+    self.overhead_role_icons = false
+
 
     -------------- Communication
 
@@ -123,10 +125,11 @@ function RoleManager:__init()
         end
     end)
 
-
-    hook.Add("TTTEndRound", "Apply Locked Roles at round end", function()
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! END ROUND")
-        
+    -- Draw player Icons
+    hook.Add("PostDrawTranslucentRenderables", "Draw Overhead Role Icons",  function( bDepth, bSkybox )
+        if self.overhead_role_icons == true then
+            self:drawOverHeadRoleIcon()
+        end
     end)
 end
 
@@ -328,4 +331,26 @@ function RoleManager:getRoleIcons()
         icons[i] = self.roleList[i].icon
     end
     return icons
+end
+
+function RoleManager:drawOverHeadRoleIcon()
+    local len = #self.playerList.list
+    for i = 1, len do
+        local name = self.playerList.list[i].name
+        local role = self.playerList.list[i].currentRole
+        if role and self.playerList.list[i].ent:Alive() then
+            local rd = self.roleList:getByName(role)
+            DrawOverheadRoleIcon(self.playerList.list[i].ent, rd.iconMaterial, rd.color) 
+        end
+    end
+ 
+    len = self.botList.exist_index
+    for i = 1, len do
+        local name = self.botList.list[i].name
+        local role = self.botList.list[i].currentRole
+        if role and self.botList.list[i].ent:Alive() then
+            local rd = self.roleList:getByName(role)
+            DrawOverheadRoleIcon(self.botList.list[i].ent, rd.iconMaterial, rd.color) 
+        end
+    end
 end

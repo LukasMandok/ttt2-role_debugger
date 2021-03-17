@@ -87,7 +87,7 @@ end
 ---
 -- @ignore
 function PANEL:Paint(w, h)
-	derma.SkinHook("Paint", "LabelTTT2", self, w, h)
+	--derma.SkinHook("Paint", "LabelTTT2", self, w, h)
 
 	return true
 end
