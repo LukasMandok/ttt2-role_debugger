@@ -60,6 +60,7 @@ function RoleManager:__init()
     net.Receive("RoleManagerBotConnected", function ()
         local cur_name = net.ReadString()
         timer.Simple(0.01, function ()
+            print("Bot " .. cur_name .. " connected.")
             self.botList:addEntity(cur_name)
         end)
         -- TODO: refresh list entries in the display
@@ -137,6 +138,9 @@ function RoleManager:__init()
         end
 
         apply_next_round = false  -- reset apply next round to false
+        timer.Simple(3, function()
+            self.botList:respawnEntities()
+        end)
     end)
 
     -- Draw player Icons

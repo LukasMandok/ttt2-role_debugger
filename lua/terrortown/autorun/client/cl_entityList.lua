@@ -165,7 +165,7 @@ function RoleList:getRolesWithCategory()
 end
 
 -- TODO: GetRole Category: Innocent, Traitor, Neutral, Killers
-function RoleList:getRoleCategory()
-
+function RoleList:getRoleCategory(role)
+    
 end
 

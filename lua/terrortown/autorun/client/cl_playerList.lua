@@ -465,14 +465,16 @@ end
 
 function BotList:respawnEntities(name)
     if name then
-        print("Spawn Enity:")
+        print("ReSpawn Enity:")
         self.list[self.revList[name]]:respawnEntity()
         self.addNewEntity[name] = name
     else
         for i = 1, self.exist_index do
+            local name = self.list[i].name 
             if self.list[i].name ~= self.list[i].currentName then
+                print(i, "Replacing: ", self.list[i].currentName, "by: ", name)
                 self.list[i]:respawnEntity()
-                 self.addNewEntity[name] = name
+                self.addNewEntity[name] = name
             end
         end
     end

@@ -198,7 +198,9 @@ local function PopulateRolePanel(parent)
         local index = roleManager:getBotLen()
         roleManager:changeBotListLen(len)
 
-        print(unpack(roleManager:getBotList()))
+        print("index:", index)
+        print("whole list:", unpack(roleManager:getBotList()))
+        print("return:", unpack( {unpack(roleManager:getBotList(), index + 1)}))
 
         return {unpack(roleManager:getBotList(), index + 1)}
     end
@@ -209,6 +211,7 @@ local function PopulateRolePanel(parent)
     --  The current combobox selection is only extended.
     --  The slider below is used to remove entries from the list.
     local function displayBotList(newBotListEntries)
+        print("displaying new Bots:", #newBotListEntries)
         for i = 1, #newBotListEntries do
             local combobox, lock = formBotList:MakeComboBox_Roles({
                 label = newBotListEntries[i],

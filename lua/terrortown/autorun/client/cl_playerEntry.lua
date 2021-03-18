@@ -187,6 +187,7 @@ end
 -- TODO: Funktion schreien und implementieren
 function BotEntry:respawnEntity()
     --self.currentName = spawn_name TODO: Muss an das machen? Eigentlich wird die Current Name List beim Spawn gesetzt.
+    local spawn_name = self.name
     print("Repawn Bot:", self.name)
     net.Start("RoleManagerRespawnBot")
         net.WriteEntity(self.ent)

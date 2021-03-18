@@ -230,8 +230,20 @@ net.Receive("RoleManagerRespawnBot", function (len, calling_ply)
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local target_ply = net.ReadEntity()
         local spawn_name = net.ReadString()
+
+        local pos = target_ply:GetPos()
+        local angle = target_ply:EyeAngles()
+
+
         target_ply:Kick("Respawning Bot with different Name.")
-        player.CreateNextBot( spawn_name )
+        timer.Simple(0.05, function()
+            ents.TTT.RemoveRagdolls(true)
+            target_ply = player.CreateNextBot( spawn_name )
+            target_ply:SetPos(pos)
+            target_ply:SetEyeAngles(angle or Angle(0, 0, 0))
+
+            --respawn(calling_ply, target_ply)
+        end)
     end
 end)
 
