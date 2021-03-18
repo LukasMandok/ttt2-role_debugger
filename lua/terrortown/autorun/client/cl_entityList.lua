@@ -123,11 +123,21 @@ setmetatable(RoleList, {
 function RoleList:__init(init)
     EntryList.__init(self, init)
 
-    self.list = {[1] = {name = ROLE_RANDOM.name}}
-    self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
+    -- self.list = {[1] = {name = ROLE_RANDOM.name, id = ROLE_RANDOM.id, category = ROLE_RANDOM.id}}
+    -- self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
 
-    self:__initRevList()
-    self:__initTranslation()
+    -- self:__initRevList()
+    -- self:__initTranslation()
+    -- self.__initCategories()
+
+    self.categories = {[1] = {name = "innocent" , roles = {}, icons = {}},
+                       [2] = {name = "traitor"  , roles = {}, icons = {}},
+                       [3] = {name = "detective", roles = {}, icons = {}},
+                       [4] = {name = "neutral"  , roles = {}, icons = {}},
+                       [5] = {name = "killer"   , roles = {}, icons = {}},
+                       [6] = {name = "unknown"  , roles = {}, icons = {}}}
+
+    self:refresh()
 end
 
 -- adds a translated name to every role entry 
@@ -137,13 +147,31 @@ function RoleList:__initTranslation()
     end
 end
 
+function RoleList:__initCategories()
+    for i = 1, #self.categories do
+        self.categories[i].roles = {}
+        self.categories[i].icons = {}
+    end
+
+    for i = 1, #self.list do
+        --print(self.list[i].name)
+        local category, index = self:getRoleCategory(self.list[i])
+        self.list[i].category = category
+
+        table.insert(self.categories[index].roles, self.list[i].name)
+        table.insert(self.categories[index].icons, self.list[i].icon)
+    end
+
+end
+
 -- initializes the RoleList again
 function RoleList:refresh()
-    self.list = {[1] = {name = ROLE_RANDOM.name}}
+    self.list = {[1] = {name = ROLE_RANDOM.name, id = ROLE_RANDOM.id}}
     self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
 
     self:__initRevList()
     self:__initTranslation()
+    self:__initCategories()
 end
 
 -- get a list with the translated 
@@ -164,8 +192,31 @@ function RoleList:getRolesWithCategory()
 
 end
 
+function RoleList:getCategories()
+    return self.categories
+end
+
 -- TODO: GetRole Category: Innocent, Traitor, Neutral, Killers
 function RoleList:getRoleCategory(role)
-    
+    if (role.name == ROLE_RANDOM.name) then
+        return ROLE_RANDOM.id, ROLE_RANDOM.index
+    end
+
+    local team = role.defaultTeam
+    local baserole = role:GetBaseRole()
+
+    if (team == TEAM_INNOCENT or team == TEAM_TRAITOR) and baserole <= 2 then
+        print("STD Role:", role.name, "Baserole:", baserole)
+        return baserole, baserole + 1
+    elseif (baserole == role.index and (team == TEAM_NONE or team == TEAM_UNASSIGNED or team == TEAM_JESTER or team == TEAM_INNOCENT)) then
+        print("NEUTRAL Role:", role.name, "Baserole:", baserole)
+        return ROLE_NEUTRAL.id, ROLE_NEUTRAL.index
+    elseif (baserole == role.index and team ~= TEAM_NONE and team ~= TEAM_UNASSIGNED) then
+        print("KILLER Role:", role.name, "Baserole:", baserole)
+        return ROLE_KILLERS.id, ROLE_KILLERS.index
+    else
+        print("UNKNOWN Role:", role.name, "Baserole:", baserole)
+        return ROLE_RANDOM.id, ROLE_RANDOM.index
+    end
 end
 

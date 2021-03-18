@@ -204,12 +204,16 @@ function PANEL:MakeComboBox_Roles(data)
 
     local right = vgui.Create("DComboBoxTTT2_roles", self)
 
-    data.data = data.data or data.choices
+    local categories = data.data or nil
     data.icons = data.icons or ""
 
-    if data.choices then
+    if categories then
+        for i = 1, #categories do
+            right:AddCategory(categories[i].name, categories[i].roles, categories[i].icons)
+        end
+    elseif data.choices then
         for i = 1, #data.choices do
-            right:AddChoice(data.choices[i], data.data[i]) --, false , data.icons[i]
+            right:AddChoice(data.choices[i], data.choices[i]) --, false , data.icons[i]
         end
     end
 

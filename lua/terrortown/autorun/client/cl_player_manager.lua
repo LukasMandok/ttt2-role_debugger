@@ -1,5 +1,8 @@
 -- TODO: in eine shared file, damit der Server das auch kennt.
-ROLE_RANDOM = {id = -1, name = "random"}
+ROLE_RANDOM = {id = -1, name = "random", index = 6}
+ROLE_NEUTRAL = {id = -2, name = "neutral", index = 4}
+ROLE_KILLERS = {id = -3, name = "killers", index = 5}
+
 CLASS_RANDOM = {id = -1, name = "random"}
 
 RoleManager = {}
@@ -342,6 +345,10 @@ end
 
 function RoleManager:getRoleList()
     return self.roleList:getNames()
+end
+
+function RoleManager:getRoleCategories()
+    return self.roleList:getCategories()
 end
 
 function RoleManager:getTranslatedRoleList()

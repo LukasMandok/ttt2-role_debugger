@@ -116,7 +116,7 @@ local function PopulateRolePanel(parent)
         local combobox, lock = formPlayerList:MakeComboBox_Roles({
             label = playerList[i],
             choices = roleList,
-            data = roleList,
+            data = roleManager:getRoleCategories(),
             selectName = roleManager:getRoleOfPlayer(playerList[i]),
             default = ROLE_RANDOM.name,
             locked = roleManager:getPlayerLocked(playerList[i]),
@@ -217,7 +217,7 @@ local function PopulateRolePanel(parent)
                 label = newBotListEntries[i],
                 addition = roleManager:getCurrentBotName(newBotListEntries[i]),
                 choices = roleList,
-                data = roleList,
+                data = roleManager:getRoleCategories(),
                 selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
                 default = ROLE_RANDOM.name,
                 locked = roleManager:getBotLocked(newBotListEntries[i]),

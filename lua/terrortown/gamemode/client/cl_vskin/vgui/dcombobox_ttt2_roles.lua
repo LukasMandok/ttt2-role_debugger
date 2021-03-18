@@ -41,7 +41,10 @@ function PANEL:Clear()
 	self:SetText("")
 	self.choices = {}
 	self.data = {}
+
+	self.categories = {}
 	self.choiceIcons = {}
+
 	self.selected = nil
 
 	if self.menu then
@@ -78,15 +81,15 @@ end
 -- @param any data
 -- @return any
 -- @realm client
-function PANEL:GetOptionTextByData(data)
-	for id, dat in pairs(self.data) do
-		if dat ~= data and dat ~= tonumber(data) then continue end
+-- function PANEL:GetOptionTextByData(data)
+-- 	for id, dat in pairs(self.data) do
+-- 		if dat ~= data and dat ~= tonumber(data) then continue end
 
-		return self:GetOptionText(id)
-	end
+-- 		return self:GetOptionText(id)
+-- 	end
 
-	return data
-end
+-- 	return data
+-- end
 
 ---
 -- @ignore
@@ -187,6 +190,34 @@ end
 function PANEL:OnSelect(index, value, data)
 
 end
+---
+-- @param string value
+-- @param any data
+-- @param any select
+-- @param string icon
+-- @return number index
+-- @realm client
+function PANEL:AddCategory(name, roles, icons, data)
+	self.categories[#self.categories + 1] = {name = name, ids = {}}
+
+	local i = #self.choices
+	for j = 1, #roles do
+		self.choices[i + j] = roles[j]
+		self.categories[#self.categories].ids[j] = i + j
+		if icons then
+			self.choiceIcons[i + j] = icons[j]
+		end
+		if data then
+			self.data[i + j] = data[j]
+		end
+	end
+
+	-- if select then
+	-- 	self:ChooseOption(value, i)
+	-- end
+
+	--return i
+end
 
 ---
 -- @param string value
@@ -238,52 +269,83 @@ function PANEL:OpenMenu(pControlOpener)
 		self.menu = nil
 	end
 
-	self.menu = DermaMenu(false, self)
+	CloseDermaMenus()
+	self.menu = vgui.Create("DMenuTTT2_roles", self)
 
-	if self:GetSortItems() then
-		local sorted = {}
+	if self.categories then
+		print("Create Roles Menu")
+		print(#self.categories)
 
-		for i = 1, #self.choices do
-			local choice = self.choices[i]
-			local val = tostring(choice)
+		for i = 1, #self.categories do
+			local cat_name = self.categories[i].name 
+			print("Name for this category:", cat_name, "number of entries:", #self.categories[i].ids)
 
-			if string.len(val) > 1 and val:StartWith("#") then
-				val = language.GetPhrase(val:sub(2))
+			local category = self.menu:AddColumn(cat_name)
+
+			for k, id in ipairs(self.categories[i].ids) do
+				local choice = self.choices[id]
+				local option = self.menu:AddOptionToColumn(choice, category, function()
+					self:ChooseOption(choice, id)
+				end)
+
+				if self.choiceIcons[i] then
+					--option:SetIcon(self.choiceIcons[id])
+				end
 			end
 
-			sorted[#sorted + 1] = {
-				id = i,
-				data = choice,
-				label = val
-			}
 		end
 
-		for k, v in SortedPairsByMemberValue(sorted, "label") do
-			local option = self.menu:AddOption(v.data, function()
-				self:ChooseOption(v.data, v.id)
-			end)
+		local x, y = self:LocalToScreen(0, self:GetTall())
 
-			if self.choiceIcons[v.id] then
-				option:SetIcon(self.choiceIcons[v.id])
-			end
-		end
+		self.menu:SetMinimumWidth(self:GetWide())
+		self.menu:Open(x, y, false, self)
+
 	else
-		for i = 1, #self.choices do
-			local choice = self.choices[i]
-			local option = self.menu:AddOption(choice, function()
-				self:ChooseOption(choice, i)
-			end)
+		if self:GetSortItems() then
+			local sorted = {}
 
-			if self.choiceIcons[i] then
-				option:SetIcon(self.choiceIcons[i])
+			for i = 1, #self.choices do
+				local choice = self.choices[i]
+				local val = tostring(choice)
+
+				if string.len(val) > 1 and val:StartWith("#") then
+					val = language.GetPhrase(val:sub(2))
+				end
+
+				sorted[#sorted + 1] = {
+					id = i,
+					data = choice,
+					label = val
+				}
+			end
+
+			for k, v in SortedPairsByMemberValue(sorted, "label") do
+				local option = self.menu:AddOption(v.data, function()
+					self:ChooseOption(v.data, v.id)
+				end)
+
+				if self.choiceIcons[v.id] then
+					option:SetIcon(self.choiceIcons[v.id])
+				end
+			end
+		else
+			for i = 1, #self.choices do
+				local choice = self.choices[i]
+				local option = self.menu:AddOption(choice, function()
+					self:ChooseOption(choice, i)
+				end)
+
+				if self.choiceIcons[i] then
+					option:SetIcon(self.choiceIcons[i])
+				end
 			end
 		end
+
+		local x, y = self:LocalToScreen(0, self:GetTall())
+
+		self.menu:SetMinimumWidth(self:GetWide())
+		self.menu:Open(x, y, false, self)
 	end
-
-	local x, y = self:LocalToScreen(0, self:GetTall())
-
-	self.menu:SetMinimumWidth(self:GetWide())
-	self.menu:Open(x, y, false, self)
 end
 
 ---
@@ -294,24 +356,24 @@ function PANEL:CloseMenu()
 	self.menu:Remove()
 end
 
----
--- @realm client
-function PANEL:CheckConVarChanges()
-	if not self.m_strConVar then return end
+-- ---
+-- -- @realm client
+-- function PANEL:CheckConVarChanges()
+-- 	if not self.m_strConVar then return end
 
-	local strValue = GetConVar(self.m_strConVar):GetString()
+-- 	local strValue = GetConVar(self.m_strConVar):GetString()
 
-	if self.m_strConVarValue == strValue then return end
+-- 	if self.m_strConVarValue == strValue then return end
 
-	self.m_strConVarValue = strValue
+-- 	self.m_strConVarValue = strValue
 
-	self:SetValue(self:GetOptionTextByData(self.m_strConVarValue))
-end
+-- 	self:SetValue(self:GetOptionTextByData(self.m_strConVarValue))
+-- end
 
 ---
 -- @ignore
 function PANEL:Think()
-	self:CheckConVarChanges()
+	--self:CheckConVarChanges()
 end
 
 ---
