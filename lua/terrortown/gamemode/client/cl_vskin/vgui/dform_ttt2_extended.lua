@@ -997,10 +997,14 @@ end
 derma.DefineControl("DFormTTT2_extended", "", PANEL, "DCollapsibleCategoryTTT2")
 derma.DefineControl("DContainerTTT2_extended", "", table.Copy(PANEL), "DContainerTTT2")
 
-function vgui.CreateTTT2Form_extended(parent, name)
+function vgui.CreateTTT2Form_extended(parent, name, expanded)
     --derma.DefineControl("DFormTTT2_extended", "", PANEL, "DCollapsibleCategoryTTT2")
 
     local form = vgui.Create("DFormTTT2_extended", parent)
+
+    if expanded == false then
+        form:SetExpanded(false)
+    end
 
     form:SetName(name)
     form:Dock(TOP)

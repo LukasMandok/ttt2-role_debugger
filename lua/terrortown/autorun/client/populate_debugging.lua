@@ -198,6 +198,8 @@ local function PopulateRolePanel(parent)
         local index = roleManager:getBotLen()
         roleManager:changeBotListLen(len)
 
+        print(unpack(roleManager:getBotList()))
+
         return {unpack(roleManager:getBotList(), index + 1)}
     end
 
@@ -299,7 +301,7 @@ local function PopulateRolePanel(parent)
     ------------------------------------------------
 
     -- create Panel with List of bots
-    local formSettings = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_roles_settings"))
+    local formSettings = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_roles_settings"), false)
     formSettings:Dock(TOP)
 
     -- creates some options
@@ -356,8 +358,16 @@ local function PopulateBotPanel(parent)
    	local form = vgui.CreateTTT2Form(parent, "test")
 
     form:MakeCheckBox({
-		label = "test",
-		convar = "bot_zombie"
+		label = "Moving Bots",
+		initial = roleManager.moving_bots,
+        default = roleManager.moving_bots,
+        OnChange = function(_, value)
+            roleManager.moving_bots = moving_bots
+            net.Start("RoleManagerSetBoolConvar")
+                net.WriteString("bot_zombie")
+                net.WriteBool(value)
+            net.SendToServer()
+        end,
 	})
 end
 

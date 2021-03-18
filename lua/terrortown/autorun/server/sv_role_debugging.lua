@@ -17,6 +17,11 @@ util.AddNetworkString( "RoleManagerApplyRole" )
 util.AddNetworkString( "RoleManagerApplyRoleNextRound" )
 util.AddNetworkString( "RoleManagerClearRolesNextRound" )
 
+util.AddNetworkString( "RoleManagerRequestBoolConvar" )
+util.AddNetworkString( "RoleManagerGetBoolConvar" )
+util.AddNetworkString( "RoleManagerSetBoolConvar" )
+
+local bool_to_number={ [true]=1, [false]=0 }
 
 -- Player connecting / disconnecting
 
@@ -101,9 +106,9 @@ net.Receive("RoleManagerSpawnBot", function (len, calling_ply)
 end)
 
 -- functino to find a corpse
-function corpse_find(v)
+function corpse_find(ply)
     for _, ent in pairs(ents.FindByClass("prop_ragdoll")) do
-        if ent.uqid == v:UniqueID() and IsValid(ent) then
+        if ent.uqid == ply:UniqueID() and IsValid(ent) then
             return ent or false
         end
     end
@@ -135,7 +140,9 @@ local function respawn(calling_ply, target_ply)
         print("!!!respawning spectator player.")
         target_ply:ConCommand("ttt_spectator_mode 0")
 
-        timer.Create("respawntpdelay", 0.1, 0, function()
+        --timer.Create("respawntpdelay", 0.05, 0, function()
+        timer.Simple(0.05, function ()
+            print("spawning bot:", target_ply:Nick())
             local spawnEntity = spawn.GetRandomPlayerSpawnEntity(target_ply)
             local spawnPos = spawnEntity:GetPos()
             local spawnEyeAngle = spawnEntity:EyeAngles()
@@ -152,10 +159,10 @@ local function respawn(calling_ply, target_ply)
             target_ply:SetPos(spawnPos)
             target_ply:SetEyeAngles(spawnEyeAngle or Angle(0, 0, 0))
 
-            if target_ply:Alive() then
-                timer.Remove("respawntpdelay")
-                return
-            end
+            -- if target_ply:Alive() then
+            --     timer.Remove("respawntpdelay")
+            --     return
+            -- end
         end)
     elseif  not target_ply:Alive() then
         print("!!!respawning death player.")
@@ -233,6 +240,10 @@ net.Receive("RoleManagerDeleteBot", function (len, calling_ply)
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local target_ply = net.ReadEntity()
         target_ply:Kick("Removed Bot.")
+        local corpse = corpse_find(target_ply) -- remove corpse
+        if corpse then
+            corpse_remove(corpse)
+        end
     end
 end)
 
@@ -302,4 +313,24 @@ net.Receive("RoleManagerClearRolesNextRound", function (len, calling_ply)
              roleselection.finalRoles[k] = nil
         end
     end
+end)
+
+net.Receive("RoleManagerSetBoolConvar", function (len, ply)
+    if ply:IsUserGroup("superadmin") then
+        local convar = net.ReadString()
+        local state = net.ReadBool()
+        print("Get Convar Message from Client: Setting " .. convar .. " to state " .. tostring(state))
+        -- TODO: Funktioniert noch nicht
+        --GetConVar( convar ):SetBool( state )
+        RunConsoleCommand( convar, tostring(bool_to_number[state]) )
+    end
+end)
+
+net.Receive("RoleManagerRequestBoolConvar", function (len, ply)
+	local convar = net.ReadString()
+	print("Get BoolConvar for Client: " .. convar .. " = " .. tostring(GetConVar(convar):GetBool()))
+    net.Start("RoleManagerGetBoolConvar")
+		net.WriteString(convar)
+		net.WriteBool(GetConVar(convar):GetBool())
+	net.Send(ply)
 end)
