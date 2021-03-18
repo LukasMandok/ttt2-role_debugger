@@ -147,8 +147,9 @@ local function respawn(calling_ply, target_ply)
             local spawnPos = spawnEntity:GetPos()
             local spawnEyeAngle = spawnEntity:EyeAngles()
 
-            local corpse = corpse_find(target_ply) -- remove corpse
+            local corpse = target_ply:FindCorpse() -- remove corpse
             if corpse then
+                print("Found Corpse at spawning")
                 corpse_remove(corpse)
             end
 
@@ -170,7 +171,7 @@ local function respawn(calling_ply, target_ply)
         local spawnPos = spawnEntity:GetPos()
         local spawnEyeAngle = spawnEntity:EyeAngles()
 
-        local corpse = corpse_find(target_ply) -- remove corpse
+        local corpse = target_ply:FindCorpse()-- remove corpse
         if corpse then
             corpse_remove(corpse)
         end
@@ -240,10 +241,17 @@ net.Receive("RoleManagerDeleteBot", function (len, calling_ply)
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local target_ply = net.ReadEntity()
         target_ply:Kick("Removed Bot.")
-        local corpse = corpse_find(target_ply) -- remove corpse
-        if corpse then
-            corpse_remove(corpse)
-        end
+        
+        timer.Simple(0.1, function()
+            ents.TTT.RemoveRagdolls(true)
+        end)
+        
+        -- local corpse = corpse_find(target_ply) -- remove corpse
+        -- print("Corpse of Kicked Player:", corpse)
+        -- if corpse then
+        --     corpse_remove(corpse)
+        -- end
+        
     end
 end)
 

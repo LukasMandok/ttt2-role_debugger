@@ -260,6 +260,7 @@ function RoleManager:changeBotListLen(len)
 end
 
 function RoleManager:getBotList()
+    print("Get Current Index:", self.botList.index)
     return self.botList:getNames()
 end
 
@@ -367,7 +368,7 @@ function RoleManager:drawOverHeadRoleIcon()
     for i = 1, len do
         local name = self.botList.list[i].name
         local role = self.botList.list[i].currentRole
-        if role and IsValid(self.botList.list[i].ent) and  self.botList.list[i].ent:Alive() then
+        if role and IsValid(self.botList.list[i].ent) and self.botList.list[i].ent:Alive() and self.botList.list[i].ent:IsSpec() == false then
             local rd = self.roleList:getByName(role)
             DrawOverheadRoleIcon(self.botList.list[i].ent, rd.iconMaterial, rd.color) 
         end
