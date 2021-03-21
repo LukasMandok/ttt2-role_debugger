@@ -1,1 +1,0 @@
-robocopy "D:\Users\Lukas\Documents\GitHub\TTT2-Role-Debugger" "D:\Program Files (x86)\Steam\steamcmd\gm\garrysmod\addons\TTT2-Role-Debugger" /MIR /XF ".git*" "clone_to_game.bat" "README.md" "LICENSE" /XD ".git"

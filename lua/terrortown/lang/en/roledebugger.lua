@@ -43,6 +43,11 @@ L["debugging_roles_settings_auto_refresh_help"] = [[
 Automatically refreshes the roles to the current assigned ones, 
 if the debug menu is opened.]]
 
+L["debugging_roles_settings_overhead_icon"] = "Overhead role icons"
+L["debugging_roles_settings_overhead_icon_help"] = [[
+Show overhead role icons during round.]]
+
+
 
 
 ----------------------------

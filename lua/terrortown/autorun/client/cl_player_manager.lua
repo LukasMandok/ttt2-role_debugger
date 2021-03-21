@@ -22,12 +22,11 @@ function RoleManager:__init()
     self.bot_roles_locked = false 
 
     -- Settings
-    self.auto_apply = true
-    self.auto_refresh = false
+    self.auto_apply = CreateConVar( "ttt2_rolemanager_auto_apply", 1, FCVAR_ARCHIVE, "Automatically activates the roles on the next round if a value is changed.", 0, 1 )
+    self.auto_refresh = CreateConVar( "ttt2_rolemanager_auto_refresh", 0, FCVAR_ARCHIVE, "Automatically refreshes the roles to the current assigned ones, if the debug menu is opened.", 0, 1 )
 
     -- TODO: Eine Convar draus machen
-    self.overhead_role_icons = true
-    self.moving_bots = false
+    self.overhead_role_icons = CreateConVar( "ttt2_rolemanager_overhead_icons", 1, FCVAR_ARCHIVE, "Show overhead role icons during round.", 0, 1 )
 
 
     -------------- Communication --------------
@@ -134,7 +133,7 @@ function RoleManager:__init()
 
     -- Draw player Icons
     hook.Add("PostDrawTranslucentRenderables", "Draw Overhead Role Icons",  function( bDepth, bSkybox )
-        if self.overhead_role_icons == true and (GAMEMODE.round_state == ROUND_ACTIVE or GAMEMODE.round_state == ROUND_POST) then
+        if self.overhead_role_icons:GetBool() == true and (GAMEMODE.round_state == ROUND_ACTIVE or GAMEMODE.round_state == ROUND_POST) then
             self:drawOverHeadRoleIcon()
         end
     end)
@@ -149,7 +148,7 @@ function RoleManager:refresh()
     self.botList:refresh()
     --self.roleList:refresh()
 
-    if self.auto_refresh then
+    if self.auto_refresh:GetBool() then
         roleManager:setCurrentRoles()
     end
 
@@ -249,7 +248,7 @@ end
 function RoleManager:changeBotListLen(len)
     self.botList:setLen(len)
     self.botList:updateStatus()
-    if roleManager.auto_apply == true then
+    if roleManager.auto_apply:GetBool() == true then
         self.apply_next_round = true
     end
 end
