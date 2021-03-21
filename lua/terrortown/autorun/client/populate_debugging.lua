@@ -306,7 +306,7 @@ local function PopulateRolePanel(parent)
 
     formSettings:MakeCheckBox({
 		label = LANG.GetTranslation("debugging_roles_settings_auto_apply"),
-		convar = "ttt2_rolemanager_auto_apply", --roleManager.auto_apply,
+		convar = "ttt_rolemanager_auto_apply", --roleManager.auto_apply,
 	})
 
     formSettings:MakeHelp({
@@ -324,7 +324,7 @@ local function PopulateRolePanel(parent)
 
     formSettings:MakeCheckBox({
 		label = LANG.GetTranslation("debugging_roles_settings_auto_refresh"),
-		convar = "ttt2_rolemanager_auto_refresh", --roleManager.auto_refresh,
+		convar = "ttt_rolemanager_auto_refresh", --roleManager.auto_refresh,
 	})
 
     formSettings:MakeHelp({
@@ -342,7 +342,7 @@ local function PopulateRolePanel(parent)
 
     formSettings:MakeCheckBox({
 		label = LANG.GetTranslation("debugging_roles_settings_overhead_icon_help"),
-		convar = "ttt2_rolemanager_overhead_icons", --roleManager.overhead_role_icons,
+		convar = "ttt_rolemanager_overhead_icons", --roleManager.overhead_role_icons,
 	})
 
     -- update List Entries
