@@ -62,7 +62,6 @@ local function PopulateRolePanel(parent)
             roleManager:applyPlayerRoles()
             roleManager:applyBotRoles()
         end,
-
         label2 = "Apply Roles next round",
         OnClick2 = function(_)
             print("Apply Roles next round")
@@ -82,22 +81,17 @@ local function PopulateRolePanel(parent)
         end,
     })
 
-    -- local updateButton = formControl:MakeDoubleButton({
-    --     label1 = "Update Player Roles",
-    --     OnClick1 = function(_)
-    --         roleManager:setCurrentRoles()
-    --     end,
-    --     OnReset = function(_)
-    --         roleManager:resetPlayerRoles()
-    --         roleManager:resetBotRoles()
-    --     end,
-    --     OnLocked =  function(slf)
-    --         print("OnLocked Funktion")
-    --     end,
-    --     OnUnlocked =  function(slf)
-    --         print("OnUnlocked Funktion")
-    --     end,
-    -- })
+    local updateButton = formControl:MakeDoubleButton({
+        label1 = "Update All",
+        OnClick1 = function(_)
+            roleManager:setCurrentRoles()
+        end,
+        label2 = "Restart Round",
+        OnClick2 = function(_)
+            print("Restart Round")
+            roleManager.startNextRound()
+        end,
+    })
 
     -----------------------------------------------
     ------------------- PLAYERS -------------------
@@ -121,12 +115,12 @@ local function PopulateRolePanel(parent)
             default = ROLE_RANDOM.name,
             locked = roleManager:getPlayerLocked(playerList[i]),
             OnChange = function(_, _, value, data, flag)
-                -- TODO: 
+                roleManager:setPlayerRole(playerList[i], value)
+
                 if roleManager.auto_apply == true then
                     roleManager.apply_next_round = true
                     roleManager:applyPlayerRolesNextRound(playerList[i])
                 end
-                roleManager:setPlayerRole(playerList[i], value)
             end,
             OnUpdate = function(_, _, value, data)
                 roleManager:setPlayerRole(playerList[i], value)
@@ -198,9 +192,10 @@ local function PopulateRolePanel(parent)
         local index = roleManager:getBotLen()
         roleManager:changeBotListLen(len)
 
-        print("index:", index)
-        print("whole list:", unpack(roleManager:getBotList()))
-        print("return:", unpack( {unpack(roleManager:getBotList(), index + 1)}))
+        -- TODO: ist nicht vollständig, wenn 
+        --print("index:", index)
+        --print("whole list:", unpack(roleManager:getBotList()))
+        --print("return:", unpack( {unpack(roleManager:getBotList(), index + 1)}))
 
         return {unpack(roleManager:getBotList(), index + 1)}
     end
@@ -211,7 +206,7 @@ local function PopulateRolePanel(parent)
     --  The current combobox selection is only extended.
     --  The slider below is used to remove entries from the list.
     local function displayBotList(newBotListEntries)
-        print("displaying new Bots:", #newBotListEntries)
+        --print("displaying new Bots:", #newBotListEntries)
         for i = 1, #newBotListEntries do
             local combobox, lock = formBotList:MakeComboBox_Roles({
                 label = newBotListEntries[i],
@@ -222,11 +217,11 @@ local function PopulateRolePanel(parent)
                 default = ROLE_RANDOM.name,
                 locked = roleManager:getBotLocked(newBotListEntries[i]),
                 OnChange = function(_, _, value, data)
+                    roleManager:setBotRole(newBotListEntries[i], value)
                     if roleManager.auto_apply == true then
                         roleManager.apply_next_round = true
                         roleManager:applyBotRolesNextRound(newBotListEntries[i])
                     end
-                    roleManager:setBotRole(newBotListEntries[i], value)
                 end,
                 OnUpdate = function(_, _, value, data)
                     roleManager:setBotRole(newBotListEntries[i], value)

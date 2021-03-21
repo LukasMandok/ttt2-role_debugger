@@ -13,6 +13,8 @@ util.AddNetworkString( "RoleManagerSpawnBotThisRound" )
 util.AddNetworkString( "RoleManagerRespawnBot" )
 util.AddNetworkString( "RoleManagerDeleteBot" )
 
+util.AddNetworkString( "RoleManagerRestartRound" )
+
 util.AddNetworkString( "RoleManagerApplyRole" )
 util.AddNetworkString( "RoleManagerApplyRoleNextRound" )
 util.AddNetworkString( "RoleManagerClearRolesNextRound" )
@@ -335,6 +337,8 @@ net.Receive("RoleManagerClearRolesNextRound", function (len, calling_ply)
     end
 end)
 
+-- General
+
 net.Receive("RoleManagerSetBoolConvar", function (len, ply)
     if ply:IsUserGroup("superadmin") then
         local convar = net.ReadString()
@@ -354,3 +358,13 @@ net.Receive("RoleManagerRequestBoolConvar", function (len, ply)
 		net.WriteBool(GetConVar(convar):GetBool())
 	net.Send(ply)
 end)
+
+net.Receive("RoleManagerRestartRound", function(len, ply)
+    RunConsoleCommand("ttt_roundrestart")
+end)
+
+function printforcedRoles()
+    for i,k in pairs(roleselection.finalRoles) do
+        print(i, roles.GetByIndex(k).name)
+    end
+end

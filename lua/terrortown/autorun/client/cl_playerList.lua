@@ -487,7 +487,7 @@ function BotList:applyRoles_nr(name)
         -- TODO: hier muss überprüft werden, ob der eintrag schon in der liste ist
         local i = self.revList[name]
         if IsValid(self.list[i].ent) then
-            print("Apply Role next round for:  " .. name )
+            --print("Apply Role next round for:  " .. name )
             self.list[i]:applyRole_nr()
         else
             print("Entity not created yet: store in table for next round for: " .. name)
@@ -499,7 +499,6 @@ function BotList:applyRoles_nr(name)
         --print("Apply Role next round for all.")
         for i = 1, len do
             if IsValid(self.list[i].ent) then
-                print("Apply Role next round")
                 self.list[i]:applyRole_nr()
             else
                 print("Entity not created yet: store in table for next round.")

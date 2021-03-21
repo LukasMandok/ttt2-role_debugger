@@ -15,10 +15,12 @@ function PANEL:Init()
 	self:SetPaintBackground( true )
 	self:SetMinimumWidth( 100 )
 	self:SetDrawOnTop( true )
-	self:SetMaxHeight( ScrH() * 0.4 )
+	self:SetMaxHeight( ScrH() * 0.5 )
 	self:SetDeleteSelf( true )
 
 	self:SetPadding( 0 )
+
+    self:SetSkin("ttt2_default_extended")
 
     self.Columns = {}
 
@@ -36,11 +38,17 @@ end
 
 -- TODO: Add Column
 function PANEL:AddColumn( name )
-    print("Adding Column")
     local column = vgui.Create( "DListLayout", self)
+    column.Paint = function( p, w, h )
+		derma.SkinHook( "Paint", "MenuColumTTT2", p, w, h )
+	end
+    column.PerformLayout = function(p) end
     --column:Dock(LEFT)
 
     local title = vgui.Create( "DLabelTTT2", column)
+    title:SetSkin("default_ttt2_extended")
+    title:SetTall(40)
+
     title:SetText( name )
 
     column:Add( title )
@@ -55,11 +63,13 @@ function PANEL:AddColumn( name )
     return column
 end
 
-function PANEL:AddOptionToColumn( strText, column, funcFunction )
+function PANEL:AddOptionToColumn( name, column, selected, funcFunction )
 
 	local pnl = vgui.Create( "DMenuOptionTTT2_roles", self )
 	pnl:SetMenu( self )
-	pnl:SetText( strText )
+	pnl:SetText( name )
+    pnl.selected = selected
+
 	if ( funcFunction ) then pnl.DoClick = funcFunction end
 
 	column:Add( pnl )
@@ -112,19 +122,19 @@ function PANEL:AddSpacer( strText, funcFunction )
 
 end
 
-function PANEL:AddSubMenu( strText, funcFunction )
+-- function PANEL:AddSubMenu( strText, funcFunction )
 
-	local pnl = vgui.Create( "DMenuOption", self )
-	local SubMenu = pnl:AddSubMenu( strText, funcFunction )
+-- 	local pnl = vgui.Create( "DMenuOption", self )
+-- 	local SubMenu = pnl:AddSubMenu( strText, funcFunction )
 
-	pnl:SetText( strText )
-	if ( funcFunction ) then pnl.DoClick = funcFunction end
+-- 	pnl:SetText( strText )
+-- 	if ( funcFunction ) then pnl.DoClick = funcFunction end
 
-	self:AddPanel( pnl )
+-- 	self:AddPanel( pnl )
 
-	return SubMenu, pnl
+-- 	return SubMenu, pnl
 
-end
+-- end
 
 function PANEL:Hide()
 
@@ -138,41 +148,41 @@ function PANEL:Hide()
 
 end
 
-function PANEL:OpenSubMenu( item, menu )
+-- function PANEL:OpenSubMenu( item, menu )
 
-	-- Do we already have a menu open?
-	local openmenu = self:GetOpenSubMenu()
-	if ( IsValid( openmenu ) && openmenu:IsVisible() ) then
+-- 	-- Do we already have a menu open?
+-- 	local openmenu = self:GetOpenSubMenu()
+-- 	if ( IsValid( openmenu ) && openmenu:IsVisible() ) then
 
-		-- Don't open it again!
-		if ( menu && openmenu == menu ) then return end
+-- 		-- Don't open it again!
+-- 		if ( menu && openmenu == menu ) then return end
 
-		-- Close it!
-		self:CloseSubMenu( openmenu )
+-- 		-- Close it!
+-- 		self:CloseSubMenu( openmenu )
 
-	end
+-- 	end
 
-	if ( !IsValid( menu ) ) then return end
+-- 	if ( !IsValid( menu ) ) then return end
 
-	local x, y = item:LocalToScreen( self:GetWide(), 0 )
-	menu:Open( x - 3, y, false, item )
+-- 	local x, y = item:LocalToScreen( self:GetWide(), 0 )
+-- 	menu:Open( x - 3, y, false, item )
 
-	self:SetOpenSubMenu( menu )
+-- 	self:SetOpenSubMenu( menu )
 
-end
+-- end
 
-function PANEL:CloseSubMenu( menu )
+-- function PANEL:CloseSubMenu( menu )
 
-	menu:Hide()
-	self:SetOpenSubMenu( nil )
+-- 	menu:Hide()
+-- 	self:SetOpenSubMenu( nil )
 
-end
+-- end
 
 function PANEL:Paint( w, h )
 
 	if ( !self:GetPaintBackground() ) then return end
 
-	derma.SkinHook( "Paint", "ContentPanelTTT2", self, w, h )
+	derma.SkinHook( "Paint", "MenuTTT2", self, w, h )
 	return true
 
 end
@@ -190,14 +200,14 @@ function PANEL:PerformLayout( w, h )
 	--local w = self:GetMinimumWidth()
 
 	-- Width of all Columns
-    local w = 0
+    local w = 1
     local h = 0
 
 	for k, col in pairs( self.Columns ) do
-	 	col:InvalidateLayout( true )
-        col:SetPos(w, 0)
+		local y = 1
 
-        local y = 0
+	 	col:InvalidateLayout( true )
+        col:SetPos(w, y)
 
         for _, pnl in pairs( col:GetChildren() ) do
             pnl:SetWide( col:GetWide() )
@@ -211,6 +221,10 @@ function PANEL:PerformLayout( w, h )
         h = math.max(h, y)
 	end
 
+    for k, col in pairs( self.Columns ) do
+        col:SetTall(h)
+    end
+
 	--for k, pnl in pairs( self:GetCanvas():GetChildren() ) do
     -- 	pnl:InvalidateLayout( true )
 	-- 	w = math.max( w, pnl:GetWide() )
@@ -219,8 +233,8 @@ function PANEL:PerformLayout( w, h )
     w = math.max(w, self:GetMinimumWidth())
     h = math.min(h, self:GetMaxHeight())
 
-	self:SetWide( w )
-    self:SetTall( h )
+	self:SetWide( w + 2 )
+    self:SetTall( h + 2 )
 
 	--local y = 0 -- for padding
 
@@ -336,33 +350,6 @@ function PANEL:HighlightItem( item )
 			pnl.Highlight = true
 		end
 	end
-
-end
-
-function PANEL:GenerateExample( ClassName, PropertySheet, Width, Height )
-
-	local MenuItemSelected = function()
-		Derma_Message( "Choosing a menu item worked!" )
-	end
-
-	local ctrl = vgui.Create( "Button" )
-	ctrl:SetText( "Test Me!" )
-	ctrl.DoClick = function()
-		local menu = DermaMenu()
-
-		menu:AddOption( "Option One", MenuItemSelected )
-		menu:AddOption( "Option 2", MenuItemSelected )
-
-		local submenu = menu:AddSubMenu( "Option Free" )
-		submenu:AddOption( "Submenu 1", MenuItemSelected )
-		submenu:AddOption( "Submenu 2", MenuItemSelected )
-
-		menu:AddOption( "Option For", MenuItemSelected )
-
-		menu:Open()
-	end
-
-	PropertySheet:AddSheet( ClassName, ctrl, nil, true, true )
 
 end
 

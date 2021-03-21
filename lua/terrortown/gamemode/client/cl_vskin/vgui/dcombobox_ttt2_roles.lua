@@ -24,7 +24,7 @@ function PANEL:Init()
 		derma.SkinHook("Paint", "ComboDownArrow", panel, w, h)
 	end
 
-	self:SetTall(22)
+	self:SetTall(32) --22
 	self:Clear()
 
 	self:SetContentAlignment(4)
@@ -44,6 +44,7 @@ function PANEL:Clear()
 
 	self.categories = {}
 	self.choiceIcons = {}
+	self.colors = {}
 
 	self.selected = nil
 
@@ -197,16 +198,22 @@ end
 -- @param string icon
 -- @return number index
 -- @realm client
-function PANEL:AddCategory(name, roles, icons, data)
+function PANEL:AddCategory(name, roles, icons, colors, data)
 	self.categories[#self.categories + 1] = {name = name, ids = {}}
-
+	
 	local i = #self.choices
 	for j = 1, #roles do
 		self.choices[i + j] = roles[j]
 		self.categories[#self.categories].ids[j] = i + j
+		
 		if icons then
 			self.choiceIcons[i + j] = icons[j]
 		end
+
+		if colors then
+			self.colors[i + j] = colors[j]
+		end
+
 		if data then
 			self.data[i + j] = data[j]
 		end
@@ -283,16 +290,20 @@ function PANEL:OpenMenu(pControlOpener)
 			local category = self.menu:AddColumn(cat_name)
 
 			for k, id in ipairs(self.categories[i].ids) do
+				local selected = (self.selected == id)
 				local choice = self.choices[id]
-				local option = self.menu:AddOptionToColumn(choice, category, function()
+				local option = self.menu:AddOptionToColumn(choice, category, selected, function()
 					self:ChooseOption(choice, id)
 				end)
 
 				if self.choiceIcons[i] then
-					--option:SetIcon(self.choiceIcons[id])
+					if self.colors[i] then
+						option:SetIcon(self.choiceIcons[id], self.colors[id])
+					else
+						option:SetIcon(self.choiceIcons[id])
+					end
 				end
 			end
-
 		end
 
 		local x, y = self:LocalToScreen(0, self:GetTall())

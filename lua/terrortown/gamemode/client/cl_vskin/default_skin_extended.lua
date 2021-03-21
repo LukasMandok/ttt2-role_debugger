@@ -1,8 +1,6 @@
 -- @class SKIN
 -- @section default_skin
 
-print("\nLoading Extended DEFAULT SKIN !!!!!!!!!!!!!!!!!1\n")
-
 local SKIN = {
 	Name = "ttt2_default_extended"
 }
@@ -245,16 +243,108 @@ end
 -- @param number h
 -- @realm client
 function SKIN:PaintLabelTTT2(panel, w, h)
-	drawSimpleText(
-		TryT(panel:GetText()),
+    local colorLine = utilGetChangedColor(colors.background, 50)
+	local colorText = utilGetChangedColor(colors.default, 50)
+	local paddingX = 10
+	local paddingY = 10
+
+	drawBox(0, 0, w, h, colors.background)
+	drawBox(0, h-4 , w, h-1, colorLine)
+
+	drawShadowedText(
+		string.upper(TryT(panel:GetText())),
 		panel:GetFont(),
-		0,
+		0.5 * w,
 		0.5 * h,
-		utilGetChangedColor(colors.default, 40),
-		TEXT_ALIGN_LEFT,
+		colorText,
+		TEXT_ALIGN_CENTER,
 		TEXT_ALIGN_CENTER
 	)
+
+    -- local colorText = colors.settingsText
+    -- local colorBox = colors.settingsBox
+
+	-- drawSimpleText(
+	-- 	TryT(panel:GetText()),
+	-- 	panel:GetFont(),
+	-- 	0.5 * w,
+	-- 	0.5 * h,
+	-- 	utilGetChangedColor(colors.default, 40),
+	-- 	TEXT_ALIGN_CENTER, -- TEXT_ALIGN_LEFT
+	-- 	TEXT_ALIGN_CENTER
+	-- )
 end
+
+
+
+function SKIN:PaintMenuTTT2(panel, w, h)
+	--drawBox(0, 0, w, h, colors.content)
+    
+    local colorBox = colors.settingsBox
+	local colorHandle = colors.handle
+
+	if not panel:IsEnabled() then
+		colorBox = ColorAlpha(colors.settingsBox, alphaDisabled)
+		colorHandle = ColorAlpha(colors.handle, alphaDisabled)
+	end
+
+	drawRoundedBoxEx(sizes.cornerRadius, 0, 0, w, h, colorBox, false, true, false, true)
+	drawRoundedBox(sizes.cornerRadius, 1, 1, w - 2, h - 2, colorHandle)
+end
+
+
+function SKIN:PaintMenuColumTTT2(panel, w, h)
+    local colorOutline = utilGetChangedColor(colors.default, 170)
+	drawOutlinedBox(0, 0, w, h, 1, colorOutline)
+end
+
+
+function SKIN:PaintMenuOptionTTT2(panel, w, h)
+    local colorBoxBack = colors.settingsBox
+	local colorBox = colors.handle 
+	local colorText = utilGetChangedColor(utilGetDefaultColor(colors.handle), 50)
+	local shift = 0
+	local pad = 6
+
+
+    if not panel:IsEnabled() and not panel.selected then
+		--colorBoxBack = ColorAlpha(colors.settingsBox, alphaDisabled)
+		--colorBox = ColorAlpha(colors.settingsBox, alphaDisabled)
+        colorText = ColorAlpha(colorText, alphaDisabled)
+    elseif panel.selected then
+        --colorBox = ColorAlpha(colors.accentHover, 50)
+        colorBoxBack = ColorAlpha(colors.accentHover, 200)--colors.settingsBox
+
+        drawRoundedBoxEx(sizes.cornerRadius, 0, 0, w, h, colorBoxBack, false, true, false, true)
+		drawRoundedBox(sizes.cornerRadius, 2, 2, w - 4, h - 4, colorBox)
+
+        colorText = ColorAlpha(utilGetActiveColor(colorText), 200)
+    end
+    if panel.Hovered then
+        --colorBox = colors.accentHover
+        colorBoxBack = colors.settingsBox
+
+        drawRoundedBoxEx(sizes.cornerRadius, 0, 0, w, h, colorBoxBack, false, true, false, true)
+		drawRoundedBox(sizes.cornerRadius, 2, 2, w - 4, h - 4, colorBox)
+
+		colorText = ColorAlpha(utilGetHoverColor(colorText), 200)
+	end
+
+    --drawRoundedBox(sizes.cornerRadius, 1, 1, w - 2, h - 2, colorBox)
+    
+    drawSimpleText(
+		TryT(panel:GetText()),
+		panel:GetFont(),
+		0.5 * w,
+		0.5 * h,
+		colorText, --utilGetChangedColor(colors.default, 40),
+		TEXT_ALIGN_CENTER, -- TEXT_ALIGN_LEFT
+		TEXT_ALIGN_CENTER
+	)
+
+end
+
+
 
 
 -- REGISTER DERMA SKIN

@@ -209,7 +209,7 @@ function PANEL:MakeComboBox_Roles(data)
 
     if categories then
         for i = 1, #categories do
-            right:AddCategory(categories[i].name, categories[i].roles, categories[i].icons)
+            right:AddCategory(categories[i].name, categories[i].roles, categories[i].icons, categories[i].colors)
         end
     elseif data.choices then
         for i = 1, #data.choices do
@@ -283,7 +283,6 @@ function PANEL:MakeComboBox_Roles(data)
     local lock
 
     if isfunction(data.OnLocked) and isfunction(data.OnUnlocked) then
-        print("!! Adding lock.")
         lock = MakeLock(self)
 
         lock.OnLocked = data.OnLocked
@@ -298,7 +297,7 @@ function PANEL:MakeComboBox_Roles(data)
         end
 
         if data.locked ~= nil then
-            print("Set Initial of: " .. label .. "  to: " .. tostring(data.locked))
+            --print("Set Initial of: " .. label .. "  to: " .. tostring(data.locked))
             lock:SetIntitial(data.locked)
         end
     end
@@ -469,6 +468,8 @@ function PANEL:MakeDoubleButton(data)
             -- TODO: choose correct parameters in the function
             data.OnReset()
         end
+    else
+        reset = MakeDummy()
     end
 
     --reset.noDefault = true
@@ -494,6 +495,8 @@ function PANEL:MakeDoubleButton(data)
         if data.locked ~= nil then
             lock:SetIntitial(data.locked)
         end
+    else
+        lock = MakeDummy()
     end
 
     self:AddItem(left, right, reset, lock, true, true)
@@ -702,7 +705,7 @@ function PANEL:AddItem(left, right, reset, lock, separate, separate_lock )
         	--self:DockMargin(0, 5, 0, 0)
             --self:DockPadding(0, 0, 0, 0)
         end
-        if separate_lock then
+        if separate_lock and IsValid(lock) then
             lock:DockMargin(10, 0, 0, 0)
         end
         --right:Dock(LEFT)

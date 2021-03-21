@@ -3,6 +3,7 @@ if SERVER then
     resource.AddFile("materials/vgui/ttt/vskin/helpscreen/debugging_large.vmt")
     resource.AddFile("materials/vgui/ttt/vskin/icon_lock_closed.vmt")
     resource.AddFile("materials/vgui/ttt/vskin/icon_lock_open.vmt")
+    resource.AddFile("materials/vgui/ttt/vskin/icon_random.vmt")
     --resource.AddFile("materials/vgui/ttt/vskin/helpscreen/icon_lock_closed_large.vmt")
     --resource.AddFile("materials/vgui/ttt/vskin/helpscreen/icon_lock_open_large.vmt")
 end

@@ -1,5 +1,9 @@
 -- TODO: in eine shared file, damit der Server das auch kennt.
-ROLE_RANDOM = {id = -1, name = "random", index = 6}
+local materialRandom = Material( "vgui/ttt/vskin/icon_random" )
+
+ROLE_RANDOM = {id = -1, name = "random", index = 6, color = Color(255, 255, 255, 255), icon = "vgui/ttt/vskin/icon_random", color = Color(200, 200, 200, 255)}
+
+ROLE_UNKNOWN = {id = -1, name = "unknown", index = 6}
 ROLE_NEUTRAL = {id = -2, name = "neutral", index = 4}
 ROLE_KILLERS = {id = -3, name = "killers", index = 5}
 
@@ -161,7 +165,7 @@ end
 function RoleManager:refresh()
     self.playerList:refresh()
     self.botList:refresh()
-    self.roleList:refresh()
+    --self.roleList:refresh()
 
     if self.auto_refresh then
         roleManager:setCurrentRoles()
@@ -188,6 +192,10 @@ function RoleManager:requestCurrentRoleList()
     net.SendToServer()
 end
 
+function RoleManager:startNextRound()
+    net.Start("RoleManagerRestartRound")
+    net.SendToServer()
+end
 
 -----------------------------------------------------
 ---------------------- Player -----------------------
@@ -304,11 +312,11 @@ function RoleManager:applyBotRoles(name)
     print("Applying Bot Roles")
     self.botList:updateStatus()
 
-    timer.Simple(1, function ()
+    timer.Simple(2, function ()
         print("?????????????????? Apply Roles", name)
         self.botList:applyRoles(name)
     end)
-    timer.Simple(1, function ()   -- TODO: Timer anpassen
+    timer.Simple(2, function ()   -- TODO: Timer anpassen
         print("??????????????????? Request CUrrent Role List")
         self:requestCurrentRoleList()
     end)

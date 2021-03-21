@@ -52,8 +52,7 @@ end
 function PlayerEntry:applyRole()
     local role_name = self.role
 
-    print("Apply Role: " .. role_name .. " to player " .. self.name)
-    print("Current role:", self.currentRole)
+    print("[Apply Role] " .. role_name .. "   to player " .. self.name .. "   Current role:", tostring(self.currentRoles))
     if not IsValid(self.ent) then
         print("Entity von Player " .. self.name .. " existiert nicht.")
     elseif GetRoundState() == 1 or GetRoundState() == 2 then
@@ -65,8 +64,8 @@ function PlayerEntry:applyRole()
         print("Der Spieler hat bereits diese Rolle")
     else
         net.Start("RoleManagerApplyRole")
-        net.WriteEntity(self.ent)
-        net.WriteString(role_name)
+            net.WriteEntity(self.ent)
+            net.WriteString(role_name)
         net.SendToServer()
     end
 
@@ -75,7 +74,7 @@ end
 -- applys role to the entity of the player next round
 function PlayerEntry:applyRole_nr()
     local role_name = self.role
-    print("Apply Role: " .. role_name .. " to player " .. self.name .. "Current role:", tostring(self.currentRole))
+    print("[Apply Role Next Round]  " .. role_name .. "    to player " .. self.name .. "    Current role:", tostring(self.currentRole))
     if not IsValid(self.ent) then
         print("Entity von Player " .. self.name .. " existiert nicht.")
     else
@@ -169,7 +168,7 @@ end
 -- TODO: muss noch implementiert werden
 -- TODO Funktion schreiben (vielleicht sollte addEntity nicht ausgeführt werden, da diese funktion durch das COnnecten des Bots ausgelöst wird)
 function BotEntry:spawnEntity(spawn_name, this_round)
-    print("Spawn Bot:", spawn_name)
+    print("Spawn Bot: " .. spawn_name)
     self.currentName = spawn_name
     if this_round == false then
         net.Start("RoleManagerSpawnBot")
@@ -188,7 +187,7 @@ end
 function BotEntry:respawnEntity()
     --self.currentName = spawn_name TODO: Muss an das machen? Eigentlich wird die Current Name List beim Spawn gesetzt.
     local spawn_name = self.name
-    print("Repawn Bot:", self.name)
+    print("Repawn Bot: " .. self.name)
     net.Start("RoleManagerRespawnBot")
         net.WriteEntity(self.ent)
         net.WriteString(spawn_name)
@@ -198,7 +197,7 @@ end
 -- deletes the entity of the bot entry
 -- TODO: muss noch implementiert werden
 function BotEntry:deleteEntity()
-    print("Remove Bot:", self.name)
+    print("Remove Bot: " .. self.name)
     self.currentName = nil
     net.Start("RoleManagerDeleteBot")
         net.WriteEntity(self.ent)
