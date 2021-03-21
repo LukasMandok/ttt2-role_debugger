@@ -118,7 +118,7 @@ function PANEL:MakeComboBox(data)
         right:ChooseOptionName(data.selectName)
     end
 
-    right.SelectOptionName = function(slf, name))
+    right.SelectOptionName = function(slf, name)
         local index = slf:GetOptionId(name)
         right:ChooseOptionName(name)
         data.OnChange(slf, index, name, data.data[index])
