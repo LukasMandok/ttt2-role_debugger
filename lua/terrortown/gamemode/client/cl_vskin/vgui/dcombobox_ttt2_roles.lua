@@ -280,12 +280,9 @@ function PANEL:OpenMenu(pControlOpener)
 	self.menu = vgui.Create("DMenuTTT2_roles", self)
 
 	if self.categories then
-		print("Create Roles Menu")
-		print(#self.categories)
 
 		for i = 1, #self.categories do
 			local cat_name = self.categories[i].name 
-			print("Name for this category:", cat_name, "number of entries:", #self.categories[i].ids)
 
 			local category = self.menu:AddColumn(cat_name)
 

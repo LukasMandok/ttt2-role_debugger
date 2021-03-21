@@ -118,8 +118,7 @@ function PANEL:MakeComboBox(data)
         right:ChooseOptionName(data.selectName)
     end
 
-    right.SelectOptionName = function(slf, name)
-        --print("------- Update Selection")
+    right.SelectOptionName = function(slf, name))
         local index = slf:GetOptionId(name)
         right:ChooseOptionName(name)
         data.OnChange(slf, index, name, data.data[index])
@@ -134,7 +133,6 @@ function PANEL:MakeComboBox(data)
         -- one frame to update the convar if one is set.
         timer.Simple(0, function()
             if data and isfunction(data.OnChange) then
-                --print("++++++ Real Selection")
                 data.OnChange(slf, index, value, rawdata)
             end
         end)
@@ -224,7 +222,6 @@ function PANEL:MakeComboBox_Roles(data)
     end
 
     right.OnUpdate = function(slf, index, value, rawdata)
-        --print("------- Update Selection")
         -- local index = slf:GetOptionId(value)
         -- right:ChooseOptionName(value)
         data.OnUpdate(slf, index, value, rawdata)
@@ -239,7 +236,6 @@ function PANEL:MakeComboBox_Roles(data)
         -- one frame to update the convar if one is set.
         timer.Simple(0, function()
             if data and isfunction(data.OnChange) then
-                --print("++++++ Real Selection")
                 data.OnChange(slf, index, value, rawdata)
             end
         end)
@@ -297,7 +293,6 @@ function PANEL:MakeComboBox_Roles(data)
         end
 
         if data.locked ~= nil then
-            --print("Set Initial of: " .. label .. "  to: " .. tostring(data.locked))
             lock:SetIntitial(data.locked)
         end
     end
@@ -324,17 +319,6 @@ function PANEL:MakeButtonSlider(data)
     local left = vgui.Create("DButtonTTT2", self)
 
     left:SetText(data.label)
-
-    --left.Paint = function(slf, w, h)
-    --	derma.SkinHook("Paint", "ButtonTTT2", self, w, h)
-    --	print("############################# Painting Button")
-    --	return false
-    --end
-
-    --function PANEL:Paint(w, h)
-    --	derma.SkinHook("Paint", "ButtonTTT2", self, w, h)
-    --	return false
-    --end
 
     left.DoClick = function(slf)
         if isfunction(data.OnClick) then

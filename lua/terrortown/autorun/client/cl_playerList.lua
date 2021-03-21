@@ -23,12 +23,9 @@ end
 -- return: arrys of names with the player roles
 function PlayerList:getRoles()
     local len = self.index or #self.list
-    -- TODO: mit revList umsetzen
 
     local roles = {}
-    -- for i = 1, len do
-    --     roles[i] = self.list[i]:getRole()
-    -- end
+
     for i, n, id in pairsByKey(self.revList, len) do
         roles[i] = self.list[id]:getRole()
     end
@@ -90,12 +87,6 @@ end
 -- param: name (string) name of the player in the List
 -- param: cur_role (string) current role that is set in the entry 
 function PlayerList:updateCurrentRole(name, cur_role)
-    --print("Set Current Role:", cur_role, "for player:", name)
-    -- for n_c, n in pairs(self.currentNameList) do
-    --     print("current Name:", n_c, "name:", n)
-    -- end
-    --print("Name:", name)
-    --print("Index:", self.revList[name])
     self.list[self.revList[name]].currentRole = cur_role
 end
 
@@ -118,11 +109,9 @@ end
 
 function PlayerList:applyRoles_nr(name)
     if name then
-        --print("Apply Role next round for:  " .. name )
         self.list[self.revList[name]]:applyRole_nr()
     else
         local len = self.index or #self.list
-        --print("Apply Role next round for all.")
         for i = 1, len do
             self.list[i]:applyRole_nr()
         end
@@ -140,15 +129,12 @@ end
 function PlayerList:applyLockedRoles(name)
     if name then
         if self.list[self.revList[name]]:getLocked() == true then
-            print("Apply Locked Rote to:", name)
             self.list[self.revList[name]]:applyRole_nr()
         end
     else
         local len = self.index or #self.list
-        print("Apply LOCKED Role next round for all!!!!")
         for i = 1, len do
             if self.list[i]:getLocked() == true then
-                print("Apply Locked Rote to:", self.list[i].name)
                 self.list[i]:applyRole_nr()
             end
         end
@@ -170,9 +156,6 @@ setmetatable(HumanList, {
         obj:__init(...)
         return obj
     end,
-    -- __newindex = function()
-
-    -- end,
 })
 
 -- initializes Human Player List and adds all players currently on the server
@@ -183,8 +166,6 @@ function HumanList:__init(init)
     for i = 1, #players do
         self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
     end
-
-    --self:__initRevList()
 end
 
 -- add Player to the HumanList and add entry in revList with given index
@@ -195,7 +176,7 @@ function HumanList:addPlayer(name, ent, role)
         self.list[id] = PlayerEntry({
                 name = name,
                 ent = ent,
-                role = role--roles:GetByIndex(players[i]:GetRole()).name
+                role = role
             })
         self.revList[name] = id
     end
@@ -240,11 +221,6 @@ end
 ---------------------- BotList ----------------------
 -----------------------------------------------------
 
--- Problem: der index ist eine position in der echten liste
--- aber die Namenslist ist anhand der revers List erzeugt ...
--- beide haben im falle der BotList eigentlich immer die gleiche Reihenfolge
--- das könnte aber trotzdem zu Problemen führen
-
 -- BotList class inherits from PlayerList
 BotList = {}
 BotList.__index = BotList
@@ -278,7 +254,6 @@ end
 
 -- creates a bot List with a number of entries given by the maximal available Player slots on the server
 -- adds existing bots as entity to the first list entries
---
 function BotList:__initExistingBots()
     local existingBots = player.GetBots()
 
@@ -365,20 +340,6 @@ function BotList:updateStatus() -- oder updateSpawn oder refresh
             self.list[i]:resetStatus()
         end
     end
-
---     if self.index > self.exist_index then
---         print("Set Spawn")
---         for i = math.max(self.exist_index,1), self.index do
---             print(i)
---             self.list[i]:setSpawn()
---         end
---    elseif self.index < self.exist_index then
---         print("Set Delete", self.index)
---         for i = math.max(self.index, 1), self.exist_index do
---             print( i)
---             self.list[i]:setDelete()
---         end
---     end
 end
 
 -- updates the current existing bot index
@@ -389,13 +350,8 @@ function BotList:refresh()
 end
 
 -- Adding a new Bot Entry to the list
-
--- TODO: die funktion wird aufgerufen, bevor der Spieler überhaupt vom Bot zur verfügung steht.
 function BotList:addEntity(cur_name)
-    --local old_exist_index = self.exist_index
     self.exist_index = #player:GetBots()
-
-    --local len = math.max(old_exist_index, self.exist_index)
 
     local ent = nil
     for _,e in pairs(player:GetBots()) do
@@ -407,7 +363,7 @@ function BotList:addEntity(cur_name)
     -- If the bot was created with the RoleManager and an entry in addNewEntity was created
     -- the new entity is added to the BotList Entry and the cur_name is removed from the addNewEntity List
     if self.addNewEntity[cur_name] and ent ~= nil then
-        print("Add Entity from addNewEntityList", cur_name, self.addNewEntity[cur_name])
+        -- print("Add Entity from addNewEntityList", cur_name, self.addNewEntity[cur_name])
         local i = self.revList[self.addNewEntity[cur_name]]
         self.list[i]:addEntity(ent, cur_name)
         self.addNewEntity[cur_name] = nil
@@ -426,23 +382,19 @@ end
 
 -- removing an entity from a botList entry
 function BotList:removeEntity(cur_name)
-    print("---------- Removing Bot from the list.")
     self.exist_index = #player:GetBots()
 
     if self.currentNameList[cur_name] then
         local i = self.revList[self.currentNameList[cur_name]]
-        print("Entity of current bot:", self.list[i].ent)
         self.list[i]:removeEntity()
         self.currentNameList[cur_name] = nil -- remove index from current name list
     end
 end
 
--- TODO: add Name Parameter
 -- If the name of the entities is not changed, a bot name must be choosen, that is not in currentNames
 function BotList:spawnEntities(name, this_round, separateList)
     list = separateList or self.list
     for i = 1, #list do
-        print(list[i].name, "Spawn:", list[i].spawn, "Delete:", list[i].delete)
         if list[i].spawn == true then
             local spawn_name = list[i].name
 
@@ -453,14 +405,12 @@ function BotList:spawnEntities(name, this_round, separateList)
                 num = num + 1
             end
 
-            print("######## Add entry to entity list: " .. spawn_name .. " = " .. list[i].name)
             self.addNewEntity[spawn_name] = list[i].name
             list[i]:spawnEntity(spawn_name, this_round)
             -- If the Name is already in the currentNameList, the addEntry function is not called: (if not self.currentNameList[cur_name] and ent ~= nil)
             self.currentNameList[spawn_name] = list[i].name
 
         elseif list[i].delete == true then
-            print("###### Rrmove Entry:" .. list[i].name)
             self.currentNameList[list[i].currentName] = nil
             list[i]:deleteEntity()
         end
@@ -469,14 +419,14 @@ end
 
 function BotList:respawnEntities(name)
     if name then
-        print("ReSpawn Enity:")
+        --print("ReSpawn Enity:")
         self.list[self.revList[name]]:respawnEntity()
         self.addNewEntity[name] = name
     else
         for i = 1, self.exist_index do
             local name = self.list[i].name 
             if self.list[i].name ~= self.list[i].currentName then
-                print(i, "Replacing: ", self.list[i].currentName, "by: ", name)
+                --print(i, "Replacing: ", self.list[i].currentName, "by: ", name)
                 self.list[i]:respawnEntity()
                 self.addNewEntity[name] = name
             end
@@ -494,7 +444,7 @@ function BotList:applyRoles_nr(name)
             --print("Apply Role next round for:  " .. name )
             self.list[i]:applyRole_nr()
         else
-            print("Entity not created yet: store in table for next round for: " .. name)
+            --print("Entity not created yet: store in table for next round for: " .. name)
             self.processNextRound[#self.processNextRound + 1] = self.list[i]
         end
     else
@@ -505,25 +455,9 @@ function BotList:applyRoles_nr(name)
             if IsValid(self.list[i].ent) then
                 self.list[i]:applyRole_nr()
             else
-                print("Entity not created yet: store in table for next round.")
+                --print("Entity not created yet: store in table for next round.")
                 self.processNextRound[#self.processNextRound + 1] = self.list[i]
             end
         end
     end
 end
-
-
-
-
--- TODO: Update Names bevor creating new entities.
--- function BotList:updateNames(name)
---     if name then
---         print("Change Name of Bot:  " .. name )
---         self.list[self.revList[name]]:updateName()
---     else
---         print("CHange Name of all Bots.")
---         for i = 1, self.exist_index do
---             self.list[i]:updateName()
---         end
---     end
--- end

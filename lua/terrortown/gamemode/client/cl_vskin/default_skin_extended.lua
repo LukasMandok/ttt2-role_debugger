@@ -55,7 +55,7 @@ surface.CreateAdvancedFont("DermaTTT2TextLarge", {font = "Trebuchet24", size = 1
 
 
 hook.Add("TTT2UpdatedVSkin", "Update ttt2_default_extended Skin", function(oldSkinName, skinName)
-    print("Updateing this skin")
+    --print("Updateing this skin")
 
     derma.GetSkinTable()["ttt2_default_extended"]:UpdatedVSkin()
 end)

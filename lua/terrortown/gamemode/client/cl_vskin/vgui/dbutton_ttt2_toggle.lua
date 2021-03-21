@@ -27,16 +27,7 @@ function PANEL:Init()
 	--self:SetPaintBackgroundEnabled(false)
 	--self:SetPaintBorderEnabled(false)
 
-
-	-- local test = self:GetSkin()
-	-- for i,k in pairs(test) do
-	-- 	print(i, k)
-	-- end
-	-- print("\nSetting new Skin" )
-
 	self.text = ""
-
-	--self.material = material_off
 
 	-- remove label and overwrite function
 	self:SetText("")
@@ -76,15 +67,13 @@ end
 -- @param boolean state: the state the button should be switched into
 function PANEL:OnToggled(state)
 	if state == false then
-		--print("Toggled OFF")
 		self:OnUnlocked()
 		self.material = self.material_off
 	elseif state == true then
-		--print("Toggled ON")
 		self:OnLocked()
 		self.material = self.material_on
 	else
-		print("Toggled but state did not change!")
+		--print("Toggled but state did not change!")
 	end
 end
 

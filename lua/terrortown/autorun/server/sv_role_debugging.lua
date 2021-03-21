@@ -46,11 +46,11 @@ end)
 hook.Add( "player_disconnect", "player_connect_example", function( data )
     if data.bot == false then
         net.Start("RoleManagerPlayerDisconnected")
-        net.WriteString(data.name)
+            net.WriteString(data.name)
         net.Broadcast()
     else
         net.Start("RoleManagerBotDisconnected")
-        net.WriteString(data.name)
+            net.WriteString(data.name)
         net.Broadcast()
     end
 
@@ -61,46 +61,29 @@ net.Receive( "RoleManagerCurrentRolesRequest" , function (len, calling_ply)
     print("Server: Requesting Current Roles")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         net.Start("RoleManagerCurrentRolesPlayer")
-        net.WriteInt(#player.GetHumans(), 10)
-        for _,p in pairs(player.GetHumans()) do
-            net.WriteString(p:Nick())
-            net.WriteString(roles.GetByIndex(p:GetSubRole()).name)
-        end
+            net.WriteInt(#player.GetHumans(), 10)
+            for _,p in pairs(player.GetHumans()) do
+                print("   Player:", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
+                net.WriteString(p:Nick())
+                net.WriteString(roles.GetByIndex(p:GetSubRole()).name)
+            end
         net.Send(calling_ply)
 
         print("Server: Sending Bot Roles")
         net.Start("RoleManagerCurrentRolesBot")
-        net.WriteInt(#player.GetBots(), 10)
-        for _,p in pairs(player.GetBots()) do
-            print("For Bot:", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
-            net.WriteString(p:Nick())
-            net.WriteString(roles.GetByIndex(p:GetSubRole()).name)
-        end
+            net.WriteInt(#player.GetBots(), 10)
+            for _,p in pairs(player.GetBots()) do
+                print("   Bot:  ", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
+                net.WriteString(p:Nick())
+                net.WriteString(roles.GetByIndex(p:GetSubRole()).name)
+            end
         net.Send(calling_ply)
     end
 end)
 
--- Renaming Bots
-
--- TODO: This is not working and not used at the moment
--- local PlayerNameOrNick = debug.getregistry().Player
--- PlayerNameOrNick.RealName = PlayerNameOrNick.Nick
--- PlayerNameOrNick.Nick = function(self) if self ~= nil then return self:GetNWString("PlayerName", self:RealName()) else return "" end end
--- PlayerNameOrNick.Name = PlayerNameOrNick.Nick
--- PlayerNameOrNick.GetName = PlayerNameOrNick.Nick
-
--- net.Receive("RoleManagerChangeBotName", function (len, calling_ply)
---     print("Server: Updating Bot Names.")
---     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
---         local target_ply = net.ReadEntity()
---         local name = net.ReadString()
---         target_ply:SetNWString("PlayerName", name)
---     end
--- end)
-
 -- Spawn Bot
 net.Receive("RoleManagerSpawnBot", function (len, calling_ply)
-    print("Server: Spawning Bot.")
+    --print("Server: Spawning Bot.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local spawn_name = net.ReadString()
         player.CreateNextBot( spawn_name )
@@ -133,25 +116,25 @@ end
 
 local function respawn(calling_ply, target_ply)
     if GetRoundState() == 1 then
-        print("!!!Round has not yet begun.")
+        print("Round has not yet begun.")
     elseif target_ply:Alive() and not target_ply:IsSpec() then
-        print("!!!The Player " .. target_ply:Nick() .. " is already alive.")
+        print("The Player " .. target_ply:Nick() .. " is already alive.")
 
     -- if player ayer is alive but a spectator or the player is dead
     elseif (target_ply:Alive() and target_ply:IsSpec()) then
-        print("!!!respawning spectator player.")
+        --print("Respawning spectator player:", target_ply:Nick())
         target_ply:ConCommand("ttt_spectator_mode 0")
 
         --timer.Create("respawntpdelay", 0.05, 0, function()
         timer.Simple(0.05, function ()
-            print("spawning bot:", target_ply:Nick())
+            --print("spawning bot:", target_ply:Nick())
             local spawnEntity = spawn.GetRandomPlayerSpawnEntity(target_ply)
             local spawnPos = spawnEntity:GetPos()
             local spawnEyeAngle = spawnEntity:EyeAngles()
 
             local corpse = target_ply:FindCorpse() -- remove corpse
             if corpse then
-                print("Found Corpse at spawning")
+                --print("Found Corpse at spawning")
                 corpse_remove(corpse)
             end
 
@@ -161,14 +144,10 @@ local function respawn(calling_ply, target_ply)
 
             target_ply:SetPos(spawnPos)
             target_ply:SetEyeAngles(spawnEyeAngle or Angle(0, 0, 0))
-
-            -- if target_ply:Alive() then
-            --     timer.Remove("respawntpdelay")
-            --     return
-            -- end
         end)
+
     elseif  not target_ply:Alive() then
-        print("!!!respawning death player.")
+        --print("Respawning death player: ".. target_ply:Nick())
         local spawnEntity = spawn.GetRandomPlayerSpawnEntity(target_ply)
         local spawnPos = spawnEntity:GetPos()
         local spawnEyeAngle = spawnEntity:EyeAngles()
@@ -189,36 +168,36 @@ local function respawn(calling_ply, target_ply)
 
 end
 
-function getRandomRole(avoidRoles)
-    local availablePlayers = roleselection.GetSelectablePlayers(player.GetAll())
-    local allAvailableRoles = roleselection.GetAllSelectableRolesList(#availablePlayers)
-    local selectableRoles = roleselection.GetSelectableRolesList(#availablePlayers, allAvailableRoles)
-    local availableRoles = {}
-    local roleCount = {}
+-- function getRandomRole(avoidRoles)
+--     local availablePlayers = roleselection.GetSelectablePlayers(player.GetAll())
+--     local allAvailableRoles = roleselection.GetAllSelectableRolesList(#availablePlayers)
+--     local selectableRoles = roleselection.GetSelectableRolesList(#availablePlayers, allAvailableRoles)
+--     local availableRoles = {}
+--     local roleCount = {}
 
-    for i = 1, #availablePlayers do
-        local rd = availablePlayers[i]:GetSubRoleData()
-        roleCount[rd] = (roleCount[rd] or 0) + 1
-    end
+--     for i = 1, #availablePlayers do
+--         local rd = availablePlayers[i]:GetSubRoleData()
+--         roleCount[rd] = (roleCount[rd] or 0) + 1
+--     end
 
-    for roleData, roleAmount in pairs(selectableRoles) do
-        print("RoleData:", roleData)
-        print("roleAmount:", roleAmount)
-        --if (not avoidRoles or not avoidRoles[roleData]) and (not roleCount[roleData] or roleCount[roleData] < roleAmount) then
-        if (not roleCount[roleData] or roleCount[roleData] < roleAmount) then
-            availableRoles[#availableRoles + 1] = roleData.index
-        end
-    end
+--     for roleData, roleAmount in pairs(selectableRoles) do
+--         print("RoleData:", roleData)
+--         print("roleAmount:", roleAmount)
+--         --if (not avoidRoles or not avoidRoles[roleData]) and (not roleCount[roleData] or roleCount[roleData] < roleAmount) then
+--         if (not roleCount[roleData] or roleCount[roleData] < roleAmount) then
+--             availableRoles[#availableRoles + 1] = roleData.index
+--         end
+--     end
 
-    if #availableRoles < 1 then return end
+--     if #availableRoles < 1 then return end
 
-    return availableRoles[math.random(#availableRoles)]
-end
+--     return availableRoles[math.random(#availableRoles)]
+-- end
 
 
 -- Spawn Bot in the same round
 net.Receive("RoleManagerSpawnBotThisRound", function (len, calling_ply)
-    print("Server: Spawning Bot this round.")
+    --print("Server: Spawning Bot this round.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local spawn_name = net.ReadString()
         target_ply = player.CreateNextBot( spawn_name )
@@ -228,7 +207,7 @@ end)
 
 -- Respawn Bot
 net.Receive("RoleManagerRespawnBot", function (len, calling_ply)
-    print("Server: Respawning Bot.")
+    --print("Server: Respawning Bot.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local target_ply = net.ReadEntity()
         local spawn_name = net.ReadString()
@@ -271,7 +250,7 @@ end)
 
 -- Apply Roles
 net.Receive("RoleManagerApplyRole", function (len, calling_ply)
-    print("Server: Applying role.")
+    --print("Server: Applying role.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local ply = net.ReadEntity()
         local role_name = net.ReadString()
@@ -282,7 +261,7 @@ net.Receive("RoleManagerApplyRole", function (len, calling_ply)
         if role.name ~= role_name then
             --role_index = getRandomRole()
             --role = roles.GetByIndex(role_index)
-            print("Server: Rolle " .. role_name .. " wurde nicht gefunden. Statdesse wird die Rolle nicht festgelegt.")
+            --print("Server: Rolle " .. role_name .. " wurde nicht gefunden. Statdesse wird die Rolle nicht festgelegt.")
         else
             local role_credits = role:GetStartingCredits()
 
@@ -290,37 +269,31 @@ net.Receive("RoleManagerApplyRole", function (len, calling_ply)
             ply:SetCredits(role_credits)
         end
 
-        
-
         SendFullStateUpdate()
-        --calling_ply:ChatPrint("You changed to '" .. role.name .. "' (index: " .. role_index .. ")")
+
         calling_ply:ChatPrint("Player: '" .. ply:Nick() .. "' role changed to " .. role_name .. ".")
     end
 end)
 
 net.Receive("RoleManagerApplyRoleNextRound", function (len, calling_ply)
-    print("Server: Applying role next round.")
+    --print("Server: Applying role next round.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local target_ply = net.ReadEntity()
         local role_name = net.ReadString()
 
         local sid64 = tostring(target_ply:SteamID64())
 
-        print("STEMDI64", sid64)
-
-        -- TODO: Abfrage durch ROLE_RANDOM.name, wenn das in einer shared file ist.
-        if role_name == "random" then
-            print("Apply Random ROle")
+        if role_name == ROLE_RANDOM.name then
+            --print("Apply Random ROle")
             --if IsValid(roleselection.finalRoles[sid64]) then
             roleselection.finalRoles[target_ply] = nil -- sid64] = nil
             --end
         else
             local role = roles.GetByName(role_name)
             local role_index = role.index
-            print("Aplly Role:", role_name, role_index, "to player", target_ply)
+            --print("Aplly Role:", role_name, role_index, "to player", target_ply)
 
             roleselection.finalRoles[target_ply] = role_index --sid64] = role_index
-            print(roleselection.finalRoles[target_ply])--sid64])
         end
 
         calling_ply:ChatPrint("Player: '" .. target_ply:Nick() .. "' has role " .. role_name .. " next round.")
@@ -328,9 +301,8 @@ net.Receive("RoleManagerApplyRoleNextRound", function (len, calling_ply)
 end)
 
 net.Receive("RoleManagerClearRolesNextRound", function (len, calling_ply)
-    print("Server: Clear Roles for next round.")
+    --print("Server: Clear Roles for next round.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
-        -- TODO: vielleicht lieber alle Elemente auf nil setzen, anstelle eine Neue referenz zuordnern
         for k,v in pairs(roleselection.finalRoles) do
              roleselection.finalRoles[k] = nil
         end
@@ -346,13 +318,14 @@ net.Receive("RoleManagerSetBoolConvar", function (len, ply)
         print("Get Convar Message from Client: Setting " .. convar .. " to state " .. tostring(state))
         -- TODO: Funktioniert noch nicht
         --GetConVar( convar ):SetBool( state )
+        print("Set Convar:", convar , "to:", tostring(bool_to_number[state]))
         RunConsoleCommand( convar, tostring(bool_to_number[state]) )
     end
 end)
 
 net.Receive("RoleManagerRequestBoolConvar", function (len, ply)
 	local convar = net.ReadString()
-	print("Get BoolConvar for Client: " .. convar .. " = " .. tostring(GetConVar(convar):GetBool()))
+	--print("Get BoolConvar for Client: " .. convar .. " = " .. tostring(GetConVar(convar):GetBool()))
     net.Start("RoleManagerGetBoolConvar")
 		net.WriteString(convar)
 		net.WriteBool(GetConVar(convar):GetBool())

@@ -21,7 +21,6 @@ local additionalTTTFiles = {
 
 --hook.Add("TTT2ModifyFiles", "Add additional Files", function(TTTFiles)
 
--- TODO: Ich bin mir nicht sicher, ob das so richtig ist, wenn das vor der eigentlichen sh_include.lua Datei aufgerufen wird, funktioniert das nicht.
 if TTTFiles ~= nil then
     table.Merge(TTTFiles, additionalTTTFiles)
     if SERVER then
@@ -40,4 +39,3 @@ if TTTFiles ~= nil then
         ttt_include( "cl_vskin__vgui__dform_extended" )
     end
 end
---end) 

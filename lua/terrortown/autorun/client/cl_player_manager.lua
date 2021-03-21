@@ -44,7 +44,6 @@ function RoleManager:__init()
         end
     end)
 
-    -- TODO: Add for Players
     net.Receive("RoleManagerPlayerConnected", function ()
         local name = net.ReadString()
         self.playerList:refresh()
@@ -52,6 +51,7 @@ function RoleManager:__init()
 
     net.Receive("RoleManagerPlayerDisconnected", function ()
         local name = net.ReadString()
+        self.playerList:refresh()
     end)
 
     net.Receive("RoleManagerBotConnected", function ()
@@ -78,7 +78,6 @@ function RoleManager:__init()
         local len = net.ReadInt(10)
         local current_roles = {}
         for i = 1, len do
-            --current_roles[net.ReadString()] = net.ReadString()
             local name = net.ReadString()
             local cur_role = net.ReadString()
 
@@ -90,13 +89,10 @@ function RoleManager:__init()
         local len = net.ReadInt(10)
         local current_roles = {}
         for i = 1, len do
-            -- current_roles[net.ReadString()] = net.ReadString()
             local cur_name = net.ReadString()
             local cur_role = net.ReadString()
 
-            -- todo: ändere CurrenNameList in zuordnung von Namen, nicht der Indice.
             local name = self.botList:getCurrentNameList()[cur_name]
-            --print("Recive Role: ", cur_role, "for", cur_name, "which is:", id)
             self.botList:updateCurrentRole(name, cur_role)
         end
     end)
@@ -111,7 +107,6 @@ function RoleManager:__init()
 
     -- Hook to create Players if self.apply_next_round ist set before the roles are distributed
     hook.Add("TTTPrepareRound", "Create Bots before round start", function()
-        print("Hook: Preparation WITH:", self.apply_next_round)
         -- Apply Roles of locked Player
         self:applyPlayerLockedRoles()
         self:applyBotLockedRoles()
@@ -120,16 +115,13 @@ function RoleManager:__init()
         if self.apply_next_round == true then
             self.botList:spawnEntities() -- self.botList.processNextRound)
 
-            print("Applying Bot Roles")
             self.botList:updateStatus()
 
             timer.Simple(2, function ()
-                print("???? Apply Roles to newly created bots")
                 self.botList:applySeparateRoles(self.botList.processNextRound)
                 self.botList.processNextRound = {}
             end)
             timer.Simple(2, function ()   -- TODO: Timer anpassen
-                print("??????????????????? Request CUrrent Role List")
                 self:requestCurrentRoleList()
             end)
         end
@@ -177,7 +169,6 @@ function RoleManager:updateCurrentRoles()
 end
 
 function RoleManager:requestCurrentRoleList()
-    --print("Cliend: Sending Role Request")
     net.Start("RoleManagerCurrentRolesRequest")
     net.SendToServer()
 end
@@ -219,13 +210,13 @@ end
 
 function RoleManager:applyPlayerRoles(name)
     self:clearRolesNextRound()
-    print("Applying Player Roles")
+    --print("Applying Player Roles")
     -- Apply
     self.playerList:applyRoles(name)
 end
 
 function RoleManager:applyPlayerRolesNextRound(name)
-    print("Applying Player Roles next Round")
+    --print("Applying Player Roles next Round")
     self.playerList:applyRoles_nr(name)
     self.apply_next_round = true
 end
@@ -248,7 +239,6 @@ end
 -----------------------------------------------------
 
 function RoleManager:setBotRole(name, role)
-    --print("   Rollen:", unpack(self.botList:getRoles()))
     self.botList:setRole(name, role)
 end
 
@@ -265,7 +255,6 @@ function RoleManager:changeBotListLen(len)
 end
 
 function RoleManager:getBotList()
-    print("Get Current Index:", self.botList.index)
     return self.botList:getNames()
 end
 
@@ -293,27 +282,24 @@ function RoleManager:setCurrentBotRoles()
     self.botList:updateStatus()
 end
 
--- TODO: add name for updateStatus?
+
 function RoleManager:applyBotRoles(name)
     self:clearRolesNextRound()
     self.botList:spawnEntities(name, true)
 
-    -- too 
-    print("Applying Bot Roles")
+    -- TODO: add name for updateStatus?
     self.botList:updateStatus()
 
     timer.Simple(2, function ()
-        print("?????????????????? Apply Roles", name)
         self.botList:applyRoles(name)
     end)
     timer.Simple(2, function ()   -- TODO: Timer anpassen
-        print("??????????????????? Request CUrrent Role List")
         self:requestCurrentRoleList()
     end)
 end
 
 function RoleManager:applyBotRolesNextRound(name)
-    print("+Applying Bot Roles next Round+", name)
+    --print("+Applying Bot Roles next Round+", name)
     self.botList:updateStatus()
     self.botList:applyRoles_nr(name)
     self.apply_next_round = true
@@ -353,7 +339,6 @@ function RoleManager:getTranslatedRoleList()
     return self.roleList:getTranslatedNames()
 end
 
--- TODO: RoleIcons in die RoleListe einfügen
 function RoleManager:getRoleIcons()
     local icons = {}
     for i = 1, #self.roleList do

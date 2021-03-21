@@ -143,12 +143,7 @@ setmetatable(RoleList, {
 function RoleList:__init(init)
     EntryList.__init(self, init)
 
-    -- self.list = {[1] = {name = ROLE_RANDOM.name, id = ROLE_RANDOM.id, category = ROLE_RANDOM.id}}
-    -- self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
-
-    -- self:__initRevList()
-    -- self:__initTranslation()
-    -- self.__initCategories()
+    self.list = {}
 
     self.categories = {[1] = {name = "innocent" , roles = {}, icons = {}},
                        [2] = {name = "traitor"  , roles = {}, icons = {}},
@@ -175,7 +170,6 @@ function RoleList:__initCategories()
     end
 
     for i = 1, #self.list do
-        --print(self.list[i].name)
         local category, index = self:getRoleCategory(self.list[i])
         self.list[i].category = category
 
@@ -201,9 +195,7 @@ end
 -- TODO: should be alphabeticall
 function RoleList:getTranslatedNames()
     local names = {}
-    -- for i = 1, #self.list do
-    --     names[i] = self.list[i].translated
-    -- end
+
     for i, n in pairsByKey(self.revList) do
         names[i] = self.list[self.revList[n]].translated
     end
@@ -218,9 +210,8 @@ function RoleList:getCategories()
     return self.categories
 end
 
--- TODO: GetRole Category: Innocent, Traitor, Neutral, Killers
+-- TODO: Schöner schreiben
 function RoleList:getRoleCategory(role)
-    print("Getting New Role Category")
     if (role.name == ROLE_RANDOM.name) then
         return ROLE_RANDOM.id, ROLE_RANDOM.index
     end
@@ -229,7 +220,7 @@ function RoleList:getRoleCategory(role)
     local baserole = role:GetBaseRole()
 
     if (team == TEAM_INNOCENT or team == TEAM_TRAITOR) and (baserole <= 2) then
-        print("STD Role:", role.name, "Baserole:", baserole)
+        --print("STD Role:", role.name, "Baserole:", baserole)
         return baserole, baserole + 1
     elseif (baserole == ROLE_CUPID) then
         return ROLE_INNOCENT, ROLE_INNOCENT + 1
@@ -238,13 +229,13 @@ function RoleList:getRoleCategory(role)
     elseif (baserole == ROLE_SIDEKICK) then
         return ROLE_KILLERS.id, ROLE_KILLERS.index
     elseif (baserole == role.index and (team == TEAM_NONE or team == TEAM_UNASSIGNED or team == TEAM_JESTER or team == TEAM_INNOCENT)) or (baserole == ROLE_MARKER) then
-        print("NEUTRAL Role:", role.name, "Baserole:", baserole)
+        --print("NEUTRAL Role:", role.name, "Baserole:", baserole)
         return ROLE_NEUTRAL.id, ROLE_NEUTRAL.index
     elseif (baserole == role.index and team ~= TEAM_NONE and team ~= TEAM_UNASSIGNED) or (baserole == ROLE_MIMIC or baserole == ROLE_PIRATE or baserole == ROLE_NECROMANCER) then
-        print("KILLER Role:", role.name, "Baserole:", baserole)
+        --print("KILLER Role:", role.name, "Baserole:", baserole)
         return ROLE_KILLERS.id, ROLE_KILLERS.index
     else
-        print("UNKNOWN Role:", role.name, "Baserole:", baserole)
+        --print("UNKNOWN Role:", role.name, "Baserole:", baserole)
         return ROLE_RANDOM.id, ROLE_RANDOM.index
     end
 end
