@@ -20,7 +20,7 @@ local function PopulateRolePanel(parent)
     local botLock = nil
 
     local function setPlayerComboboxesLocked(bool)
-        roleManager.player_roles_locked = bool -- TODO: Funktion dafür schreiben
+        roleManager.player_roles_locked = bool
         for i,entry in pairs(playerComboboxes) do
             entry["lock"]:setLocked(bool)
         end
@@ -28,7 +28,7 @@ local function PopulateRolePanel(parent)
 
 
     local function setBotComboboxesLocked(bool)
-        roleManager.bot_roles_locked = bool -- TODO: Funktion dafür schreiben
+        roleManager.bot_roles_locked = bool
         for i,entry in pairs(botComboboxes) do
             entry["lock"]:setLocked(bool)
         end
@@ -36,7 +36,7 @@ local function PopulateRolePanel(parent)
 
 
     local function setAllComboboxesLocked(bool)
-        roleManager.all_roles_locked = bool -- TODO: function dafür schreiben
+        roleManager.all_roles_locked = bool
         playerLock:setLocked(bool)
         botLock:setLocked(bool)
 
@@ -52,19 +52,18 @@ local function PopulateRolePanel(parent)
     -----------------------------------------------
     ------------------- GENERAL -------------------
     -----------------------------------------------
-    --TODO: Übersetzung einfügen
-    local formControl = vgui.CreateTTT2Form_extended(parent, "Control")
+    local formControl = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_roles_control"))
 
     local applyButton = formControl:MakeDoubleButton({
-        label1 = "Apply Roles",
+        label1 = LANG.GetTranslation("debugging_roles_control_apply"),
         OnClick1 = function(_)
-            print("Apply Roles")
+            --print("Apply Roles")
             roleManager:applyPlayerRoles()
             roleManager:applyBotRoles()
         end,
-        label2 = "Apply Roles next round",
+        label2 = LANG.GetTranslation("debugging_roles_control_apply_nr"),
         OnClick2 = function(_)
-            print("Apply Roles next round")
+            --print("Apply Roles next round")
             roleManager:applyPlayerRolesNextRound()
             roleManager:applyBotRolesNextRound()
         end,
@@ -82,13 +81,13 @@ local function PopulateRolePanel(parent)
     })
 
     local updateButton = formControl:MakeDoubleButton({
-        label1 = "Update All",
+        label1 = LANG.GetTranslation("debugging_roles_control_update"),
         OnClick1 = function(_)
             roleManager:setCurrentRoles()
         end,
-        label2 = "Restart Round",
+        label2 = LANG.GetTranslation("debugging_roles_control_restart"),
         OnClick2 = function(_)
-            print("Restart Round")
+            --print("Restart Round")
             roleManager.startNextRound()
         end,
     })
@@ -101,7 +100,7 @@ local function PopulateRolePanel(parent)
     local playerList = roleManager:getPlayerList()
 
     -- create Panel with List of human players
-    local formPlayer = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_player_roles"))
+    local formPlayer = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_roles_player"))
     formPlayer:Dock(TOP)
     local formPlayerList = vgui.CreateTTT2Container_extended(formPlayer)
 
@@ -143,15 +142,13 @@ local function PopulateRolePanel(parent)
 
         hook.Add("UpdateRoleSelection_" .. playerList[i], "Update Role Selection " .. playerList[i], function(customRole)
             local role = customRole or roleManager:getRoleOfPlayer(playerList[i])
-            --print("Update role to", role)
-            --combobox:ChooseOptionName(role)
             combobox:UpdateOptionName(role)
         end)
 
     end
 
     local updateButton, _, lock = formPlayer:MakeDoubleButton({
-        label1 = "Update Player Roles",
+        label1 = LANG.GetTranslation("debugging_roles_player_update"),
         OnClick1 = function(_)
             roleManager:setCurrentPlayerRoles()
         end,
@@ -180,7 +177,7 @@ local function PopulateRolePanel(parent)
     local botList = roleManager:getBotList()
 
     -- create Panel with List of bots
-    local formBot = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_bot_roles"))
+    local formBot = vgui.CreateTTT2Form_extended(parent, LANG.GetTranslation("header_debugging_roles_bot"))
     formBot:Dock(TOP)
     local formBotList = vgui.CreateTTT2Container_extended(formBot)
 
@@ -192,7 +189,7 @@ local function PopulateRolePanel(parent)
         local index = roleManager:getBotLen()
         roleManager:changeBotListLen(len)
 
-        -- TODO: ist nicht vollständig, wenn 
+        -- TODO: 
         --print("index:", index)
         --print("whole list:", unpack(roleManager:getBotList()))
         --print("return:", unpack( {unpack(roleManager:getBotList(), index + 1)}))
@@ -206,7 +203,6 @@ local function PopulateRolePanel(parent)
     --  The current combobox selection is only extended.
     --  The slider below is used to remove entries from the list.
     local function displayBotList(newBotListEntries)
-        --print("displaying new Bots:", #newBotListEntries)
         for i = 1, #newBotListEntries do
             local combobox, lock = formBotList:MakeComboBox_Roles({
                 label = newBotListEntries[i],
@@ -234,7 +230,6 @@ local function PopulateRolePanel(parent)
                 end,
                 OnRemove = function()
                     --roleManager:setBotLocked(newBotListEntries[i], false)
-                    print("deleting entry", newBotListEntries[i])
                     botComboboxes[newBotListEntries[i]] = nil
                     --print("Removing hook for", newBotListEntries[i] )
                     hook.Remove("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i])
@@ -243,11 +238,8 @@ local function PopulateRolePanel(parent)
 
             botComboboxes[newBotListEntries[i]] = {["combo"] = combobox, ["lock"] = lock}
 
-            -- TODO: Die Updates funktionieren noch nicht immer zuverlässig!
             hook.Add("UpdateRoleSelection_" .. newBotListEntries[i], "Update Role Selection " .. newBotListEntries[i], function(customRole)
                 local role = customRole or roleManager:getRoleOfBot(newBotListEntries[i])
-                --print("Update role to", role)
-                --combobox:ChooseOptionName(role)
                 combobox:UpdateOptionName(role)
             end)
 
@@ -257,12 +249,8 @@ local function PopulateRolePanel(parent)
     -- Creates a slider that allows to change the amount of bots displayed in the 
     -- List of Bots above.
     -- Removes all entries above if the values of the slider is reduced.
-    --
-    -- TODO: Update funktioniert nicht richtig, wenn der apply Button gedrückt wurde.
-    -- TODO: Übersetzung einfügen
-    -- TODO: Reset Button vom SLider setzt auch Rollen zurück
     local botSlider, lock = formBot:MakeButtonSlider({
-        label = "Update Bots",
+        label = LANG.GetTranslation("debugging_roles_bot_update"),
         min = 0,
         max = game.MaxPlayers() - #playerList,
         decimal = 0,
@@ -304,11 +292,11 @@ local function PopulateRolePanel(parent)
 
     -- creates some options
     formSettings:MakeHelp({
-        label = "debugging_settings_auto_apply_help"
+        label = "debugging_roles_settings_auto_apply_help"
     })
 
     formSettings:MakeCheckBox({
-        label = LANG.GetTranslation("debugging_settings_auto_apply_testing"),
+        label = LANG.GetTranslation("debugging_roles_settings_auto_apply"),
         initial = roleManager.auto_apply,
         default = roleManager.auto_apply,
         OnChange = function(_, value)
@@ -317,11 +305,11 @@ local function PopulateRolePanel(parent)
     })
 
     formSettings:MakeHelp({
-        label = "debugging_settings_auto_refresh_help"
+        label = "debugging_roles_settings_auto_refresh_help"
     })
 
     formSettings:MakeCheckBox({
-        label = LANG.GetTranslation("debugging_settings_auto_refresh"),
+        label = LANG.GetTranslation("debugging_roles_settings_auto_refresh"),
         initial = roleManager.auto_refresh,
         default = roleManager.auto_refresh,
         OnChange = function(_, value)
@@ -353,10 +341,10 @@ local function PopulateWeaponPanel(parent)
 end
 
 local function PopulateBotPanel(parent)
-   	local form = vgui.CreateTTT2Form(parent, "test")
+   	local form = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_bots_settings"))
 
     form:MakeCheckBox({
-		label = "Moving Bots",
+		label = LANG.GetTranslation("debugging_bots_settings_moving"),
 		initial = roleManager.moving_bots,
         default = roleManager.moving_bots,
         OnChange = function(_, value)

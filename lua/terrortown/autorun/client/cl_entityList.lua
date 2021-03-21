@@ -24,12 +24,32 @@ function pairsByKey(revList, len, f)
     end
 end
 
+
 function getArrayLen(array)
     local len = 0
     for i,k in pairs(array) do
         len = len + 1
     end
     return len
+end
+
+
+function findValueInTable(val, tab, func) 
+    if func then
+        for k,v in pairs(tab) do
+            if v:func() == val then
+                return k
+            end
+        end
+        return false
+    else
+        for k,v in pairs(tab) do
+            if v == val then
+                return k
+            end
+        end
+        return false
+    end
 end
 
 ------------------------------------------------------

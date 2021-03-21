@@ -201,15 +201,36 @@ function HumanList:addPlayer(name, ent, role)
     end
 end
 
+-- removes Entry from the Player List if the player is not on the server anymore
+-- one needs to reinitialize the revList after this 
+function HumanList:removePlayer(name)
+    if self.revList[name] then
+        local id = self.revList[name]
+        table.remove(self.list, id)
+
+        self:__initRevList()
+    end
+end
+
 -- adds all human players that are on the server to the human player list if missing
--- (it calls the addPlayer function)
--- TODO: Wenn spieler Disconnecten, muss der Eintrag entfernt werden.
+-- removes human players if they are not on the server anymore
+-- (it calls the addPlayer and removePlayer functions)
 function HumanList:refresh()
     self:__initRevList()
     local players = player.GetHumans()
     for _,p in ipairs(players) do
         if not self.revList[p:Nick()] then
             self:addPlayer(p:Nick(), p, ROLE_RANDOM.name)
+        end
+    end
+
+    -- TODO: DEBUGGEN
+    if #players <= #self.list then
+        for _,p in pairs(self.list) do
+            local i = findValueInTable(p.name, players, Nick) 
+            if i then
+                self:removePlayer(p.name)
+            end
         end
     end
 end
@@ -258,14 +279,8 @@ end
 -- creates a bot List with a number of entries given by the maximal available Player slots on the server
 -- adds existing bots as entity to the first list entries
 --
--- TODO: Namen der bereits vorhandenen Bots berücksichtigen:
---      - Echte Namen der Bots in Klammern anzeigen. und in nächster Runde durch anders benannten Bot ersetzen
 function BotList:__initExistingBots()
     local existingBots = player.GetBots()
-    -- local existingBotNames = {}
-    -- for i,v in ipairs(player.GetBots()) do
-    --     existingBotNames[v:Nick()] = i
-    -- end
 
     self.exist_index = #existingBots
     self.index = #existingBots
@@ -273,13 +288,12 @@ function BotList:__initExistingBots()
     for i = 1, self.max do
         local name = "Bot" .. string.format("%02d", i)
         if i <= self.exist_index then
-            --print("Adding existing Bot:", name, existingBots[i]:Nick())
             self.currentNameList[existingBots[i]:Nick()] = name
             self.list[i] = BotEntry({
                 name = name,
                 currentName = existingBots[i]:Nick(),
                 ent = existingBots[i],
-                role = ROLE_RANDOM.name, --roles:GetByIndex(bots[i]:GetRole()).name,
+                role = ROLE_RANDOM.name,
                 spawn = false,
                 delete = false})
         else
@@ -299,27 +313,17 @@ end
 -- param: (string) name of the bot in the botlist
 -- return: name of the bot in the game
 function BotList:getCurrentName(name)
-    --print("getCurrentName(" .. name .. ") = " .. (self.list[self.revList[name]].currentName or "nil"))
     return self.list[self.revList[name]].currentName
 end
 
--- get 
--- return: (table) names of the bots ingame with indices in the botList 
--- {name = id, ...}
--- TODO: ändere CurrentNameList in zuordnung von Namen
+-- get a list with all current names ingame with the name of the bot in the list ase value
+-- return: (table) names of the bots ingame with names in the botList 
+-- {cur_name = name, ...}
 function BotList:getCurrentNameList()
     return self.currentNameList
-    -- local names = {}
-    -- for i, entry in pairs(self.list()) do
-    --     if self.list[i].currentName then
-    --         names[entry.currentName] = i
-    --     end
-    -- end
-    -- return names
 end
 
--- TODO: Funktioniert nocht nicht - fehler mit CurrentName List
--- TODO: Scheint ebenfalls in der nächsten Runde aufgehoben zu sein.
+-- TODO: DEBUGGEN
 -- deletes the old currentNameList and fills it with newly updated names in game
 -- updates the currentName for every ListEntry
 function BotList:updateCurrentNames()
