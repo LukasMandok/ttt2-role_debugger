@@ -58,22 +58,22 @@ end)
 
 -- Role List
 net.Receive( "RoleManagerCurrentRolesRequest" , function (len, calling_ply)
-    print("Server: Requesting Current Roles")
+    --print("Server: Requesting Current Roles")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         net.Start("RoleManagerCurrentRolesPlayer")
             net.WriteInt(#player.GetHumans(), 10)
             for _,p in pairs(player.GetHumans()) do
-                print("   Player:", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
+                --print("   Player:", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
                 net.WriteString(p:Nick())
                 net.WriteString(roles.GetByIndex(p:GetSubRole()).name)
             end
         net.Send(calling_ply)
 
-        print("Server: Sending Bot Roles")
+        --print("Server: Sending Bot Roles")
         net.Start("RoleManagerCurrentRolesBot")
             net.WriteInt(#player.GetBots(), 10)
             for _,p in pairs(player.GetBots()) do
-                print("   Bot:  ", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
+                --print("   Bot:  ", p:Nick(), "Set Role:", roles.GetByIndex(p:GetSubRole()).name)
                 net.WriteString(p:Nick())
                 net.WriteString(roles.GetByIndex(p:GetSubRole()).name)
             end
@@ -116,9 +116,9 @@ end
 
 local function respawn(calling_ply, target_ply)
     if GetRoundState() == 1 then
-        print("Round has not yet begun.")
+        --print("Round has not yet begun.")
     elseif target_ply:Alive() and not target_ply:IsSpec() then
-        print("The Player " .. target_ply:Nick() .. " is already alive.")
+        --print("The Player " .. target_ply:Nick() .. " is already alive.")
 
     -- if player ayer is alive but a spectator or the player is dead
     elseif (target_ply:Alive() and target_ply:IsSpec()) then
@@ -230,7 +230,7 @@ end)
 
 -- Delete Bot
 net.Receive("RoleManagerDeleteBot", function (len, calling_ply)
-    print("Server: Seleting Bot.")
+    --print("Server: Seleting Bot.")
     if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
         local target_ply = net.ReadEntity()
         target_ply:Kick("Removed Bot.")
@@ -271,7 +271,7 @@ net.Receive("RoleManagerApplyRole", function (len, calling_ply)
 
         SendFullStateUpdate()
 
-        calling_ply:ChatPrint("Player: '" .. ply:Nick() .. "' role changed to " .. role_name .. ".")
+        calling_ply:ChatPrint("Player: '" .. ply:Nick() .. "' has role " .. role_name .. ".")
     end
 end)
 
