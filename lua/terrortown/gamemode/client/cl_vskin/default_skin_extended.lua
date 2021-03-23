@@ -229,7 +229,7 @@ function SKIN:PaintFormButtonLockTTT2(panel, w, h, separate)
 	end
 
     if (panel.separate == nil or panel.separate == false) then
-	    drawRoundedBoxEx(sizes.cornerRadius, 0, 0, w, h, colorBoxBack, false, true, false, true)
+	    drawRoundedBoxEx(sizes.cornerRadius, 0, 0, w, h, colorBoxBack, false, false, false, false)
     end
 	drawRoundedBox(sizes.cornerRadius, 1, 1, w - 2, h - 2, colorBox)
 
