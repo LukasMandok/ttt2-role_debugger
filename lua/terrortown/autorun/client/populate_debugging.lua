@@ -370,6 +370,49 @@ local function PopulateBotPanel(parent)
             net.SendToServer()
         end,
 	})
+
+    local playerList = player.GetAll()
+
+    local playerListNames = {}
+    local index_remove = nil
+    for i = 1, #playerList do
+        playerListNames[i] = playerList[i]:Nick()
+        if playerListNames[i] == LocalPlayer():Nick() then
+            index_remove = i
+        end
+    end
+    if index_remove then
+        table.remove(playerListNames, index_remove)
+        table.remove(playerList, index_remove) 
+    end
+
+    local formPlayer = vgui.CreateTTT2Form_extended(parent, "Control Players")
+    formPlayer:Dock(TOP)
+
+    local target_ply = playerList[1]
+
+    local combobox = formPlayer:MakeComboBox({
+        label = "Control Player",
+        choices = playerListNames,
+        data = playerList,
+        selectName = playerListNames[1],
+        default = playerListNames[1],
+        OnChange = function(_, _, value, data)
+            target_ply = data
+        end,
+    })
+
+    local controlButton = formPlayer:MakeDoubleButton({
+        label1 = "Control Player", 
+        OnClick1 = function(_)
+            print("Start Control of Player:", target_ply:Nick())
+            net.Start("playerControlStartControl")
+                net.WriteEntity(target_ply)
+            net.SendToServer()
+        end,
+    })
+
+
 end
 
 HELPSCRN.populate["ttt2_debugging"] = function(helpData, id)

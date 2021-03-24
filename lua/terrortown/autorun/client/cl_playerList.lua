@@ -164,7 +164,9 @@ function HumanList:__init(init)
 
     local players = player.GetHumans()
     for i = 1, #players do
-        self:addPlayer(players[i]:Nick(), players[i], ROLE_RANDOM.name)
+        self:addPlayer(players[i]:Nick(),
+                       players[i],
+                       ROLE_RANDOM.name)
     end
 end
 
