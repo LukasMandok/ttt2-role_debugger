@@ -1,6 +1,37 @@
-AddCSLuaFile()
+FirstPerson = FirstPerson or {
+    ply = nil,
 
-FirstPerson = FirstPerson or {}
+	-- Animation/Rendering
+	entity = nil,
+	skelEntity = nil,
+	lastTick = 0,
+
+	-- Variables to detect change in model state
+	model = nil,
+	bodyGroups = nil,
+	materials = nil,
+	skin = nil,
+	material = nil,
+	color = nil,
+
+	-- Variables to detect change in pose state
+	weapon = nil,
+	sequence = nil,
+	reloading = false,
+
+	-- Pose-dependent variables
+	pose = "",
+	viewOffset = Vector(0, 0, 0),
+	neckOffset = Vector(0, 0, 0),
+	vehicleAngle = 0,
+
+	-- Model-dependent variables
+	ragdollSequence = nil,
+	idleSequence = nil,
+
+	-- API variables
+	apiBoneHide = {}
+}
 
 local bone_list = {
 	"ValveBiped.Bip01_Neck1",

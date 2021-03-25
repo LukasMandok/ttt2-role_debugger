@@ -17,8 +17,6 @@ net.Receive("playerControllerNet", function (len)
         if tbl.controlling then
             print("Die ViewEntity:", GetViewEntity():GetName())
 
-            --ply.controller["player"]:DrawViewModel()
-
 
         -- If the controlled Player
         else

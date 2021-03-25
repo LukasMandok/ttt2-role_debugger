@@ -158,12 +158,13 @@ end
 
 -- Body state functions
 function FirstPerson:ShouldDraw()
+	print("GetViewEntity:", GetViewEntity())
     print(cvarEnabled:GetBool(),
 		(not self.ply:InVehicle() or cvarVehicle:GetBool()),
 		IsValid(self.entity),
 		IsValid(self.skelEntity),
 		self.ply:Alive(),
-		GetViewEntity() == self.ply,
+		--GetViewEntity() == self.ply,
 		-- not self.ply:ShouldDrawLocalPlayer(),
 		self.ply:GetObserverMode() == 0,
 		self.skelEntity.neck,
@@ -178,7 +179,7 @@ function FirstPerson:ShouldDraw()
 		IsValid(self.entity) and
 		IsValid(self.skelEntity) and
 		self.ply:Alive() and
-		GetViewEntity() == self.ply and
+		--GetViewEntity() == self.ply and
 		-- not self.ply:ShouldDrawLocalPlayer() and
 		self.ply:GetObserverMode() == 0 and
 		self.skelEntity.neck and
@@ -247,6 +248,9 @@ function FirstPerson:GetRenderPosAngle()
 		renderAngle = Angle(0, ply:EyeAngles().y, 0)
 	end
 
+	-- TODO viewOffset sollte bekannt sein!!!
+	--self.viewOffset = Vector(-10, 0, -5)
+	print(self.neckOffset, self.viewOffset) 
 	local offset = self.viewOffset - self.neckOffset
 	offset:Rotate(renderAngle)
 

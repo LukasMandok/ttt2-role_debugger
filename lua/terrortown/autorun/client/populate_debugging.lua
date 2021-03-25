@@ -390,6 +390,7 @@ local function PopulateBotPanel(parent)
     formPlayer:Dock(TOP)
 
     local target_ply = playerList[1]
+    local real_first_person = false
 
     local combobox = formPlayer:MakeComboBox({
         label = "Control Player",
@@ -402,12 +403,22 @@ local function PopulateBotPanel(parent)
         end,
     })
 
+    local checkbox = formPlayer:MakeCheckBox({
+        label = "Real First Person View (Still buggy)",
+        initial = false,
+        default = false,
+        OnChange = function(_, value)
+            real_first_person = not real_first_person
+        end,
+    })
+
     local controlButton = formPlayer:MakeDoubleButton({
         label1 = "Control Player", 
         OnClick1 = function(_)
             print("Start Control of Player:", target_ply:Nick())
             net.Start("playerControllerStartControl")
                 net.WriteEntity(target_ply)
+                net.WriteBool(real_first_person)
             net.SendToServer()
         end,
     })

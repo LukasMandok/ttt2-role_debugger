@@ -104,7 +104,7 @@ local function specCalcView(ply, origin, angles, fov)
     end
     view = getCalcView()
     if IsValid(specEnt) then
-        specEnt:SetNoDraw(not thirdperson and not realFirstPerson)
+        specEnt:SetNoDraw(not thirdperson or realFirstPerson)
     end
     return view
 end 
@@ -344,7 +344,7 @@ local function startSpectate(um)
         if ply == LocalPlayer() then
             return true 
         else
-            return (not realFirstPerson) or isRoaming or thirdperson 
+            return (not realFirstPerson) and isRoaming or thirdperson 
         end
     end) 
     

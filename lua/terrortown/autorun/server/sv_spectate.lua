@@ -24,8 +24,7 @@ local function findPlayer(info)
 end
 
 
-
-local function startSpectating(ply, target, first_person)
+local function startSpectating(ply, target, real_first_person)
     local canSpectate = hook.Call("PCSpectate_canSpectate", nil, ply, target)
     if canSpectate == false then return end
 
@@ -36,14 +35,16 @@ local function startSpectating(ply, target, first_person)
 
     net.Start("PCSpectate")
         net.WriteBool(target == nil)
-        net.WriteBool(first_person == true)
+        net.WriteBool(real_first_person == true)
         if IsValid(ply.PCSpectatingEnt) then
             net.WriteEntity(ply.PCSpectatingEnt)
         end
     net.Send(ply)
 
-    -- TODO: bruacht man wahrscheinlich nicht
-    --ply:SetViewEntity(target)
+    -- TODO: bruacht man wahrscheinlich nicht.
+    -- if real_first_person == true then
+    --     ply:SetViewEntity(target)
+    -- end
 
     local targetText = IsValid(target) and target:IsPlayer() and (target:Nick() .. " (" .. target:SteamID() .. ")") or IsValid(target) and "an entity" or ""
     ply:ChatPrint("You are now spectating " .. targetText)

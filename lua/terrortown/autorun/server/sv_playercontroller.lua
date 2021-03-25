@@ -6,7 +6,8 @@ util.AddNetworkString("playerControllerNet")
 net.Receive("playerControllerStartControl", function (len, calling_ply)
     if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
         target_ply = net.ReadEntity()
-        PlayerControl.StartControl(calling_ply, target_ply)
+        real_first_person = net.ReadBool()
+        PlayerControl.StartControl(calling_ply, target_ply, real_first_person)
     end
 end)
 
@@ -16,7 +17,7 @@ function PlayerControl.NetSend(ply, tbl)
     net.Send(ply)
 end
 
-function PlayerControl.StartControl(c_ply, t_ply)
+function PlayerControl.StartControl(c_ply, t_ply, real_first_person)
 
     -- Add Controlling Hooks
     if not PlayerControl.controllers then
@@ -30,7 +31,7 @@ function PlayerControl.StartControl(c_ply, t_ply)
     t_ply.controller["c_ply"] = c_ply
 
     -- Make Transition
-    StartPCSpectate(c_ply, t_ply, false) --OBS_MODE_IN_EYE
+    StartPCSpectate(c_ply, t_ply, real_first_person) --OBS_MODE_IN_EYE
     --c_ply:SpectateEntity(t_ply)
     --c_ply:SetViewEntity(t_ply)
 
@@ -61,9 +62,19 @@ function PlayerControl.overrideCommand(ply, cmd)
 
         if not IsValid(t_ply) then return end
 
+        c_ply:SetNWInt("playerController_Buttons", cmd:GetButtons())
+        c_ply:SetNWInt("playerController_Impluse", cmd:GetImpulse())
 
+        c_ply.controller["viewAngles"] = ply:EyeAngles()
 
+        c_ply.controller["ForwardMove"] = cmd:GetForwardMove()
+        c_ply.controller["SideMove"] = cmd:GetSideMove()
+		c_ply.controller["UpMove"] = cmd:GetUpMove()
 
+		c_ply.controller["MouseWheel"] = cmd:GetMouseWheel()
+		c_ply.controller["MouseX"] = cmd:GetMouseX()
+		c_ply.controller["MouseY"] = cmd:GetMouseY()
+		
     -- Override for the controlled Person
     elseif  ply.controller and ply.controller["c_ply"] then
         local t_ply = ply
@@ -71,6 +82,20 @@ function PlayerControl.overrideCommand(ply, cmd)
 
         if not IsValid(c_ply) then return end
 
+        cmd:SetButtons(c_ply:GetNWInt("playerController_Buttons", 0))
+        cmd:SetImpulse(c_ply:GetNWInt("playerController_Impluse", 0))
+
+        cmd:SetViewAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
+		t_ply:SetEyeAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
+
+		cmd:SetForwardMove(c_ply.controller["ForwardMove"] or 0)
+        cmd:SetSideMove(c_ply.controller["SideMove"] or 0)
+		cmd:SetUpMove(c_ply.controller["UpMove"] or 0)
+
+		cmd:SetMouseWheel(c_ply.controller["MouseWheel"] or 0)
+		cmd:SetMouseX(c_ply.controller["MouseX"] or 0)
+		cmd:SetMouseY(c_ply.controller["MouseY"] or 0)
+        
     end
 
 end
