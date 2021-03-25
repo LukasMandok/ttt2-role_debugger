@@ -44,20 +44,8 @@ hook.Add("Initialize", "PCSpectate", function()
         end)
 
         local canSpectate = false
-        local function calcAccess()
-            CAMI.PlayerHasAccess(LocalPlayer(), "PCSpectate", function(b, _)
-                canSpectate = b
-            end)
         end
-        calcAccess()
-
-        -- Spectate option in player menu
-        FAdmin.ScoreBoard.Player:AddActionButton("Spectate", "fadmin/icons/spectate", Color(0, 200, 0, 255), function(ply) calcAccess() return canSpectate and ply ~= LocalPlayer() end, function(ply)
-            if not IsValid(ply) then return end
-            RunConsoleCommand("PCSpectate", ply:UserID())
         end)
-    end
-end)
 
 /*---------------------------------------------------------------------------
 Get the thirdperson position
@@ -115,86 +103,11 @@ local function specCalcView(ply, origin, angles, fov)
         return
     end
     view = getCalcView()
-
-    --local modelexample
     if IsValid(specEnt) then
-        --modelexample = specEnt:GetHands() -- ClientsideModel( "models/weapons/c_arms_cstrike.mdl" )
-        --modelexample:SetNoDraw( true )
-        
-        --specEnt:SetNoDraw(not thirdperson and not realFirstPerson)
-        
-        --ply:DrawViewModel(false)
-        --specEnt:DrawViewModel(false)
+        specEnt:SetNoDraw(not thirdperson and not realFirstPerson)
     end
-
-    
-    --local hands = ents.Create( "gmod_hands" )
-
-    --local offsetvec = Vector( 3, -5.6, 0 )
-    --local offsetang = Angle( 180, 90, -90 )
-
-    --hook.Add("PrePlayerDraw", "Disable viewmodel of spectated entity and replace with hands", function(ply)
-        --if ply == specEnt then
-            -- local boneid = ply:LookupBone( "ValveBiped.Bip01_R_Forearm" )
-
-            -- if not boneid then return end
-
-            -- local matrix = ply:GetBoneMatrix( boneid )
-	
-            -- if not matrix then return end
-
-            -- local newpos, newang = LocalToWorld( offsetvec, offsetang, matrix:GetTranslation(), matrix:GetAngles() )
-
-            -- local testpos = ply:GetPos()
-
-            
-            -- ply:SetHands( modelexample )
-	        -- modelexample:SetOwner( ply )
-
-            -- local simplemodel = player_manager.TranslateToPlayerModelName( ply:GetModel() )
-            -- local info = player_manager.TranslatePlayerHands( simplemodel )
-            -- if ( info ) then
-            --     modelexample:SetModel( info.model )
-            --     modelexample:SetSkin( info.skin )
-            --     modelexample:SetBodyGroups( info.body )
-            -- end
-
-            -- --modelexample:SetPos( newpos )
-            -- --modelexample:SetAngles( newang )
-            -- --modelexample:SetupBones()
-            -- modelexample:DrawModel()
-            -- --print("!!!!!!!!!!!!!", vm) 
-            -- --ply:SetHands(modelexample)
-
-            
-            -- local vm = ply:GetViewModel(0) 
-            -- modelexample:AttachToViewmodel(vm)
-
-            -- modelexample:AddEffects( EF_BONEMERGE )
-            -- modelexample:SetParent( vm )
-            -- modelexample:SetMoveType( MOVETYPE_NONE )
-
-            -- modelexample:SetPos( vector_origin )
-            -- modelexample:SetAngles( angle_zero )
-
-            --vm:DeleteOnRemove( modelexample )
-	        --ply:DeleteOnRemove( modelexample )
-
-
-            --print("Draw the arms of the spectating player:", vm:GetName())
-            -- local hand = ply:GetHands()
-            -- if ( IsValid( hands ) ) then
-            --     print("hands:", hand)
-            --     hands:Spawn()
-            --     hands:DrawModel()
-            -- end
-            --return true 
-        --end   
-    --end)
-
     return view
 end 
-
 /*---------------------------------------------------------------------------
 Find the right player to spectate
 ---------------------------------------------------------------------------*/
@@ -305,28 +218,6 @@ Free roaming position updates
 local function specThink()
     local ply = LocalPlayer()
 
-    -- Update linesToDraw
-    -- local pls = player.GetAll()
-    -- local lastPly = 0
-    -- local skip = 0
-    -- for i = 0, #pls - 1 do
-    --     local p = pls[i + 1]
-    --     if not IsValid(p) then continue end
-    --     if not isRoaming and p == specEnt and not thirdperson then skip = skip + 3 continue end
-
-    --     local tr = p:GetEyeTrace()
-    --     local sp = gunpos(p)
-
-    --     local pos = i * 3 - skip
-
-    --     linesToDraw[pos] = tr.HitPos
-    --     linesToDraw[pos + 1] = sp
-    --     linesToDraw[pos + 2] = team.GetColor(p:Team())
-    --     lastPly = i
-    -- end
-
-    -- -- Remove entries from linesToDraw that don't match with a player anymore
-    -- for i = #linesToDraw, lastPly * 3 + 3, -1 do linesToDraw[i] = nil end
 
     if not isRoaming or keysDown["USE"] then return end
 
@@ -431,7 +322,7 @@ specEnt
 Spectate a player
 ---------------------------------------------------------------------------*/
 local function startSpectate(um)
-    isRoaming = net.ReadBool()
+    isRoaming = net.ReadBool() 
     realFirstPerson = net.ReadBool()
     specEnt = net.ReadEntity()
     specEnt = IsValid(specEnt) and specEnt or nil
@@ -449,17 +340,14 @@ local function startSpectate(um)
 
     hook.Add("CalcView", "PCSpectate", specCalcView)
     hook.Add("PlayerBindPress", "PCSpectate", specBinds)
-    -- hook.Add("ShouldDrawLocalPlayer", "PCSpectate", function(ply)
-    --     return true
-    --     -- if ply == LocalPlayer() then
-    --     --     print("Local Player: true")
-    --     --     return true 
-    --     -- else
-    --     --     print("ShouldDrawLocalPlayer:", realFirstPerson, isRoaming, thirdperson)
-    --     --     return realFirstPerson or isRoaming or thirdperson 
-    --     -- end
-    -- end) 
-
+    hook.Add("ShouldDrawLocalPlayer", "PCSpectate", function(ply)
+        if ply == LocalPlayer() then
+            return true 
+        else
+            return (not realFirstPerson) or isRoaming or thirdperson 
+        end
+    end) 
+    
     hook.Add("Think", "PCSpectate", specThink)
     hook.Add("HUDPaint", "PCSpectate", drawHelp)
 

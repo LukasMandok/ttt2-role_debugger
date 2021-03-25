@@ -43,7 +43,7 @@ local function startSpectating(ply, target, first_person)
     net.Send(ply)
 
     -- TODO: bruacht man wahrscheinlich nicht
-    ply:SetViewEntity(target)
+    --ply:SetViewEntity(target)
 
     local targetText = IsValid(target) and target:IsPlayer() and (target:Nick() .. " (" .. target:SteamID() .. ")") or IsValid(target) and "an entity" or ""
     ply:ChatPrint("You are now spectating " .. targetText)
@@ -128,12 +128,13 @@ concommand.Add("_PCSpectatePosUpdate", setSpectatePos)
 
 
 local function endSpectate(ply, cmd, args)
+    print("End Spectating")
     ply.PCSpectatingEnt = nil
     ply.PCSpectating = nil
     ply.PCSpectatePos = nil
     hook.Call("PCSpectate_stop", nil, ply)
 
-    ply:SetViewEntity(ply)
+    --ply:SetViewEntity(ply)
 end
 concommand.Add("PCSpectate_StopSpectating", endSpectate)
 
