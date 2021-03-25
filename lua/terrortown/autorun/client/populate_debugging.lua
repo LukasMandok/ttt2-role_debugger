@@ -406,7 +406,7 @@ local function PopulateBotPanel(parent)
         label1 = "Control Player", 
         OnClick1 = function(_)
             print("Start Control of Player:", target_ply:Nick())
-            net.Start("playerControlStartControl")
+            net.Start("playerControllerStartControl")
                 net.WriteEntity(target_ply)
             net.SendToServer()
         end,

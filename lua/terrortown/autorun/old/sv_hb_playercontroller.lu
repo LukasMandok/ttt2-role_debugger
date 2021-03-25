@@ -399,6 +399,7 @@ function hb_playercontroller.startControl(ctrlr, ctrld)
 	end
 	local access = hb_playercontroller.conVarsCommands["access"]
 	
+	
 	if ctrlr.hb_playercontrollerCTRLD then
 		failnotify(ctrlr.hb_playercontrollerCTRLD["plyController"], "Already Controlling a Player")
 		return
