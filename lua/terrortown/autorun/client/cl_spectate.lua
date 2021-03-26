@@ -3,7 +3,7 @@ PCSpectate = {}
 local stopSpectating, startFreeRoam
 local isSpectating = false
 local specEnt
-local realFirstPerson = true
+local realFirstPerson = false
 local thirdperson = true
 local isRoaming = false
 local roamPos -- the position when roaming free
@@ -20,32 +20,6 @@ function PCSpectate.getSpecEnt()
         return nil
     end
 end
-
-/*---------------------------------------------------------------------------
-startHooks
-FAdmin tab buttons
----------------------------------------------------------------------------*/
-hook.Add("Initialize", "PCSpectate", function()
-    surface.CreateFont("UiBold", {
-        size = 16,
-        weight = 800,
-        antialias = true,
-        shadow = false,
-        font = "Verdana"})
-
-    if not FAdmin then return end
-    FAdmin.StartHooks["zzSpectate"] = function()
-        FAdmin.Commands.AddCommand("Spectate", nil, "<Player>")
-
-        -- Right click option
-        FAdmin.ScoreBoard.Main.AddPlayerRightClick("Spectate", function(ply)
-            if not IsValid(ply) then return end
-            RunConsoleCommand("PCSpectate", ply:UserID())
-        end)
-
-        local canSpectate = false
-        end
-        end)
 
 /*---------------------------------------------------------------------------
 Get the thirdperson position
@@ -78,6 +52,10 @@ local function getCalcView()
         else
             view.origin = specEnt:IsPlayer() and specEnt:GetShootPos() or specEnt:LocalToWorld(specEnt:OBBCenter())
             view.angles = specEnt:IsPlayer() and specEnt:EyeAngles() or specEnt:GetAngles()
+
+            if not real_first_person then
+                view.origin = view.origin + Vector(-10, 0, 0)
+            end
         end
 
         roamPos = view.origin
@@ -104,7 +82,7 @@ local function specCalcView(ply, origin, angles, fov)
     end
     view = getCalcView()
     if IsValid(specEnt) then
-        specEnt:SetNoDraw(not thirdperson or realFirstPerson)
+        specEnt:SetNoDraw( not ((not realFirstPerson) or (realFirstPerson and (isRoaming or thirdperson))))
     end
     return view
 end 
@@ -344,7 +322,7 @@ local function startSpectate(um)
         if ply == LocalPlayer() then
             return true 
         else
-            return (not realFirstPerson) and isRoaming or thirdperson 
+            return (not realFirstPerson) or (realFirstPerson and (isRoaming or thirdperson))
         end
     end) 
     
@@ -354,7 +332,11 @@ local function startSpectate(um)
     timer.Create("PCSpectatePosUpdate", 0.5, 0, function()
         if not isRoaming then return end
 
-        RunConsoleCommand("_PCSpectatePosUpdate", roamPos.x, roamPos.y, roamPos.z)
+        net.Start("PCSpectate_PositionUpdate")
+            net.WriteVector(roamPos)
+        net.SendToServer()
+
+        --RunConsoleCommand("_PCSpectatePosUpdate", roamPos.x, roamPos.y, roamPos.z)
     end)
 end
 net.Receive("PCSpectate", startSpectate)
@@ -377,9 +359,12 @@ stopSpectating = function()
     end
 
     if realFirstPerson == true then
+        print("Ending First Person.")
         FirstPerson:End()
     end 
 
-    RunConsoleCommand("PCSpectate_StopSpectating")
+    --RunConsoleCommand("PCSpectate_StopSpectating")
+    net.Start("PCSpectate_EndSpectating")
+    net.SendToServer()
     isSpectating = false
 end

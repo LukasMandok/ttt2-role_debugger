@@ -41,6 +41,31 @@ FirstPerson = FirstPerson or {
 	apiBoneHide = {}
 }
 
+local bone_list = {
+	"ValveBiped.Bip01_Neck1",
+}
+
+function FirstPerson:GetBone(ent)
+	local bone = 0
+	for _, v in ipairs(bone_list) do
+		bone = ent:LookupBone(v) or 0
+		if bone > 0 then
+			ent._fp_headbone = bone
+			return bone
+		end
+	end
+	return bone
+end
+
+function FirstPerson:_debug_list_bones(ent)
+	local bones = ent:GetBoneCount()
+	local i = 0
+	while i < bones do
+		print(ent:GetBoneName(i))
+		i = i + 1
+	end
+end
+
 -- PUBLIC API
 function FirstPerson:SetLimbHidden(limb, hidden)
 	-- `limb` may be "l_arm", "r_arm", "l_leg", or "r_leg"
@@ -158,21 +183,19 @@ end
 
 -- Body state functions
 function FirstPerson:ShouldDraw()
-	print("GetViewEntity:", GetViewEntity())
-    print(cvarEnabled:GetBool(),
-		(not self.ply:InVehicle() or cvarVehicle:GetBool()),
-		IsValid(self.entity),
-		IsValid(self.skelEntity),
-		self.ply:Alive(),
-		--GetViewEntity() == self.ply,
-		-- not self.ply:ShouldDrawLocalPlayer(),
-		self.ply:GetObserverMode() == 0,
-		self.skelEntity.neck,
-		self.skelEntity.neck ~= 0,
-		not IsValid(BodyAnimMDL),
-		not IsValid(BodyAnim))
-
-
+	-- print("GetViewEntity:", GetViewEntity())
+    -- print(cvarEnabled:GetBool(),
+	-- 	(not self.ply:InVehicle() or cvarVehicle:GetBool()),
+	-- 	IsValid(self.entity),
+	-- 	IsValid(self.skelEntity),
+	-- 	self.ply:Alive(),
+	-- 	--GetViewEntity() == self.ply,
+	-- 	-- not self.ply:ShouldDrawLocalPlayer(),
+	-- 	self.ply:GetObserverMode() == 0,
+	-- 	self.skelEntity.neck,
+	-- 	self.skelEntity.neck ~= 0,
+	-- 	not IsValid(BodyAnimMDL),
+	-- 	not IsValid(BodyAnim))
 
 	return cvarEnabled:GetBool() and
 		(not self.ply:InVehicle() or cvarVehicle:GetBool()) and
@@ -249,8 +272,8 @@ function FirstPerson:GetRenderPosAngle()
 	end
 
 	-- TODO viewOffset sollte bekannt sein!!!
-	--self.viewOffset = Vector(-10, 0, -5)
-	print(self.neckOffset, self.viewOffset) 
+	-- self.viewOffset = Vector(-10, 0, -5)
+	-- print(self.neckOffset, self.viewOffset) 
 	local offset = self.viewOffset - self.neckOffset
 	offset:Rotate(renderAngle)
 
@@ -300,7 +323,7 @@ local NAME_SHOW_ARM = {
 	left = {
 		weapon_crowbar = true,
 		weapon_pistol = true,
-	weapon_stunstick = true,
+		weapon_stunstick = true,
 		gmod_tool = true,
 	},
 	right = {
@@ -404,7 +427,7 @@ function FirstPerson:Think(maxSeqGroundSpeed)
 	-- Handle model changes
 	modelChanged = self:HasChanged("model", ApproximatePlayerModel()) or modelChanged
 	modelChanged = self:HasTableChanged("bodyGroups", GetPlayerBodyGroups()) or modelChanged
-	--modelChanged = self:HasTableChanged("materials", GetPlayerMaterials()) or modelChanged
+	modelChanged = self:HasTableChanged("materials", GetPlayerMaterials()) or modelChanged
 	modelChanged = self:HasChanged("skin", self.ply:GetSkin()) or modelChanged
 	modelChanged = self:HasChanged("material", self.ply:GetMaterial()) or modelChanged
 	modelChanged = self:HasTableChanged("color", self.ply:GetColor()) or modelChanged
@@ -512,28 +535,28 @@ function FirstPerson:Start(obs_ply)
     
     hook.Add("UpdateAnimation", "FirstPerson:UpdateAnimation", function(ply, _, maxSeqGroundSpeed)
         if ply == self.ply then
-            FirstPerson:Think(maxSeqGroundSpeed)
+            self:Think(maxSeqGroundSpeed)
         end
     end)
 
     -- On start of reload animation
     hook.Add("DoAnimationEvent", "FirstPerson:DoAnimationEvent", function(ply, event)
         if ply == self.ply and event == PLAYERANIMEVENT_RELOAD	then
-            FirstPerson.reloading = true
-            FirstPerson:OnPoseChange()
+            self.reloading = true
+            self:OnPoseChange()
         end
     end)
 
     hook.Add("PreDrawEffects", "FirstPerson:RenderScreenspaceEffects", function()
-        FirstPerson:Render()
+        self:Render()
     end)
 
     -- Lock yaw in vehicles
     hook.Add("CreateMove", "FirstPerson:CreateMove", function(ucmd)
-        if FirstPerson:ShouldDraw() and cvarVehicleYawLock:GetBool() and self.ply:InVehicle() then
+        if self:ShouldDraw() and cvarVehicleYawLock:GetBool() and self.ply:InVehicle() then
             ang = ucmd:GetViewAngles()
             max = cvarVehicleYawLockMax:GetInt()
-            yaw = math.Clamp(math.NormalizeAngle(ang.y - FirstPerson.vehicleAngle), -max, max) + FirstPerson.vehicleAngle
+            yaw = math.Clamp(math.NormalizeAngle(ang.y - self.vehicleAngle), -max, max) + self.vehicleAngle
             ucmd:SetViewAngles(Angle(ang.p, yaw, ang.r))
         end
     end)
@@ -548,7 +571,7 @@ function FirstPerson:End()
     hook.Remove("PreDrawEffects", "FirstPerson:RenderScreenspaceEffects")
     hook.Remove("CreateMove", "FirstPerson:CreateMove")
 
-    FirstPerson.ply = nil
+    self.ply = nil
 end
 
 

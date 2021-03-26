@@ -3,6 +3,33 @@ local cvarHeightEnabled = CreateConVar("sv_fp_dynamicheight", 1, {FCVAR_SERVER_C
 local cvarHeightMin = CreateConVar("sv_fp_dynamicheight_min", 16, {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE}, "Minimum view height")
 local cvarHeightMax = CreateConVar("sv_fp_dynamicheight_max", 64, {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE}, "Maximum view height")
 
+FirstPerson = FirstPerson or {}
+
+local bone_list = {
+	"ValveBiped.Bip01_Neck1",
+}
+
+function FirstPerson:GetBone(ent)
+	local bone = 0
+	for _, v in ipairs(bone_list) do
+		bone = ent:LookupBone(v) or 0
+		if bone > 0 then
+			ent._fp_headbone = bone
+			return bone
+		end
+	end
+	return bone
+end
+
+function FirstPerson:_debug_list_bones(ent)
+	local bones = ent:GetBoneCount()
+	local i = 0
+	while i < bones do
+		print(ent:GetBoneName(i))
+		i = i + 1
+	end
+end
+
 local function GetViewOffsetValue(ply, sequence, offset)
 
 	local height

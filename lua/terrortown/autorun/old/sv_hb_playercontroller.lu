@@ -210,7 +210,9 @@ function hb_playercontroller.endControl(ply, arg)
 					local dpos = ctrld:GetPos()
 					local rpos = ctrlr:GetPos()
 					
-					effectdatafrom:SetOrigin(Vector(dpos.x, dpos.y, dpos.z + 20))
+					effectdatafrom:SetOrigin(Vector(
+						
+						.x, dpos.y, dpos.z + 20))
 					effectdatafrom:SetStart(Vector(rpos.x, rpos.y, rpos.z + 20))
 					effectdatafrom:SetAttachment(1)
 					effectdatafrom:SetEntity(ctrld)
