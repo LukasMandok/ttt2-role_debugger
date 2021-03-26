@@ -214,8 +214,6 @@ end
 
 -- end
 function EndPCSpectate(c_ply)
-    print("!!!!!!!!!!!!!!!!!")
-    print("ENdPCSpectate:", c_ply.PCSpectate)
     if c_ply.PCSpectate then
         c_ply.PCSpectate:endSpectating()
         --c_ply.PCSpectate = nil

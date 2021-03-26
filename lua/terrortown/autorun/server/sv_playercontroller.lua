@@ -26,11 +26,11 @@ end
 
 function PlayerControl:StartControl(c_ply, t_ply, realFirstPerson)
 
-    if not PlayerControl.isActive then
+    if not self.isActive then
         -- Add Controlling Hooks
-        hook.Add("StartCommand", "playerControllerOverrideCommands", PlayerControl.overrideCommand)
+        hook.Add("StartCommand", "PlayerController:OverrideCommands", PlayerControl.overrideCommand)
 
-        PlayerControl.isActive = true
+        self.isActive = true
 
         -- Define Tables
         c_ply.controller = {}
@@ -46,27 +46,40 @@ function PlayerControl:StartControl(c_ply, t_ply, realFirstPerson)
 
 
         -- Send initial information to the clients
-        PlayerControl.NetSend(c_ply, {
+        PlayerControl.NetSend(self.c_ply, {
             mode = PC_MODE_START,
-            player = t_ply,
+            player = self.t_ply,
             controlling = true,
         })
 
-        PlayerControl.NetSend(t_ply, {
+        PlayerControl.NetSend(self.t_ply, {
             len = PC_MODE_START,
-            player = c_ply,
+            player = self.c_ply,
             controlling = false
         })
 
         -- Set Some Network Variables:
-        t_ply:SetNWBool("playerController_Controlled", true)
+        self.t_ply:SetNWBool("playerController_Controlled", true)
+
+        -- hook.Add("DoAnimationEvent", "PlayerControler:DisableControllerAnimation", function(ply, event, data)
+        --     if ply == self.c_ply then
+        --         return ACT_INVALID
+        --     end
+        -- end)
+
+        -- Start driver:
+        --drive.Start(self.c_ply, self.t_ply)
     end
 end
 
 function PlayerControl:EndControl()
     -- Add Controlling Hooks
     if self.isActive then
-        hook.Remove("playerController_Buttons", "playerControllerOverrideCommands")
+        hook.Remove("playerController_Buttons", "PlayerController:OverrideCommands")
+
+        hook.Remove("DoAnimationEvent", "PlayerControler:DisableControllerAnimation")
+        -- Start driver:
+        --drive.End(self.c_ply, self.t_ply)
 
         -- DO Some transition
         self.spectator:endSpectating()
@@ -91,7 +104,10 @@ function PlayerControl:EndControl()
         self.c_ply.controller = nil
         self.t_ply.controller = nil
 
-        self.isActive = false
+        self.c_ply = nil
+        self.t_ply = nil 
+
+        self.isActive = nil
     end    
 end
 
@@ -135,6 +151,7 @@ function PlayerControl.overrideCommand(ply, cmd)
 
         cmd:ClearMovement()
         cmd:ClearButtons()
+
 		
     -- Override for the controlled Person
     elseif  ply.controller and ply.controller["c_ply"] then
@@ -149,8 +166,7 @@ function PlayerControl.overrideCommand(ply, cmd)
         t_ply:SetEyeAngles(c_ply.controller["viewAngles"] or t_ply:EyeAngles())
         --print("ViewAngles:", c_ply.controller["viewAngles"], t_ply:EyeAngles())
 
-        --cmd:SetViewAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
-		--ply:SetEyeAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
+        cmd:SetViewAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
 
 		cmd:SetForwardMove(c_ply.controller["ForwardMove"] or 0)
         cmd:SetSideMove(c_ply.controller["SideMove"] or 0)

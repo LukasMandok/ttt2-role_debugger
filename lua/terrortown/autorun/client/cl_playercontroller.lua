@@ -13,11 +13,23 @@ net.Receive("playerControllerNet", function (len)
         ply.controller = {}
         ply.controller["player"] = tbl.player
         
+        print("Table Print:")
+        PrintTable(tbl) 
+
         -- If controlling Player
         if tbl.controlling then
             print("Die ViewEntity:", GetViewEntity():GetName())
+            
+            ply:UseClientSideAnimation()
 
-
+            hook.Add("DoAnimationEvent", "PlayerControler:DisableControllerAnimation", function(anim_ply, event, data)
+                if ply == anim_ply then
+                    return ACT_INVALID
+                end
+            end)
+            -- ply.Move = function(slf, mv)
+            --     return true
+            -- end
         -- If the controlled Player
         else
 
