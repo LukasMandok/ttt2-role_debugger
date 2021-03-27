@@ -413,7 +413,7 @@ local function PopulateBotPanel(parent)
     })
 
     local controlButton = formPlayer:MakeDoubleButton({
-        label1 = "Control Player", 
+        label1 = "Start Control Player", 
         OnClick1 = function(_)
             print("Start Control of Player:", target_ply:Nick())
             net.Start("playerControllerStartControl")
@@ -421,8 +421,13 @@ local function PopulateBotPanel(parent)
                 net.WriteBool(real_first_person)
             net.SendToServer()
         end,
+        label2 = "End Control Player", 
+        OnClick2 = function(_)
+            print("End Control")
+            net.Start("playerControllerEndControl")
+            net.SendToServer()
+        end,
     })
-
 
 end
 

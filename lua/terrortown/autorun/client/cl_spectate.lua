@@ -76,6 +76,7 @@ specCalcView
 Override the view for the player to look through the spectated player's eyes
 ---------------------------------------------------------------------------*/
 local function specCalcView(ply, origin, angles, fov)
+    print("Old: specCalcView")
     if not IsValid(specEnt) and not isRoaming then
         startFreeRoam()
         return

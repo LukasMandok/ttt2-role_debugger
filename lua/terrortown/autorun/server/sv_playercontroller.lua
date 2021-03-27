@@ -8,13 +8,29 @@ PlayerControl = PlayerControl or {
 }
 
 util.AddNetworkString("playerControllerStartControl")
+util.AddNetworkString("playerControllerEndControl")
 util.AddNetworkString("playerControllerNet")
 
 net.Receive("playerControllerStartControl", function (len, calling_ply)
-    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
+    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then       
         target_ply = net.ReadEntity()
         realFirstPerson = net.ReadBool()
-        PlayerControl:StartControl(calling_ply, target_ply, realFirstPerson)
+
+        -- TODO: Called Origional Mehtod
+        --PlayerControl:StartControl(calling_ply, target_ply, realFirstPerson)
+    
+        -- Now creating a drive unit:
+        print("PlayerStartDriving")
+        drive.PlayerStartDriving(calling_ply, target_ply, "drive_playercontroller")
+        print("Start")
+        drive.Start(calling_ply, target_ply)
+    end
+end)
+
+net.Receive("playerControllerEndControl", function (len, calling_ply)
+    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then       
+
+        drive.PlayerStopDriving(calling_ply)
     end
 end)
 
