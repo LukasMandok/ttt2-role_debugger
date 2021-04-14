@@ -47,7 +47,6 @@ local function PopulateRolePanel(parent)
 
     -- gets list with available Role Names and the translated one
     local roleList = roleManager:getRoleList()
-    local translatedRoleList = roleManager:getTranslatedRoleList()
 
     -----------------------------------------------
     ------------------- GENERAL -------------------
@@ -305,9 +304,9 @@ local function PopulateRolePanel(parent)
     -- })
 
     formSettings:MakeCheckBox({
-		label = LANG.GetTranslation("debugging_roles_settings_auto_apply"),
-		convar = "ttt_rolemanager_auto_apply", --roleManager.auto_apply,
-	})
+        label = LANG.GetTranslation("debugging_roles_settings_auto_apply"),
+        convar = "ttt_rolemanager_auto_apply", --roleManager.auto_apply,
+    })
 
     formSettings:MakeHelp({
         label = "debugging_roles_settings_auto_refresh_help"
@@ -323,9 +322,9 @@ local function PopulateRolePanel(parent)
     -- })
 
     formSettings:MakeCheckBox({
-		label = LANG.GetTranslation("debugging_roles_settings_auto_refresh"),
-		convar = "ttt_rolemanager_auto_refresh", --roleManager.auto_refresh,
-	})
+        label = LANG.GetTranslation("debugging_roles_settings_auto_refresh"),
+        convar = "ttt_rolemanager_auto_refresh", --roleManager.auto_refresh,
+    })
 
     formSettings:MakeHelp({
         label = "debugging_roles_settings_overhead_icon_help"
@@ -341,9 +340,9 @@ local function PopulateRolePanel(parent)
     -- })
 
     formSettings:MakeCheckBox({
-		label = LANG.GetTranslation("debugging_roles_settings_overhead_icon_help"),
-		convar = "ttt_rolemanager_overhead_icons", --roleManager.overhead_role_icons,
-	})
+        label = LANG.GetTranslation("debugging_roles_settings_overhead_icon_help"),
+        convar = "ttt_rolemanager_overhead_icons", --roleManager.overhead_role_icons,
+    })
 
     -- update List Entries
     roleManager:refresh()
@@ -359,8 +358,8 @@ local function PopulateBotPanel(parent)
    	local form = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_bots_settings"))
 
     form:MakeCheckBox({
-		label = LANG.GetTranslation("debugging_bots_settings_moving"),
-		initial = roleManager.moving_bots,
+        label = LANG.GetTranslation("debugging_bots_settings_moving"),
+        initial = roleManager.moving_bots,
         default = roleManager.moving_bots,
         OnChange = function(_, value)
             roleManager.moving_bots = moving_bots
@@ -369,7 +368,7 @@ local function PopulateBotPanel(parent)
                 net.WriteBool(value)
             net.SendToServer()
         end,
-	})
+    })
 
     local playerList = player.GetAll()
 
@@ -383,16 +382,18 @@ local function PopulateBotPanel(parent)
     end
     if index_remove then
         table.remove(playerListNames, index_remove)
-        table.remove(playerList, index_remove) 
+        table.remove(playerList, index_remove)
     end
 
     local formPlayer = vgui.CreateTTT2Form_extended(parent, "Control Players")
     formPlayer:Dock(TOP)
 
     local target_ply = playerList[1]
-    local real_first_person = false
+    local realFirstPerson = false
+    local thirdperson = false
+    local roaming = false
 
-    local combobox = formPlayer:MakeComboBox({
+    formPlayer:MakeComboBox({
         label = "Control Player",
         choices = playerListNames,
         data = playerList,
@@ -403,22 +404,48 @@ local function PopulateBotPanel(parent)
         end,
     })
 
-    local checkbox = formPlayer:MakeCheckBox({
+    formPlayer:MakeCheckBox({
         label = "Real First Person View (Still buggy)",
         initial = false,
         default = false,
         OnChange = function(_, value)
-            real_first_person = not real_first_person
+            realFirstPerson = not realFirstPerson
+        end,
+    })
+
+    formPlayer:MakeCheckBox({
+        label = "On: Third Person, Off: First Person",
+        initial = false,
+        default = false,
+        OnChange = function(_, value)
+            thirdperson = not thirdperson
+        end,
+    })
+
+    formPlayer:MakeCheckBox({
+        label = "Roaming",
+        initial = false,
+        default = false,
+        OnChange = function(_, value)
+            roaming = not roaming
         end,
     })
 
     local controlButton = formPlayer:MakeDoubleButton({
-        label1 = "Control Player", 
+        label1 = "Start Control Player",
         OnClick1 = function(_)
             print("Start Control of Player:", target_ply:Nick())
-            net.Start("playerControllerStartControl")
+            net.Start("PlayerController:StartControl")
                 net.WriteEntity(target_ply)
-                net.WriteBool(real_first_person)
+                net.WriteBool(thirdperson)
+                net.WriteBool(roaming)
+                net.WriteBool(realFirstPerson)
+            net.SendToServer()
+        end,
+        label2 = "End Control Player",
+        OnClick2 = function(_)
+            print("End Control")
+            net.Start("PlayerController:EndControl")
             net.SendToServer()
         end,
     })

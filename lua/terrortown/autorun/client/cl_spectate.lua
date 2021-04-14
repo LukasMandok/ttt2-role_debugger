@@ -54,7 +54,7 @@ local function getCalcView()
             view.angles = specEnt:IsPlayer() and specEnt:EyeAngles() or specEnt:GetAngles()
 
             if not real_first_person then
-                view.origin = view.origin + Vector(-10, 0, 0)
+                view.origin = view.origin + Vector(10, 0, 0)
             end
         end
 
@@ -84,7 +84,6 @@ local function specCalcView(ply, origin, angles, fov)
     if IsValid(specEnt) then
         specEnt:SetNoDraw( not ((not realFirstPerson) or (realFirstPerson and (isRoaming or thirdperson))))
     end
-    return view
 end 
 /*---------------------------------------------------------------------------
 Find the right player to spectate
@@ -327,7 +326,7 @@ local function startSpectate(um)
     end) 
     
     hook.Add("Think", "PCSpectate", specThink)
-    hook.Add("HUDPaint", "PCSpectate", drawHelp)
+    --hook.Add("HUDPaint", "PCSpectate", drawHelp)
 
     timer.Create("PCSpectatePosUpdate", 0.5, 0, function()
         if not isRoaming then return end
@@ -368,3 +367,5 @@ stopSpectating = function()
     net.SendToServer()
     isSpectating = false
 end
+
+net.Receive("PCSpectate_EndSpectating", stopSpectating)

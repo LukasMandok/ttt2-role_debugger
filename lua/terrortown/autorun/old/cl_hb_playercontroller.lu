@@ -203,7 +203,7 @@ function hb_playercontroller.overrideBindPress(ply, str, psd)
 			local weps = ctrld:GetWeapons()
 			local actv = table.KeyFromValue(weps, ctrld:GetActiveWeapon())
 			if not actv then return end
-			
+
 			if strl == "invnext" then
 				actv = actv + 1
 				if actv > #weps then

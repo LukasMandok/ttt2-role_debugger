@@ -56,10 +56,6 @@ function PCSpectate:__init(c_ply, t_ply, realFirstPerson)
     self.isActive = true
 
     self:startSpectating()
-
-
-
-
 end
 
 function PCSpectate:startSpectating()
@@ -105,6 +101,9 @@ function PCSpectate:endSpectating()
         self.c_ply = nil
         self.t_ply = nil
 
+        net.Start("PCSpectate_EndSpectating")
+        net.Send(c_ply)
+        
         hook.Run("PCSpectate_EndSpectating", c_ply)
     end
     --self.c_ply.PCSpectate = nil
@@ -277,8 +276,6 @@ net.Receive("PCSpectate_EndSpectating", function (_,ply)
         EndPCSpectate(ply)
     end
 end)
-
-
 
 
 -- tp
