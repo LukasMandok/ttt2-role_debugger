@@ -38,6 +38,19 @@ function PlayerControl.NetSend(ply, tbl)
     net.Send(ply)
 end
 
+
+local function NetOrderEquipment(len, ply)
+    local cls = net.ReadString()
+
+    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+        print("OrdereEquipment custom from:", ply:Nick())
+
+        concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
+    else
+        concommand.Run( ply, "ttt_order_equipment", {cls}  )
+    end
+end
+
 function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirstPerson)
 
     if not self.isActive then
@@ -49,6 +62,11 @@ function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirs
 
         hook.Add("WeaponEquip", "PlayerController:UpdateTargetInventory", function(wep, ply) PlayerControl.updateInventory(ply, wep) end)
         hook.Add("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory", PlayerControl.updateInventory)
+
+        hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
+
+        -- replace receiver for Equipment ordering
+        net.Receive("TTT2OrderEquipment", NetOrderEquipment)
 
         self.isActive = true
 
@@ -101,9 +119,16 @@ function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirs
 
         timer.Create("UpdatePlayerInformation", 0.1, 0, function ()
 
+            -- TODO: Transfer POV
+            --print("POV:", self.t_ply:GetFOV())
             local wep = self.t_ply:GetActiveWeapon()
-            local ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
-            local clip = wep:Clip1()
+
+            --print("IronSight:", wep:GetIronsights())
+
+            --print("Zoom:", wep:GetZoom())
+
+            --local ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
+            --local clip = wep:Clip1()
             --print("Wep:", wep, "ammotype:", ammotype, "ammo:", ammo, "clip:", clip)
 
             --print("Sending Player:", self.t_ply, "to Client:", self.t_ply:GetSubRole())
@@ -111,9 +136,10 @@ function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirs
                 mode = PC_SV_PLAYER,
                 player = self.t_ply,
                 role = self.t_ply:GetSubRole(),
+                credits = self.t_ply:GetCredits(),
                 drowning = nil,
-                clip = clip,
-                ammo = ammo,
+                clip = wep:Clip1(),
+                ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType()),
             })
         end)
 
@@ -139,6 +165,8 @@ function PlayerControl:EndControl()
 
         hook.Remove("WeaponEquip", "PlayerController:UpdateTargetInventory")
         hook.Remove("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory")
+        
+        hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
         -- Start driver:
 
         --drive.End(self.c_ply, self.t_ply)
@@ -171,6 +199,10 @@ function PlayerControl:EndControl()
         self.t_ply = nil
 
         self.isActive = nil
+
+        -- including sv_shop again to override the receiver!
+        -- NOT WORKING
+        --ttt_include("sv_shop")
     end
 end
 
@@ -200,7 +232,8 @@ function PlayerControl.overrideCommand(ply, cmd)
         c_ply:SetNWInt("playerController_Buttons", cmd:GetButtons())
         c_ply:SetNWInt("playerController_Impluse", cmd:GetImpulse())
 
-        c_ply.controller["viewAngles"] = cmd:GetViewAngles() --c_ply:EyeAngles()
+        --c_ply.controller["ViewAngles"] = cmd:GetViewAngles() --c_ply:EyeAngles()
+        --print("Controller: ViewAngles: ", cmd:GetViewAngles())
 
         c_ply.controller["ForwardMove"] = cmd:GetForwardMove()
         c_ply.controller["SideMove"] = cmd:GetSideMove()
@@ -209,6 +242,8 @@ function PlayerControl.overrideCommand(ply, cmd)
         c_ply.controller["MouseWheel"] = cmd:GetMouseWheel()
         c_ply.controller["MouseX"] = cmd:GetMouseX()
         c_ply.controller["MouseY"] = cmd:GetMouseY()
+
+        --c_ply:SetFOV(t_ply:GetFOV())
 
         --cmd:ClearMovement()
         --cmd:ClearButtons()
@@ -224,8 +259,8 @@ function PlayerControl.overrideCommand(ply, cmd)
         cmd:SetButtons(c_ply:GetNWInt("playerController_Buttons", 0))
         cmd:SetImpulse(c_ply:GetNWInt("playerController_Impluse", 0))
 
-        --t_ply:SetEyeAngles(c_ply.controller["viewAngles"] or t_ply:EyeAngles())
-        --print("ViewAngles:", c_ply.controller["viewAngles"], t_ply:EyeAngles())
+        --t_ply:SetEyeAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
+        --print("Target: ViewAngles:", c_ply.controller["ViewAngles"], t_ply:EyeAngles())
 
         --cmd:SetViewAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
 
@@ -234,8 +269,8 @@ function PlayerControl.overrideCommand(ply, cmd)
         cmd:SetUpMove(c_ply.controller["UpMove"] or 0)
 
         cmd:SetMouseWheel(c_ply.controller["MouseWheel"] or 0)
-        cmd:SetMouseX(c_ply.controller["MouseX"] or 0)
-        cmd:SetMouseY(c_ply.controller["MouseY"] or 0)
+        --cmd:SetMouseX(c_ply.controller["MouseX"] or 0)
+        --cmd:SetMouseY(c_ply.controller["MouseY"] or 0)
 
 
     -- elseif ply == player.GetBots()[2] then
@@ -338,7 +373,12 @@ net.Receive("PlayerController:NetCl", function (len, ply)
 end)
 
 
+-- local function ConCommandOrderEquipment(ply, cmd, args)
+-- 	if #args ~= 1 then return end
 
+-- 	OrderEquipment(ply, args[1])
+-- end
+-- concommand.Add("ttt_order_equipment", ConCommandOrderEquipment)
 
 
 -- function PlayerControl.finishMove(ply, mv)

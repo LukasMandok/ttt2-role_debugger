@@ -87,7 +87,6 @@ function PlayerControl.Camera(c_ply, t_ply, thirdperson, isRoaming)
                 trace = {}
                 trace.start  = view.origin
                 trace.endpos = view.origin - CustomAngles:Forward() * offset
-                trace.filter = player.GetAll()
 
                 trace = util.TraceLine(trace)
                 local TargetOrigin = trace.HitPos + trace.HitNormal*2

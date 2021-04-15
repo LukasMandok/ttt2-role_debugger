@@ -30,13 +30,15 @@ function PlayerControl.setupMove(ply, mv, cmd)
 end
 
 
--- Shared
+-- Disable Movment for the controlling player
 function PlayerControl.disableMovment(ply, mv)
     if ply.controller and ply.controller["t_ply"]  then
+        ply:SetFOV(ply.controller["t_ply"]:GetFOV())
         return true
     end
 end
 
+-- Disable Weapon Switch for the controlling Player
 function PlayerControl.disableWeaponSwitch(ply, oldWep, newWep )
     print("Disable Weapon Switch:")
     if ply.controller and ply.controller["t_ply"]  then
@@ -44,7 +46,18 @@ function PlayerControl.disableWeaponSwitch(ply, oldWep, newWep )
     end
 end
 
+-- prevent the controller from bying something from the shop
+-- relay in net message since this hook is not called when the controlling player does not have the rights to by an item
+function PlayerControl.preventEquipmentOrder(ply, cls, is_item, credits)
+    -- allow, ignoreCost, message = hook.Run("TTT2CanOrderEquipment")
+    if ply.controller and ply.controller["t_ply"] then
+        print("Prevent Controller from bying something:", ply:Nick())
+        return false
+    end
+end
 
+-- relay shop order from 
+-- only works if the controller itself is allowed to buy this item
 
 
 

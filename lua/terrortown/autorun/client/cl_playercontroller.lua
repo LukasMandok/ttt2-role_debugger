@@ -2,10 +2,12 @@ PlayerControl = PlayerControl or {
     c_ply = nil,
     t_ply = nil,
 }
+
 OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
-local overrideLocalPlayer = function(flag)
+local overrideFunctions = function(flag)
     if flag == true then
+        -- Local Player
         LocalPlayer = function()
             if PlayerControl.t_ply == nil then
                 return OldLocalPlayer()
@@ -13,8 +15,28 @@ local overrideLocalPlayer = function(flag)
                 return PlayerControl.t_ply
             end
         end
+
+        -- SteamID for Bots
+        if PlayerControl.t_ply:IsBot() then
+            local t_ply = PlayerControl.t_ply
+            local t_ply_meta = getmetatable(t_ply)
+            print("overriding SteamID64 for:", t_ply:Nick())
+
+            t_ply_meta.SteamID64 = function(slf)
+                return 111111111111
+            end
+            print("Neu:", t_ply:SteamID64())
+        end
     else
+        -- reset LocalPlayer function
         LocalPlayer = OldLocalPlayer
+
+        -- reset SteamID64 functino for bots
+        if PlayerControl.t_ply:IsBot() then
+            PlayerControl.t_ply.SteamID64 = function(self)
+                return nil
+            end
+        end
     end
 end
 
@@ -76,7 +98,7 @@ net.Receive("PlayerController:Net", function (len)
                 PlayerControl.camera:CreateMove( cmd, ply, true)
             end)
 
-            overrideLocalPlayer(true)
+            overrideFunctions(true)
 
         -- If the controlled Player
         else
@@ -114,7 +136,7 @@ net.Receive("PlayerController:Net", function (len)
         hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
 
         print("reversing to OldLocalPlayer")
-        overrideLocalPlayer(false)
+        overrideFunctions(false)
 
         PlayerControl.camera = nil
         ply.controller = nil
@@ -142,8 +164,9 @@ net.Receive("PlayerController:Net", function (len)
     elseif tbl.mode == PC_SV_PLAYER then
         --print("Client: Update Target Information", ply.controller, ply.controller["t_ply"])
         if ply.controller and ply.controller["t_ply"] == tbl.player then
-            local role = tbl.role
-            ply.controller["t_ply"]:SetRole(role)
+
+            ply.controller["t_ply"]:SetRole(tbl.role)
+            ply.controller["t_ply"].equipment_credits = tbl.credits
 
             -- local clip = tbl.clip
             -- local ammo = tbl.ammo
