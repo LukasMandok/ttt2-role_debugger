@@ -1,4 +1,22 @@
-PlayerControl = PlayerControl or {}
+PlayerControl = PlayerControl or {
+    c_ply = nil,
+    t_ply = nil,
+}
+OldLocalPlayer = OldLocalPlayer or LocalPlayer
+
+local overrideLocalPlayer = function(flag)
+    if flag == true then
+        LocalPlayer = function()
+            if PlayerControl.t_ply == nil then
+                return OldLocalPlayer()
+            else
+                return PlayerControl.t_ply
+            end
+        end
+    else
+        LocalPlayer = OldLocalPlayer
+    end
+end
 
 function PlayerControl.NetSendCl(mode, arg1, arg2)
     net.Start("PlayerController:NetCl")
@@ -18,7 +36,7 @@ function PlayerControl.NetSendCl(mode, arg1, arg2)
 end
 
 net.Receive("PlayerController:Net", function (len)
-    local ply = LocalPlayer()
+    local ply = OldLocalPlayer()
     if not IsValid(ply) then return end
     local tbl = net.ReadTable()
 
@@ -32,6 +50,7 @@ net.Receive("PlayerController:Net", function (len)
         -- If controlling Player
         if tbl.controlling then
             ply.controller["t_ply"] = tbl.player
+            PlayerControl.t_ply = ply.controller["t_ply"]
 
             local thirdperson = tbl.thirdperson or false
             local roaming = tbl.roaming or false
@@ -57,10 +76,12 @@ net.Receive("PlayerController:Net", function (len)
                 PlayerControl.camera:CreateMove( cmd, ply, true)
             end)
 
+            overrideLocalPlayer(true)
+
         -- If the controlled Player
         else
-
             ply.controller["c_ply"] = tbl.player
+            PlayerControl.c_ply = ply.controller["c_ply"]
             -- hook.Add("CreateMove","PlayerController:TargetMovment",function(cmd)
             --     print("Create Target Move:", ply:Nick())
             --     camera:CreateTargetMove( cmd, ply, true)
@@ -69,6 +90,15 @@ net.Receive("PlayerController:Net", function (len)
             -- TODO: Disable all commands / or maybe not
             hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerControl.diableBinds)
 
+            -- Timer to send Hud updates to the server and from there to the client.
+            -- TODO: Remove Message
+            timer.Create("SendHUD", 1, 0, function()
+                print("Sending message from t_ply")
+                local curHUD = HUDManager.GetHUD()
+                local curHUDTbl = huds.GetStored(curHUD)
+
+                PlayerControl.NetSendCl(PC_CL_MESSAGE)
+            end)
         end
 
 
@@ -83,8 +113,17 @@ net.Receive("PlayerController:Net", function (len)
         hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
         hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
 
+        print("reversing to OldLocalPlayer")
+        overrideLocalPlayer(false)
+
         PlayerControl.camera = nil
         ply.controller = nil
+
+        PlayerControl.c_ply = nil
+        PlayerControl.t_ply = nil
+
+        -- Remove Tier for Hud Update
+        timer.Remove( "SendHUD" )
 
     -- MESSAGE FROM SERVER
     elseif tbl.mode == PC_SV_MESSAGE then
@@ -94,10 +133,27 @@ net.Receive("PlayerController:Net", function (len)
         print("CLIENT: Update Inventory")
         if ply.controller and ply.controller["t_ply"] then
             ply.controller["t_ply"].inventory = tbl.inventory
-            print("\n\nNew Inventory: ")
-            PrintTable(ply.controller["t_ply"].inventory)
-            print("Actual Inventory: ")
-            PrintTable(ply.controller["t_ply"]:GetInventory())
+            -- print("\n\nNew Inventory: ")
+            -- PrintTable(ply.controller["t_ply"].inventory)
+            -- print("Actual Inventory: ")
+            -- PrintTable(ply.controller["t_ply"]:GetInventory())
+        end
+
+    elseif tbl.mode == PC_SV_PLAYER then
+        --print("Client: Update Target Information", ply.controller, ply.controller["t_ply"])
+        if ply.controller and ply.controller["t_ply"] == tbl.player then
+            local role = tbl.role
+            ply.controller["t_ply"]:SetRole(role)
+
+            -- local clip = tbl.clip
+            -- local ammo = tbl.ammo
+            -- print("ammo:", ammo, "clip:", clip)
+
+            ply.controller["t_ply"]:SetAmmo( tbl.ammo,  ply.controller["t_ply"]:GetActiveWeapon():GetPrimaryAmmoType() )
+            ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
+
+            --print("Role to set:", role)
+            --print("Role of t_ply:", ply.controller["t_ply"]:GetSubRole())
         end
     end
 end)

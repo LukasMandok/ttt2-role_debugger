@@ -39,11 +39,11 @@ function PlayerControl.Camera(c_ply, t_ply, thirdperson, isRoaming)
             --c_ply:SetViewEntity(nil)
         else
             --c_ply:SetViewEntity(nil)
-        end 
+        end
     end
 
     CAM:Init()
-    
+
 
     CAM.ShouldDrawLocalPlayer = function( self, ply, on )
         return on or OutLerp < 1

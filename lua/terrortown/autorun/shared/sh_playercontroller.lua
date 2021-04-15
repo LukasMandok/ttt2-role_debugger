@@ -7,17 +7,21 @@ PC_SV_START = 1
 PC_SV_END = 2
 PC_SV_MESSAGE = 3
 PC_SV_INVENTORY = 4
+PC_SV_PLAYER = 5
 
 -- Client Network Flags
 PC_CL_WEAPON = 1
 PC_CL_DROP_WEAPON = 2
 PC_CL_INVENTORY = 3
+PC_CL_MESSAGE = 4
 
 -- SERVER ONLY
 function PlayerControl.setupMove(ply, mv, cmd)
-    if mv:KeyReleased( IN_USE ) then
+    if mv:KeyReleased( IN_SCORE ) then
         PlayerControl:EndControl()
     end
+
+
 
     -- if ply.controller and ply.controller["t_ply"]  then
     --     print("SetupMove")

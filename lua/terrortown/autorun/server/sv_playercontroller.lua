@@ -6,6 +6,7 @@ PlayerControl = PlayerControl or {
     isActive = false,
 
     spectator = nil,
+    previous_wep = nil,
 }
 
 util.AddNetworkString("PlayerController:StartControl")
@@ -85,18 +86,52 @@ function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirs
         -- Set Some Network Variables:
         self.t_ply:SetNWBool("playerController_Controlled", true)
 
+        -- make controlling player unarmed
+        -- TODO: Change to disable attacking instead of unarming the player
+        self.previous_wep = self.c_ply:GetActiveWeapon()
+        local unarmed = self.c_ply:GetWeapon("weapon_ttt_unarmed")
+        self.c_ply:SetActiveWeapon(unarmed)
+
         -- Start driver:
         --self.c_ply:SetViewEntity(self.t_ply)
         --drive.Start(self.c_ply, self.t_ply)
 
-        print("Update Inventory!")
+        --print("Update Inventory!")
         self.updateInventory(self.t_ply)
+
+        timer.Create("UpdatePlayerInformation", 0.1, 0, function ()
+
+            local wep = self.t_ply:GetActiveWeapon()
+            local ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
+            local clip = wep:Clip1()
+            --print("Wep:", wep, "ammotype:", ammotype, "ammo:", ammo, "clip:", clip)
+
+            --print("Sending Player:", self.t_ply, "to Client:", self.t_ply:GetSubRole())
+            PlayerControl.NetSend(self.c_ply, {
+                mode = PC_SV_PLAYER,
+                player = self.t_ply,
+                role = self.t_ply:GetSubRole(),
+                drowning = nil,
+                clip = clip,
+                ammo = ammo,
+            })
+        end)
+
     end
 end
 
 function PlayerControl:EndControl()
     -- Add Controlling Hooks
     if self.isActive then
+
+        -- Delete Player Information Timer
+        timer.Remove("UpdatePlayerInformation")
+
+        -- reset previous wepon 
+        -- TODO: not needed if attacking is disabled
+        self.c_ply:SetActiveWeapon(self.previous_wep)
+        self.previous_wep = nil
+
         hook.Remove("StartCommand", "PlayerController:OverrideCommands")
 
         hook.Remove("SetupMove", "PlayerController:SetupMove")
@@ -165,7 +200,7 @@ function PlayerControl.overrideCommand(ply, cmd)
         c_ply:SetNWInt("playerController_Buttons", cmd:GetButtons())
         c_ply:SetNWInt("playerController_Impluse", cmd:GetImpulse())
 
-        c_ply.controller["viewAngles"] = cmd:GetViewAngles()--c_ply:EyeAngles()
+        c_ply.controller["viewAngles"] = cmd:GetViewAngles() --c_ply:EyeAngles()
 
         c_ply.controller["ForwardMove"] = cmd:GetForwardMove()
         c_ply.controller["SideMove"] = cmd:GetSideMove()
@@ -252,10 +287,11 @@ net.Receive("PlayerController:TargetAngle", function (len, calling_ply)
     end
 end)
 
-net.Receive("PlayerController:NetCl", function (len, c_ply)
+net.Receive("PlayerController:NetCl", function (len, ply)
     local mode = net.ReadInt(6)
 
-    if c_ply == PlayerControl.c_ply then
+    -- If message from Controlling Player
+    if ply == PlayerControl.c_ply then
 
         local t_ply = PlayerControl.t_ply
 
@@ -286,6 +322,17 @@ net.Receive("PlayerController:NetCl", function (len, c_ply)
             --     player = t_ply,
             --     inventory = t_ply:GetInventory()
             -- })
+        elseif mode == PC_CL_MESSAGE then
+            print("Getting Message from wrong player")
+
+        end
+
+    -- if message from Target Player -- TODO: REMOVE
+    -- Die Nachricht vom Bot kommt nicht an.
+    elseif ply == PlayerControl.t_ply then
+        print("NetCl from t_ply.")
+        if mode == PC_CL_MESSAGE then
+            print("Got Message from Target Player:")
         end
     end
 end)
