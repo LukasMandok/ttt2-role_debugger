@@ -19,10 +19,8 @@ util.AddNetworkString("PlayerController:TargetAngle")
 net.Receive("PlayerController:StartControl", function (len, calling_ply)
     if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
         local target_ply = net.ReadEntity()
-        local thirdperson = net.ReadBool()
-        local roaming = net.ReadBool()
-        local realFirstPerson = net.ReadBool()
-        PlayerControl:StartControl(calling_ply, target_ply, thirdperson, roaming, realFirstPerson)
+        local view_flag = net.ReadInt(6)
+        PlayerControl:StartControl(calling_ply, target_ply, view_flag)
     end
 end)
 
@@ -51,7 +49,7 @@ local function NetOrderEquipment(len, ply)
     end
 end
 
-function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirstPerson)
+function PlayerControl:StartControl(c_ply, t_ply, view_flag)
 
     if not self.isActive then
         print("Running Server Hooks to start Control")
@@ -90,8 +88,7 @@ function PlayerControl:StartControl(c_ply, t_ply, thirdperson, roaming, realFirs
         PlayerControl.NetSend(self.c_ply, {
             mode = PC_SV_START,
             player = self.t_ply,
-            thirdperson = thirdperson,
-            roaming = roaming,
+            view_flag = view_flag,
             controlling = true,
         })
 

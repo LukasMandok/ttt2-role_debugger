@@ -389,9 +389,7 @@ local function PopulateBotPanel(parent)
     formPlayer:Dock(TOP)
 
     local target_ply = playerList[1]
-    local realFirstPerson = false
-    local thirdperson = false
-    local roaming = false
+    local view_flag = PC_CAM_SIMPLEFIRSTPERSON
 
     formPlayer:MakeComboBox({
         label = "Control Player",
@@ -404,30 +402,63 @@ local function PopulateBotPanel(parent)
         end,
     })
 
-    formPlayer:MakeCheckBox({
-        label = "Real First Person View (Still buggy)",
-        initial = false,
-        default = false,
+    local sfp_check, fp_check, tp_check, r_check
+
+    sfp_check = formPlayer:MakeCheckBox({
+        label = "Simple First Person",
+        initial = true,
+        default = true,
         OnChange = function(_, value)
-            realFirstPerson = not realFirstPerson
+            if value == true then
+                view_flag = PC_CAM_SIMPLEFIRSTPERSON
+                fp_check:SetValue(false)
+                tp_check:SetValue(false)
+                r_check:SetValue(false)
+            end
         end,
     })
 
-    formPlayer:MakeCheckBox({
-        label = "On: Third Person, Off: First Person",
+    fp_check = formPlayer:MakeCheckBox({
+        label = "Real First Person View (not implemented yet)",
         initial = false,
         default = false,
+        disabled = true,
         OnChange = function(_, value)
-            thirdperson = not thirdperson
+            if value == true then
+                view_flag = PC_CAM_FIRSTPERSON
+                sfp_check:SetValue(false)
+                tp_check:SetValue(false)
+                r_check:SetValue(false)
+            end
         end,
     })
 
-    formPlayer:MakeCheckBox({
-        label = "Roaming",
+    tp_check = formPlayer:MakeCheckBox({
+        label = "Third Person",
         initial = false,
         default = false,
         OnChange = function(_, value)
-            roaming = not roaming
+            if value == true then
+                view_flag = PC_CAM_THIRDPERSON
+                sfp_check:SetValue(false)
+                fp_check:SetValue(false)
+                r_check:SetValue(false)
+            end
+        end,
+    })
+
+    r_check = formPlayer:MakeCheckBox({
+        label = "Free Roaming (not implemented yet)",
+        initial = false,
+        default = false,
+        disabled = true,
+        OnChange = function(_, value)
+            if value == true then
+                view_flag = PC_CAM_ROAMING
+                sfp_check:SetValue(false)
+                fp_check:SetValue(false)
+                tp_check:SetValue(false)
+            end
         end,
     })
 
@@ -437,9 +468,7 @@ local function PopulateBotPanel(parent)
             print("Start Control of Player:", target_ply:Nick())
             net.Start("PlayerController:StartControl")
                 net.WriteEntity(target_ply)
-                net.WriteBool(thirdperson)
-                net.WriteBool(roaming)
-                net.WriteBool(realFirstPerson)
+                net.WriteInt(view_flag, 6)
             net.SendToServer()
         end,
         label2 = "End Control Player",

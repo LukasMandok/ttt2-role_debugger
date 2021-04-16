@@ -15,6 +15,11 @@ PC_CL_DROP_WEAPON = 2
 PC_CL_INVENTORY = 3
 PC_CL_MESSAGE = 4
 
+PC_CAM_ROAMING = 1
+PC_CAM_THIRDPERSON = 2
+PC_CAM_FIRSTPERSON = 3
+PC_CAM_SIMPLEFIRSTPERSON = 4
+
 -- SERVER ONLY
 function PlayerControl.setupMove(ply, mv, cmd)
     if mv:KeyReleased( IN_SCORE ) then

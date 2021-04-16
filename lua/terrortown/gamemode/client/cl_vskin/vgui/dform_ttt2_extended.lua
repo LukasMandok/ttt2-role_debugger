@@ -736,6 +736,10 @@ function PANEL:MakeCheckBox(data)
         end
     end
 
+    if data.disabled == true then
+        left:SetEnabled(false) 
+    end
+
     local reset = MakeReset(self)
 
     if ConVarExists(data.convar or "") or data.default ~= nil then

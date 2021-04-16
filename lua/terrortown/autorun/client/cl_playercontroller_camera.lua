@@ -7,8 +7,18 @@ PlayerControl = PlayerControl or {}
 -- end)
 
 -- Taunt Camera, shamelessly stolen from the garrysmod base.
-function PlayerControl.Camera(c_ply, t_ply, thirdperson, isRoaming)
-    print("Create Camer:", c_ply, t_ply, thirdperson, isRoaming)
+
+function GetRealEyeTrace(pos, ang, offset, filter)
+    offset = offset or 10000
+    local trace = {}
+    trace.start = pos
+    trace.endpos = pos + ang:Forward() * offset
+    trace.filter = filter or {}
+    return util.TraceLine(trace)
+end
+
+function PlayerControl.Camera(c_ply, t_ply, view_flag)
+    print("Create Camer:", c_ply, t_ply, view_flag)
 
     local CAM = {}
 
@@ -16,29 +26,35 @@ function PlayerControl.Camera(c_ply, t_ply, thirdperson, isRoaming)
     local c_ply            = c_ply
     local t_ply            = t_ply
 
-    local isRoaming        = isRoaming or false
-    local thirdperson      = thirdperson or false
+    local view_flag        = view_flag
+    local viewmode         = nil
 
-    local offset           = 128
+    local offset           = 100
+    local vertical_offset  = 5
+    local horizontal_offset = 10
 
     -- THird Person Mode
-    local WasOn            = false
+    local wasOn            = false
 
-    local CustomAngles     = Angle( 0, 0, 0 )
-    local PlayerLockAngles = nil
+    local view_angles     = t_ply:EyeAngles()
+    local view_pos        = t_ply:GetShootPos()
+    local c_ply_angles    = c_ply:EyeAngles()
 
-    local InLerp           = 0
-    local OutLerp          = 1
+    local inLerp           = 0
+    local outLerp          = 1
 
-    CAM.Init = function( self )
-        if not isRoaming and not thirdperson then
-            print("Init FIrst Person")
+    CAM.Init = function()
+        if view_flag == PC_CAM_ROAMING then
+
+        elseif view_flag == PC_CAM_THIRDPERSON then
+
+        elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
+            print("Init First Person")
+            viewmode = PlayerControl.SimpleFirstPerson(c_ply, t_ply)
             --c_ply:SetViewEntity(t_ply)
-            --c_ply:SetObserverMode(OBS_MODE_IN_EYE)
-        elseif not isRoaming and thirdperson then
-            --c_ply:SetViewEntity(nil)
-        else
-            --c_ply:SetViewEntity(nil)
+
+        elseif view_flag == PC_CAM_FIRSTPERSON then
+
         end
     end
 
@@ -46,115 +62,147 @@ function PlayerControl.Camera(c_ply, t_ply, thirdperson, isRoaming)
 
 
     CAM.ShouldDrawLocalPlayer = function( self, ply, on )
-        return on or OutLerp < 1
+        return on or outLerp < 1
     end
 
     CAM.GetCameraAngle = function( self )
-        return CustomAngles
+        return view_angles
     end
 
     CAM.ChangeOffset = function( self, d_offset )
         offset = offset + d_offset
     end
 
-    CAM.CalcView = function( self, c_view, ply, on )
+    CAM.CorrectShotAngle = function( origin, angles )
+        local view_trace = GetRealEyeTrace(origin, angles, nil, {t_ply})
+        return (view_trace.HitPos - t_ply:GetShootPos()):Angle()
+    end
 
-        local view = c_view
-        if not isRoaming then
-            -- IF THIRD PERSON
-            if thirdperson then
+    CAM.CalcView = function( self, view, ply, on )
 
-                view.origin = t_ply:GetShootPos() -- getThirdPersonPos(t_ply)
-                view.angles = t_ply:EyeAngles()
+        --local view = c_view
 
-                if ( !ply:Alive() ) then on = false end
+        -- if Third Person
+        if view_flag == PC_CAM_THIRDPERSON then
 
-                if ( WasOn ~= on ) then
-                    if ( on ) then InLerp = 0 end
-                    if ( !on ) then OutLerp = 0 end
-                    WasOn = on
-                end
+            view.origin = t_ply:GetShootPos() -- getThirdPersonPos(t_ply)
+            view.angles = t_ply:EyeAngles()
 
-                if ( !on && OutLerp >= 1 ) then
-                    print("Set Custom Angles:", view.angles)
-                    CustomAngles = view.angles * 1
-                    PlayerLockAngles = nil
-                    InLerp = 0
-                    return
-                end
+            if ( !ply:Alive() ) then on = false end
 
-                if ( PlayerLockAngles == nil ) then return end
-                trace = {}
-                trace.start  = view.origin
-                trace.endpos = view.origin - CustomAngles:Forward() * offset
+            if ( wasOn ~= on ) then
+                if ( on ) then inLerp = 0 end
+                if ( !on ) then outLerp = 0 end
+                wasOn = on
+            end
 
-                trace = util.TraceLine(trace)
-                local TargetOrigin = trace.HitPos + trace.HitNormal*2
+            if ( !on and outLerp >= 1 ) then
+                print("Set Custom Angles:", view.angles)
+                view_angles = view.angles * 1
+                c_ply_angles = nil
+                inLerp = 0
+                return
+            end
 
-                if ( InLerp < 1 ) then
-                    InLerp = InLerp + FrameTime() * 5.0
-                    view.origin = LerpVector( InLerp, view.origin, TargetOrigin )
-                    view.angles = LerpAngle( InLerp, PlayerLockAngles, CustomAngles )
-                    return true
-                end
+            if ( c_ply_angles == nil ) then return end
+            trace = {}
+            trace.start  = view.origin + Vector(0, 0, vertical_offset) + view_angles:Right() * horizontal_offset
+            trace.endpos = view.origin + Vector(0, 0, vertical_offset) + view_angles:Right() * horizontal_offset - view_angles:Forward() * offset
 
-                if ( OutLerp < 1 ) then
-                    OutLerp = OutLerp + FrameTime() * 3.0
-                    view.origin = LerpVector( 1-OutLerp, view.origin, TargetOrigin )
-                    view.angles = LerpAngle( 1-OutLerp, PlayerLockAngles, CustomAngles )
-                    return true
-                end
+            trace = util.TraceLine(trace)
+            view_pos = trace.HitPos + trace.HitNormal * 2
 
-                view.angles = CustomAngles * 1
-                view.origin = TargetOrigin
-                return true
-
-            -- ELSE FIRST PERSON
-            else
-                if !on then
-                    CustomAngles = t_ply:EyeAngles()
-                    on = true
-                end
-
-                view.origin = t_ply:GetShootPos() + CustomAngles:Forward() * offset / 10
-                view.angles = CustomAngles
-
+            if ( inLerp < 1 ) then
+                inLerp = inLerp + FrameTime() * 5.0
+                view.origin = LerpVector( inLerp, view.origin, view_pos )
+                view.angles = LerpAngle( inLerp, c_ply_angles, view_angles )
                 return true
             end
 
-        -- IF Roaming
-        else
+            if ( outLerp < 1 ) then
+                outLerp = outLerp + FrameTime() * 3.0
+                view.origin = LerpVector( 1-outLerp, view.origin, view_pos )
+                view.angles = LerpAngle( 1-outLerp, c_ply_angles, view_angles )
+                return true
+            end
+
+            -- if vertical_offset > 0 then
+            --     view_angles = CAM.CompensateOffset(view_pos, view_angles)
+            -- end
+
+            view.angles = view_angles * 1
+            view.origin = view_pos
+            return true
+
+        -- If Simple First Person
+        elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
+            if !on then
+                view_angles = t_ply:EyeAngles()
+                view_pos = t_ply:GetShootPos()
+                on = true
+            end
+
+            --view.origin = t_ply:GetShootPos() + view_angles:Up() * offset / 10
+            view.angles = view_angles
+
+            view = viewmode.CalcView(view, t_ply)
+
+            view_angles = view.angles
+            view_pos = view.origin
+
+            return true
+
+        -- If complex First Person
+        elseif view_flag == PC_CAM_FIRSTPERSON then
+            return
+
+        -- If Roaming
+        elseif view_flag == PC_CAM_ROAMING then
             print("Calc roaming view")
             return
         end
     end
+
+
     CAM.CreateMove = function( self, cmd, ply, on )
 
         if ( !ply:Alive() ) then on = false end
         if ( !on ) then return end
 
-        if ( PlayerLockAngles == nil ) then
-            PlayerLockAngles = CustomAngles * 1
+        if ( c_ply_angles == nil ) then
+            c_ply_angles = c_ply:EyeAngles() --view_angles * 1
         end
 
         --
         -- Rotate our view
         --
         --if thirdperson then
-            -- CustomAngles.pitch  = math.Clamp(CustomAngles.pitch + cmd:GetMouseY() * 0.01 -90, 90)
-            -- CustomAngles.yaw    = CustomAngles.yaw        - cmd:GetMouseX() * 0.01
+            -- view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01 -90, 90)
+            -- view_angles.yaw    = view_angles.yaw        - cmd:GetMouseX() * 0.01
         --else
-        CustomAngles.pitch  = math.Clamp(CustomAngles.pitch + cmd:GetMouseY() * 0.01, -90, 90)
-        CustomAngles.yaw    = CustomAngles.yaw        - cmd:GetMouseX() * 0.01
+        view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01, -90, 90)
+        view_angles.yaw    = view_angles.yaw              - cmd:GetMouseX() * 0.01
         --end
-        --
-        -- Lock the player's controls and angles
-        --
-        cmd:SetViewAngles( PlayerLockAngles )
+
+        local corrected_angles = view_angles
+
+        if view_flag == PC_CAM_SIMPLEFIRSTPERSON or 
+          (view_flag == PC_CAM_THIRDPERSON and (vertical_offset ~= 0 or horizontal_offset ~= 0)) then
+            corrected_angles = CAM.CorrectShotAngle(view_pos, view_angles)
+        end
 
         net.Start("PlayerController:TargetAngle")
-            net.WriteAngle(CustomAngles)
+            net.WriteAngle(corrected_angles)
         net.SendToServer()
+
+       --
+        -- Lock the player's controls and angles
+        --
+        cmd:SetViewAngles( c_ply_angles )
+
+        -- net.Start("PlayerController:TargetAngle")
+        --     net.WriteAngle(view_angles)
+        -- net.SendToServer()
 
         --cmd:ClearButtons()
         --cmd:ClearMovement()
@@ -163,6 +211,11 @@ function PlayerControl.Camera(c_ply, t_ply, thirdperson, isRoaming)
 
     end
 
+    CAM.Stop = function(self)
+        if viewmode ~= nil then
+            viewmode:Stop()
+        end
+    end
 
     return CAM
 end

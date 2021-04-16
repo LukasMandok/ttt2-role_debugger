@@ -74,14 +74,13 @@ net.Receive("PlayerController:Net", function (len)
             ply.controller["t_ply"] = tbl.player
             PlayerControl.t_ply = ply.controller["t_ply"]
 
-            local thirdperson = tbl.thirdperson or false
-            local roaming = tbl.roaming or false
+            local view_flag = tbl.view_flag or PC_CAM_FIRSTPERSON
 
             -- ply.controller["t_ply"]:InstallDataTable()
             -- ply.controller["t_ply"]:SetupDataTables()
 
             -- create Camera
-            PlayerControl.camera = PlayerControl.Camera(ply, ply.controller["t_ply"], thirdperson, roaming)
+            PlayerControl.camera = PlayerControl.Camera(ply, ply.controller["t_ply"], view_flag)
 
             hook.Add("Move", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
             --hook.Add("PlayerSwitchWeapon", "PlayerController:DisableControllerMouse", PlayerControl.disableMouse)
@@ -138,6 +137,7 @@ net.Receive("PlayerController:Net", function (len)
         print("reversing to OldLocalPlayer")
         overrideFunctions(false)
 
+        PlayerControl.camera:Stop()
         PlayerControl.camera = nil
         ply.controller = nil
 
