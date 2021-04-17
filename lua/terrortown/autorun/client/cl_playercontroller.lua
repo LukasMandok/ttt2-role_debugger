@@ -183,7 +183,7 @@ net.Receive("PlayerController:Net", function (len)
             -- local clip = tbl.clip
             -- local ammo = tbl.ammo
             -- print("ammo:", ammo, "clip:", clip)
-
+            
             ply.controller["t_ply"]:SetAmmo( tbl.ammo,  ply.controller["t_ply"]:GetActiveWeapon():GetPrimaryAmmoType() )
             ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
 

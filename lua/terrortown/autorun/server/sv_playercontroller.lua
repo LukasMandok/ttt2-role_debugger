@@ -58,8 +58,10 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
         hook.Add("SetupMove", "PlayerController:SetupMove", PlayerControl.setupMove)
         hook.Add("Move", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
 
+        hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerControl.disableWeaponSwitch)
         hook.Add("WeaponEquip", "PlayerController:UpdateTargetInventory", function(wep, ply) PlayerControl.updateInventory(ply, wep) end)
         hook.Add("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory", PlayerControl.updateInventory)
+        hook.Add("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight", PlayerControl.controlFlashlight)
 
         hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
 
@@ -124,8 +126,14 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
 
             --print("Zoom:", wep:GetZoom())
 
-            --local ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
-            --local clip = wep:Clip1()
+            local ammo = 0
+            local clip = -1
+
+            if IsValid(wep) then
+                ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
+                clip = wep:Clip1()
+            end
+            --
             --print("Wep:", wep, "ammotype:", ammotype, "ammo:", ammo, "clip:", clip)
 
             --print("Sending Player:", self.t_ply, "to Client:", self.t_ply:GetSubRole())
@@ -135,8 +143,8 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
                 role = self.t_ply:GetSubRole(),
                 credits = self.t_ply:GetCredits(),
                 drowning = nil,
-                clip = wep:Clip1(),
-                ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType()),
+                clip = clip,
+                ammo = ammo,
             })
         end)
 
@@ -160,8 +168,10 @@ function PlayerControl:EndControl()
         hook.Remove("SetupMove", "PlayerController:SetupMove")
         hook.Remove("Move", "PlayerController:DisableControllerMovment")
 
+        hook.Remove("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch")
         hook.Remove("WeaponEquip", "PlayerController:UpdateTargetInventory")
         hook.Remove("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory")
+        hook.Remove("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight")
         
         hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
         -- Start driver:

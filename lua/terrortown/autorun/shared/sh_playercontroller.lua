@@ -28,10 +28,10 @@ function PlayerControl.setupMove(ply, mv, cmd)
 
 
 
-    -- if ply.controller and ply.controller["t_ply"]  then
-    --     print("SetupMove")
-    --     return true
-    -- end
+    if ply.controller and ply.controller["t_ply"]  then
+         --print("SetupMove")
+         return true
+    end
 end
 
 
@@ -48,6 +48,14 @@ function PlayerControl.disableWeaponSwitch(ply, oldWep, newWep )
     print("Disable Weapon Switch:")
     if ply.controller and ply.controller["t_ply"]  then
         return true
+    end
+end
+
+-- Prevents Controller from using Flashlight and toggles flashlight of target instead
+function PlayerControl.controlFlashlight( ply, enabled )
+    if ply.controller and ply.controller["t_ply"]  then
+        ply.controller["t_ply"]:Flashlight( not ply.controller["t_ply"]:FlashlightIsOn() )
+        return false
     end
 end
 
