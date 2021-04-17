@@ -5,7 +5,9 @@ PlayerControl = PlayerControl or {
 
 OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
+-- Override Functions for the controlling Player
 local overrideFunctions = function(flag)
+    -- start override
     if flag == true then
         -- Local Player
         LocalPlayer = function()
@@ -16,17 +18,25 @@ local overrideFunctions = function(flag)
             end
         end
 
+        local t_ply = PlayerControl.t_ply
+        local t_ply_meta = getmetatable(t_ply)
+
+        -- Admin RIghts
+
+
+
         -- SteamID for Bots
         if PlayerControl.t_ply:IsBot() then
-            local t_ply = PlayerControl.t_ply
-            local t_ply_meta = getmetatable(t_ply)
             print("overriding SteamID64 for:", t_ply:Nick())
 
             t_ply_meta.SteamID64 = function(slf)
                 return 111111111111
+                --return PlayerControl.c_ply:SteamID64()
             end
             print("Neu:", t_ply:SteamID64())
         end
+
+    -- reset back to previous
     else
         -- reset LocalPlayer function
         LocalPlayer = OldLocalPlayer
@@ -72,6 +82,7 @@ net.Receive("PlayerController:Net", function (len)
         -- If controlling Player
         if tbl.controlling then
             ply.controller["t_ply"] = tbl.player
+            PlayerControl.c_ply = ply
             PlayerControl.t_ply = ply.controller["t_ply"]
 
             local view_flag = tbl.view_flag or PC_CAM_FIRSTPERSON
@@ -102,6 +113,7 @@ net.Receive("PlayerController:Net", function (len)
         -- If the controlled Player
         else
             ply.controller["c_ply"] = tbl.player
+            PlayerControl.t_ply = ply
             PlayerControl.c_ply = ply.controller["c_ply"]
             -- hook.Add("CreateMove","PlayerController:TargetMovment",function(cmd)
             --     print("Create Target Move:", ply:Nick())

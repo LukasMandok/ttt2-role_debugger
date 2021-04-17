@@ -24,8 +24,8 @@ net.Receive("PlayerController:StartControl", function (len, calling_ply)
     end
 end)
 
-net.Receive("playerControllerEndontrol", function (len, calling_ply)
-    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
+net.Receive("playerController:EndControl", function (len, calling_ply)
+    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then -- or (calling_ply.controller and (calling_ply.controller["c_ply"]:IsAdmin() or calling_ply.controller["c_ply"]:IsSuperAdmin())) then
         PlayerControl:EndControl()
     end
 end)
