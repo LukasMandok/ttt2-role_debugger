@@ -53,9 +53,13 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
 
         hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
 
+        self.sprintEnabled = GetConVar( "ttt2_sprint_enabled" )
+	    self.maxSprintMul = GetConVar( "ttt2_sprint_enabled" )
+
         -- replace receiver for Equipment ordering
         net.Receive("TTT2OrderEquipment", PlayerControl.NetOrderEquipmentOverride)
         net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponOverride)
+        net.Receive("TTT2SprintToggle", PlayerControl.SprintToggleOverride)
 
         self.isActive = true
 
@@ -410,6 +414,23 @@ function PlayerControl.PickupWeaponOverride(_, ply)
     if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
 
     ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
+end
+
+-- Sprind override
+function PlayerControl.SprintToggleOverride(_, ply)
+    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+        ply = PlayerControl.t_ply
+    end
+    -- sprintEnabled:GetBoll()
+    if not PlayerControl.sprintEnabled:GetBool() or not IsValid(ply) then return end
+
+    local bool = net.ReadBool()
+
+    print("Sprinting bool:", bool)
+
+    ply.oldSprintProgress = ply.sprintProgress
+    ply.sprintMultiplier = bool and (1 + PlayerControl.maxSprintMul:GetFloat()) or nil
+    ply.isSprinting = bool
 end
 
 -- TODO: REMOVE Default PICKUP
