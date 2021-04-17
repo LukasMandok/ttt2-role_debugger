@@ -37,18 +37,6 @@ function PlayerControl.NetSend(ply, tbl)
 end
 
 
-local function NetOrderEquipment(len, ply)
-    local cls = net.ReadString()
-
-    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
-        print("OrdereEquipment custom from:", ply:Nick())
-
-        concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
-    else
-        concommand.Run( ply, "ttt_order_equipment", {cls}  )
-    end
-end
-
 function PlayerControl:StartControl(c_ply, t_ply, view_flag)
 
     if not self.isActive then
@@ -66,7 +54,8 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
         hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
 
         -- replace receiver for Equipment ordering
-        net.Receive("TTT2OrderEquipment", NetOrderEquipment)
+        net.Receive("TTT2OrderEquipment", PlayerControl.NetOrderEquipmentOverride)
+        net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponOverride)
 
         self.isActive = true
 
@@ -174,6 +163,10 @@ function PlayerControl:EndControl()
         hook.Remove("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight")
         
         hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
+        
+        -- Reset back to origional function
+                net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponDefault)
+        
         -- Start driver:
 
         --drive.End(self.c_ply, self.t_ply)
@@ -378,6 +371,66 @@ net.Receive("PlayerController:NetCl", function (len, ply)
         end
     end
 end)
+
+
+-- Override Server Communication from TTT2 Standard
+
+-- Override Equipment Ordering to Forward to t_ply
+-- ATTENTION: THIS changes the definition of the 
+function PlayerControl.NetOrderEquipmentOverride(len, ply)
+    local cls = net.ReadString()
+
+    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+        print("OrdereEquipment custom from:", ply:Nick())
+
+        concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
+    else
+        concommand.Run( ply, "ttt_order_equipment", {cls}  )
+    end
+end
+
+
+--net.Receive("ttt2_switch_weapon", function(_, ply)
+
+function PlayerControl.PickupWeaponOverride(_, ply)
+    print("Custom Pickup")
+    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+        ply = PlayerControl.t_ply
+    end
+
+    -- player and wepaon must be valid
+    if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
+
+    -- handle weapon switch
+    local tracedWeapon = ply:GetEyeTrace().Entity
+
+    if not IsValid(tracedWeapon) or not tracedWeapon:IsWeapon() then return end
+
+    -- do not pickup weapon if too far away
+    if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
+
+    ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
+end
+
+-- TODO: REMOVE Default PICKUP
+function PlayerControl.PickupWeaponDefault(_, ply)
+	print("Default Pickup")
+    
+    -- player and wepaon must be valid
+	if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
+
+	-- handle weapon switch
+	local tracedWeapon = ply:GetEyeTrace().Entity
+
+	if not IsValid(tracedWeapon) or not tracedWeapon:IsWeapon() then return end
+
+	-- do not pickup weapon if too far away
+	if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
+
+	ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
+end
+
+
 
 
 -- local function ConCommandOrderEquipment(ply, cmd, args)
