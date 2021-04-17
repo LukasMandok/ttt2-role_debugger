@@ -48,21 +48,19 @@ function PlayerControl.SimpleFirstPerson(c_ply, t_ply)
         view.znear = 1
         --view.zfar = 
 
-
-
         return view
     end
 
     -- Correct Shoot Angle for the Controlled Player according Crosshair of the controlling Player
-    SimpleFirstPerson.CorrectShotAngle = function(origin, angles, t_ply)
-        local view_trace = GetRealEyeTrace(origin, angles, nil, {t_ply})
-        return (view_trace.HitPos - t_ply:GetShootPos()):Angle()
-    end
+    -- SimpleFirstPerson.CorrectShotAngle = function(origin, angles, t_ply)
+    --     local view_trace = GetRealEyeTrace(origin, angles, nil, {t_ply})
+    --     return (view_trace.HitPos - t_ply:GetShootPos()):Angle()
+    -- end
 
 
     SimpleFirstPerson.SetBonesVisible = function(self)
         for bone, fac in pairs(invisibleBones) do
-            print("Setting Bone to visible:", bone)
+            --print("Setting Bone to visible:", bone)
             t_ply:ManipulateBoneScale(bone, fac)
             invisibleBones[bone] = nil
         end

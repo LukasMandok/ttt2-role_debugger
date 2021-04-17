@@ -299,6 +299,7 @@ end
 -- Update Target Inventory:
 PlayerControl.updateInventory = function(ply, wep)
     if IsValid(ply) and ply == PlayerControl.t_ply then
+        -- TODO: Error with Nick() not valid!)
         print("SERVER: Updating Inventory:", PlayerControl.t_ply:Nick(), "Hat ", wep, "aufgehoben. Send to:", PlayerControl.c_ply:Nick())
         timer.Simple(0.1, function()
             PlayerControl.NetSend(PlayerControl.c_ply, {

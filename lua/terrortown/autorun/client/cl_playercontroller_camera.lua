@@ -37,6 +37,10 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
     local wasOn            = false
 
     local view_angles     = t_ply:EyeAngles()
+    if view_angles.pitch > 90 then
+        view_angles.pitch = view_angles.pitch - 360
+    end
+    --print("Set initial view_angles:", t_ply:EyeAngles())
     local view_pos        = t_ply:GetShootPos()
     local c_ply_angles    = c_ply:EyeAngles()
 
@@ -138,10 +142,13 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
         -- If Simple First Person
         elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
             if !on then
+                print("initial view angles:", t_ply:EyeAngles())
                 view_angles = t_ply:EyeAngles()
                 view_pos = t_ply:GetShootPos()
                 on = true
             end
+
+            print("view_angles:", view_angles)
 
             --view.origin = t_ply:GetShootPos() + view_angles:Up() * offset / 10
             view.angles = view_angles
@@ -181,7 +188,7 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
             -- view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01 -90, 90)
             -- view_angles.yaw    = view_angles.yaw        - cmd:GetMouseX() * 0.01
         --else
-        view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01, -90, 90)
+        view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01, -85, 85)
         view_angles.yaw    = view_angles.yaw              - cmd:GetMouseX() * 0.01
         --end
 

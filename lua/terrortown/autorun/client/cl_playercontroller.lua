@@ -7,6 +7,10 @@ OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
 -- Override Functions for the controlling Player
 local overrideFunctions = function(flag)
+
+    local t_ply = PlayerControl.t_ply
+    local t_ply_meta = getmetatable(t_ply)
+
     -- start override
     if flag == true then
         -- Local Player
@@ -18,9 +22,6 @@ local overrideFunctions = function(flag)
             end
         end
 
-        local t_ply = PlayerControl.t_ply
-        local t_ply_meta = getmetatable(t_ply)
-
         -- Admin RIghts
 
 
@@ -31,9 +32,10 @@ local overrideFunctions = function(flag)
 
             t_ply_meta.SteamID64 = function(slf)
                 return 111111111111
-                --return PlayerControl.c_ply:SteamID64()
+                -- TODO: For some reaseon the game crashes with that!!
+                --return OldLocalPlayer():SteamID64()
             end
-            print("Neu:", t_ply:SteamID64())
+            --print("Neu:", t_ply:SteamID64())
         end
 
     -- reset back to previous
@@ -43,7 +45,7 @@ local overrideFunctions = function(flag)
 
         -- reset SteamID64 functino for bots
         if PlayerControl.t_ply:IsBot() then
-            PlayerControl.t_ply.SteamID64 = function(self)
+            t_ply_meta.SteamID64 = function(self)
                 return nil
             end
         end
@@ -126,7 +128,7 @@ net.Receive("PlayerController:Net", function (len)
             -- Timer to send Hud updates to the server and from there to the client.
             -- TODO: Remove Message
             timer.Create("SendHUD", 1, 0, function()
-                print("Sending message from t_ply")
+                --print("Sending message from t_ply")
                 local curHUD = HUDManager.GetHUD()
                 local curHUDTbl = huds.GetStored(curHUD)
 
@@ -164,7 +166,7 @@ net.Receive("PlayerController:Net", function (len)
 
     -- Inventory Update of Target Player for Controlling Player
     elseif tbl.mode == PC_SV_INVENTORY then
-        print("CLIENT: Update Inventory")
+        --print("CLIENT: Update Inventory")
         if ply.controller and ply.controller["t_ply"] then
             ply.controller["t_ply"].inventory = tbl.inventory
             -- print("\n\nNew Inventory: ")
@@ -185,7 +187,7 @@ net.Receive("PlayerController:Net", function (len)
             -- local ammo = tbl.ammo
             -- print("ammo:", ammo, "clip:", clip)
             if IsValid(wep) then
-                print("Valid weapon -> set ammo and clip count")
+                --print("Valid weapon -> set ammo and clip count")
                 ply.controller["t_ply"]:SetAmmo( tbl.ammo,  wep:GetPrimaryAmmoType() )
                 ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
             else
@@ -252,7 +254,6 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
 
         -- Select Previous Weapon
         else
-            print("select previous weapon")
             local weps = t_ply:GetWeapons()
             local active_w = table.KeyFromValue(weps, t_ply:GetActiveWeapon())
 
@@ -261,7 +262,7 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
                 active_w = #weps
             end
 
-            print("FLAG:", PC_CL_WEAPON, "Class:", weps[active_w]:GetClass())
+            --print("FLAG:", PC_CL_WEAPON, "Class:", weps[active_w]:GetClass())
             PlayerControl.NetSendCl(PC_CL_WEAPON, weps[active_w]:GetClass())
         end
 
@@ -274,12 +275,12 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
 
         local weps = t_ply:GetWeapons()
 
-        print("inventory:")
-        PrintTable(inv)
-        print("selected:", PrintTable(inv[idx]))
+        --print("inventory:")
+        --PrintTable(inv)
+        --print("selected:", PrintTable(inv[idx]))
 
         if inv[idx][1] then
-            print("name:", inv[idx][1]:GetClass())
+            --print("name:", inv[idx][1]:GetClass())
             PlayerControl.NetSendCl(PC_CL_WEAPON, inv[idx][1]:GetClass())
             return true
         end
