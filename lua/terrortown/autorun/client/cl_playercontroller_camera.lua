@@ -108,6 +108,7 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
             trace = {}
             trace.start  = view.origin + Vector(0, 0, vertical_offset) + view_angles:Right() * horizontal_offset
             trace.endpos = view.origin + Vector(0, 0, vertical_offset) + view_angles:Right() * horizontal_offset - view_angles:Forward() * offset
+            trace.filter = {t_ply}
 
             trace = util.TraceLine(trace)
             view_pos = trace.HitPos + trace.HitNormal * 2

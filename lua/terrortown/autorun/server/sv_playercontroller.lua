@@ -146,6 +146,8 @@ function PlayerControl:EndControl()
 
         -- Delete Player Information Timer
         timer.Remove("UpdatePlayerInformation")
+        -- Reset back to origional function
+        --net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponDefault)
 
         -- reset previous wepon 
         -- TODO: not needed if attacking is disabled
@@ -163,9 +165,6 @@ function PlayerControl:EndControl()
         hook.Remove("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight")
         
         hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
-        
-        -- Reset back to origional function
-                net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponDefault)
         
         -- Start driver:
 
@@ -393,7 +392,7 @@ end
 --net.Receive("ttt2_switch_weapon", function(_, ply)
 
 function PlayerControl.PickupWeaponOverride(_, ply)
-    print("Custom Pickup")
+    print("overridden Weapon Pickup")
     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
         ply = PlayerControl.t_ply
     end
@@ -413,22 +412,21 @@ function PlayerControl.PickupWeaponOverride(_, ply)
 end
 
 -- TODO: REMOVE Default PICKUP
-function PlayerControl.PickupWeaponDefault(_, ply)
-	print("Default Pickup")
+-- function PlayerControl.PickupWeaponDefault(_, ply)
     
-    -- player and wepaon must be valid
-	if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
+--     -- player and wepaon must be valid
+-- 	if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
 
-	-- handle weapon switch
-	local tracedWeapon = ply:GetEyeTrace().Entity
+-- 	-- handle weapon switch
+-- 	local tracedWeapon = ply:GetEyeTrace().Entity
 
-	if not IsValid(tracedWeapon) or not tracedWeapon:IsWeapon() then return end
+-- 	if not IsValid(tracedWeapon) or not tracedWeapon:IsWeapon() then return end
 
-	-- do not pickup weapon if too far away
-	if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
+-- 	-- do not pickup weapon if too far away
+-- 	if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
 
-	ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
-end
+-- 	ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
+-- end
 
 
 
