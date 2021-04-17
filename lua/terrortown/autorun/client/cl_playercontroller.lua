@@ -3,22 +3,34 @@ PlayerControl = PlayerControl or {
     t_ply = nil,
 }
 
+ply_meta = FindMetaTable("Player")
+
+ply_meta.OldSteamID64 = ply_meta.OldSteamID64 or ply_meta.SteamID64
+
+
+-- t_ply_meta.DisplayName = "t_ply"
+-- t_ply_meta.SteamID64 = function(slf)
+--     return 00000
+-- end
+
+-- player_manager.RegisterClass( "t_ply", t_ply_meta, {} )
+
 OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
 -- Override Functions for the controlling Player
 local overrideFunctions = function(flag)
 
     local t_ply = PlayerControl.t_ply
-    local t_ply_meta = getmetatable(t_ply)
+    --local t_ply_meta = getmetatable(t_ply)
 
     -- start override
     if flag == true then
         -- Local Player
         LocalPlayer = function()
-            if PlayerControl.t_ply == nil then
+            if t_ply == nil then
                 return OldLocalPlayer()
             else
-                return PlayerControl.t_ply
+                return t_ply
             end
         end
 
@@ -27,15 +39,26 @@ local overrideFunctions = function(flag)
 
 
         -- SteamID for Bots
-        if PlayerControl.t_ply:IsBot() then
+        if t_ply:IsBot() then
             print("overriding SteamID64 for:", t_ply:Nick())
+            print("\nOld SteamID64:", t_ply:SteamID64())
 
-            t_ply_meta.SteamID64 = function(slf)
-                return 111111111111
+            --player_manager.SetPlayerClass(t_ply, "t_ply")
+            ply_meta.SteamID64 = function(slf)
+                --print("slf:", slf)
+                --print("old:", slf:OldSteamID64())
+                if slf == t_ply then
+                    return PlayerControl.c_ply:OldSteamID64()
+                else
+                    return slf:OldSteamID64()
+                end
                 -- TODO: For some reaseon the game crashes with that!!
                 --return OldLocalPlayer():SteamID64()
             end
-            --print("Neu:", t_ply:SteamID64())
+            --print("PlayerClass:", player_manager.GetPlayerClass(t_ply))
+            --PrintTable( baseclass.Get( "t_ply" ) )
+            print("New SteamID64:", t_ply:SteamID64())
+            --print("DisplayName:", t_ply.DisplayName)
         end
 
     -- reset back to previous
@@ -45,9 +68,11 @@ local overrideFunctions = function(flag)
 
         -- reset SteamID64 functino for bots
         if PlayerControl.t_ply:IsBot() then
-            t_ply_meta.SteamID64 = function(self)
-                return nil
-            end
+            --player_manager.ClearPlayerClass(t_ply)
+            ply_meta.SteamID64 = ply_meta.OldSteamID64
+            -- = function(self)
+            --     return nil
+            -- end
         end
     end
 end
