@@ -180,12 +180,17 @@ net.Receive("PlayerController:Net", function (len)
             ply.controller["t_ply"]:SetRole(tbl.role)
             ply.controller["t_ply"].equipment_credits = tbl.credits
 
+            local wep = ply.controller["t_ply"]:GetActiveWeapon()
             -- local clip = tbl.clip
             -- local ammo = tbl.ammo
             -- print("ammo:", ammo, "clip:", clip)
-            
-            ply.controller["t_ply"]:SetAmmo( tbl.ammo,  ply.controller["t_ply"]:GetActiveWeapon():GetPrimaryAmmoType() )
-            ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
+            if IsValid(wep) then
+                print("Valid weapon -> set ammo and clip count")
+                ply.controller["t_ply"]:SetAmmo( tbl.ammo,  wep:GetPrimaryAmmoType() )
+                ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
+            else
+                print("Current weapon is not valid!")
+            end
 
             --print("Role to set:", role)
             --print("Role of t_ply:", ply.controller["t_ply"]:GetSubRole())
