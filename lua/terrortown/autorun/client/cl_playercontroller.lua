@@ -96,7 +96,7 @@ net.Receive("PlayerController:Net", function (len)
             PlayerControl.camera = PlayerControl.Camera(ply, ply.controller["t_ply"], view_flag)
 
             hook.Add("Move", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
-            --hook.Add("PlayerSwitchWeapon", "PlayerController:DisableControllerMouse", PlayerControl.disableMouse)
+            hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerControl.disableWeaponSwitch)
             --hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerControl.disableMouse)
 
             hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerControl.overrideBinds)
@@ -140,7 +140,7 @@ net.Receive("PlayerController:Net", function (len)
     -- END
     elseif tbl.mode == PC_SV_END then
         hook.Remove("Move", "PlayerController:DisableControllerMovment")
-        --hook.Remove("InputMouseApply", "PlayerController:DisableControllerMouse")
+        hook.Remove("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch")
 
         hook.Remove("CalcView", "PlayerController:CameraView")
         hook.Remove("CreateMove", "PlayerController:ControllerMovment")
@@ -227,43 +227,33 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
 
         -- Change Camera Distance
         if input.IsKeyDown( KEY_LSHIFT ) then -- If shift is pressed, change camera distance
-            PlayerControl.camera:ChangeOffset(-10)
+            PlayerControl.camera:ChangeOffset(10)
 
         -- Select Next Weapon
         else
-            local weps = t_ply:GetWeapons()
-            local active_w = table.KeyFromValue(weps, t_ply:GetActiveWeapon())
-
-            active_w = active_w + 1
-            if active_w > #weps then
-                active_w = 1
-            end
+            WSWITCH:SelectNext()
+            local idx = WSWITCH.Selected
 
             --print("FLAG:", PC_CL_WEAPON, "Class:", weps[active_w]:GetClass())
-            PlayerControl.NetSendCl(PC_CL_WEAPON, weps[active_w]:GetClass())
+            PlayerControl.NetSendCl(PC_CL_WEAPON, WSWITCH.WeaponCache[idx]:GetClass()) -- weps[active_w]
         end
 
         return true
 
     -- Previous Weapon Slot
     elseif bind == "invprev" and pressed then
-
         -- Change Camera Distance
         if input.IsKeyDown( KEY_LSHIFT ) then -- If shift is pressed, change camera distance
-            PlayerControl.camera:ChangeOffset(10)
+            PlayerControl.camera:ChangeOffset(-10)
 
         -- Select Previous Weapon
         else
-            local weps = t_ply:GetWeapons()
-            local active_w = table.KeyFromValue(weps, t_ply:GetActiveWeapon())
 
-            active_w = active_w - 1
-            if active_w < 1 then
-                active_w = #weps
-            end
+            WSWITCH:SelectPrev()
+            local idx = WSWITCH.Selected
 
             --print("FLAG:", PC_CL_WEAPON, "Class:", weps[active_w]:GetClass())
-            PlayerControl.NetSendCl(PC_CL_WEAPON, weps[active_w]:GetClass())
+            PlayerControl.NetSendCl(PC_CL_WEAPON, WSWITCH.WeaponCache[idx]:GetClass()) --weps[active_w]
         end
 
         return true
@@ -273,11 +263,7 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
         local inv = t_ply:GetInventory()
         local idx = tonumber(string.sub(bind, 5, - 1)) or 1
 
-        local weps = t_ply:GetWeapons()
-
-        --print("inventory:")
-        --PrintTable(inv)
-        --print("selected:", PrintTable(inv[idx]))
+        WSWITCH:SelectSlot(idx)
 
         if inv[idx][1] then
             --print("name:", inv[idx][1]:GetClass())

@@ -53,7 +53,6 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
         elseif view_flag == PC_CAM_THIRDPERSON then
 
         elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
-            print("Init First Person")
             viewmode = PlayerControl.SimpleFirstPerson(c_ply, t_ply)
             --c_ply:SetViewEntity(t_ply)
 
@@ -101,7 +100,6 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
             end
 
             if ( !on and outLerp >= 1 ) then
-                print("Set Custom Angles:", view.angles)
                 view_angles = view.angles * 1
                 c_ply_angles = nil
                 inLerp = 0
@@ -142,13 +140,10 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
         -- If Simple First Person
         elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
             if !on then
-                print("initial view angles:", t_ply:EyeAngles())
                 view_angles = t_ply:EyeAngles()
                 view_pos = t_ply:GetShootPos()
                 on = true
             end
-
-            print("view_angles:", view_angles)
 
             --view.origin = t_ply:GetShootPos() + view_angles:Up() * offset / 10
             view.angles = view_angles
