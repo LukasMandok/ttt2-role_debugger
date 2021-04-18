@@ -6,7 +6,7 @@ PlayerControl = PlayerControl or {
 ply_meta = FindMetaTable("Player")
 
 ply_meta.OldSteamID64 = ply_meta.OldSteamID64 or ply_meta.SteamID64
-
+ply_meta.OldGetForward = ply_meta.OldGetForward or ply_meta.GetForward
 
 -- t_ply_meta.DisplayName = "t_ply"
 -- t_ply_meta.SteamID64 = function(slf)
@@ -61,6 +61,17 @@ local overrideFunctions = function(flag)
             --print("DisplayName:", t_ply.DisplayName)
         end
 
+        -- Forward function for clients
+        ply_meta.GetForward = function(slf)
+            if slf == t_ply then
+                local angle = slf:EyeAngles()
+                angle[3] = 0
+                return angle:Forward()
+            else
+                return slf:GetForward()
+            end
+        end
+
     -- reset back to previous
     else
         -- reset LocalPlayer function
@@ -74,6 +85,9 @@ local overrideFunctions = function(flag)
             --     return nil
             -- end
         end
+
+        -- reset GetForward function
+        ply_meta.GetForward = ply_meta.OldGetForward
     end
 end
 

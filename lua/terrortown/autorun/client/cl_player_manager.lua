@@ -25,7 +25,6 @@ function RoleManager:__init()
     self.auto_apply = CreateConVar( "ttt_rolemanager_auto_apply", 1, FCVAR_ARCHIVE, "Automatically activates the roles on the next round if a value is changed.", 0, 1 )
     self.auto_refresh = CreateConVar( "ttt_rolemanager_auto_refresh", 0, FCVAR_ARCHIVE, "Automatically updates the roles, if the debug menu is opened.", 0, 1 )
 
-    -- TODO: Eine Convar draus machen
     self.overhead_role_icons = CreateConVar( "ttt_rolemanager_overhead_icons", 1, FCVAR_ARCHIVE, "Show overhead role icons during round.", 0, 1 )
 
 
