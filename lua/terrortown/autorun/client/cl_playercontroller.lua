@@ -249,6 +249,20 @@ net.Receive("PlayerController:Net", function (len)
             --print("Role to set:", role)
             --print("Role of t_ply:", ply.controller["t_ply"]:GetSubRole())
         end
+    elseif tbl.mode == PC_SV_PICKUP then
+        if ply.controller and ply.controller["t_ply"] == tbl.player then
+            
+            if tbl.type == PC_PICKUP_WEAPON then
+                hook.Run("HUDWeaponPickedUp", tbl.weapon)
+
+            elseif tbl.type == PC_PICKUP_ITEM then
+                hook.Run("HUDItemPickedUp", tbl.item)
+
+            elseif tbl.type == PC_PICKUP_AMMO then
+                hook.Run("HUDAmmoPickedUp", tbl.ammo, tbl.count)
+            end
+
+        end
     end
 end)
 

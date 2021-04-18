@@ -50,6 +50,8 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
         hook.Add("WeaponEquip", "PlayerController:UpdateTargetInventory", function(wep, ply) PlayerControl.updateInventory(ply, wep) end)
         hook.Add("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory", PlayerControl.updateInventory)
         hook.Add("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight", PlayerControl.controlFlashlight)
+        hook.Add("WeaponEquip", "PlayerController:ItemPickedUp", PlayerControl.itemPickedUp) --PlayerCanPickupItem
+        hook.Add("PlayerAmmoChanged", "PlayerController:AmmoPickedUp", PlayerControl.ammoPickedUp)
 
         hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
 
@@ -171,16 +173,13 @@ function PlayerControl:EndControl()
         hook.Remove("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory")
         hook.Remove("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight")
         
-        hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
-        
-        -- Start driver:
+        hook.Remove("WeaponEquip", "PlayerController:ItemPickedUp")
+        hook.Remove("PlayerAmmoChanged", "PlayerController:AmmoPickedUp")
 
-        --drive.End(self.c_ply, self.t_ply)
-        --self.c_ply:SetViewEntity(cam)
+        hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
 
         -- DO Some transition
-        --self.spectator:endSpectating()
-        --self.spectator = nil
+
 
         -- Send Message to CLients
         PlayerControl.NetSend(self.c_ply, {
@@ -213,17 +212,6 @@ function PlayerControl:EndControl()
         --ttt_include("sv_shop")
     end
 end
-
--- TODO: ist nur vorübergehend. EIgentlich sollte der SPectator Mode 
--- vom Player Controller abgebrochen werden und nicht anders rum
--- hook.Add("PCSpectate_EndSpectating", "Remove Player Control", function (c_ply)
---     print(PlayerControl.c_ply, c_ply)
---     print("Called End Spectating Hook", PlayerControl.c_ply:Nick(), c_ply:Nick())
---     if PlayerControl.c_ply == c_ply then
---         print("Terminate PlayerControl")
---         PlayerControl:EndControl()
---     end
--- end)
 
 -----------------------------------
 ------ Controller Funktions -------
@@ -320,6 +308,47 @@ PlayerControl.updateInventory = function(ply, wep)
     end
 end
 
+-- Weapon / Item Pickup
+function PlayerControl.itemPickedUp( item, ply )
+    print("Calling weponPickedUp", ply)
+    if ply.controller and ply.controller["c_ply"] and ply == PlayerControl.t_ply then
+        print("Send message to client")
+
+        if items.IsItem(item.id) then
+            PlayerControl.NetSend(PlayerControl.c_ply, {
+                mode = PC_SV_PICKUP,
+                player = PlayerControl.t_ply,
+                type = PC_PICKUP_ITEM,
+                item = item
+            })
+        else
+            PlayerControl.NetSend(PlayerControl.c_ply, {
+                mode = PC_SV_PICKUP,
+                player = PlayerControl.t_ply,
+                type = PC_PICKUP_WEAPON,
+                weapon = item
+            })
+        end
+    end
+end
+
+-- Ammo Pickup
+function PlayerControl.ammoPickedUp(ply, ammoID, oldCount, newCount)
+    if ply.controller and ply.controller["c_ply"] and ply == PlayerControl.t_ply then
+        local difference = newCount - oldCount 
+        if difference > 0 then
+           local name = game.GetAmmoName( ammoID ) 
+            PlayerControl.NetSend(PlayerControl.c_ply, {
+                mode = PC_SV_PICKUP,
+                player = PlayerControl.t_ply,
+                type = PC_PICKUP_AMMO,
+                ammo = name,
+                count = difference
+            }) 
+        end
+    end
+end
+
 
 --- Communication
 
@@ -394,6 +423,7 @@ function PlayerControl.NetOrderEquipmentOverride(len, ply)
 
         concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
     else
+        -- TODO: Error with passiv items!
         concommand.Run( ply, "ttt_order_equipment", {cls}  )
     end
 end

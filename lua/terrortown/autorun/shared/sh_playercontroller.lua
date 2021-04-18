@@ -9,6 +9,11 @@ PC_SV_MESSAGE = 3
 PC_SV_INVENTORY = 4
 PC_SV_PLAYER = 5
 
+-- Pickups
+PC_PICKUP_WEAPON = 0
+PC_PICKUP_ITEM = 1
+PC_PICKUP_AMMO = 2
+
 -- Client Network Flags
 PC_CL_WEAPON = 1
 PC_CL_DROP_WEAPON = 2
@@ -68,6 +73,8 @@ function PlayerControl.preventEquipmentOrder(ply, cls, is_item, credits)
 end
 
 -- SHARED
+
+-- Override Shared version of UpdateSprint 
 
 local function PlayerSprint(trySprinting, moveKey)
 	if SERVER then return end
@@ -148,7 +155,6 @@ local function UpdateSprintOverride()
 	end
 end
 
--- Override Shared version of UpdateSprint 
 function PlayerControl.overrideUpdateSprint(flag)
     if flag == true then
         UpdateSprint = UpdateSprintOverride
