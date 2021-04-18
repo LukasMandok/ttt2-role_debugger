@@ -20,13 +20,11 @@ PC_CAM_THIRDPERSON = 2
 PC_CAM_FIRSTPERSON = 3
 PC_CAM_SIMPLEFIRSTPERSON = 4
 
--- SERVER ONLY
+-- SERVER
 function PlayerControl.setupMove(ply, mv, cmd)
     if mv:KeyReleased( IN_SCORE ) then
         PlayerControl:EndControl()
     end
-
-
 
     if ply.controller and ply.controller["t_ply"]  then
          --print("SetupMove")
@@ -66,6 +64,111 @@ function PlayerControl.preventEquipmentOrder(ply, cls, is_item, credits)
     if ply.controller and ply.controller["t_ply"] then
         print("Prevent Controller from bying something:", ply:Nick())
         return false
+    end
+end
+
+-- SHARED
+
+local function PlayerSprint(trySprinting, moveKey)
+	if SERVER then return end
+
+	local client = LocalPlayer()
+
+	if trySprinting and not GetGlobalBool("ttt2_sprint_enabled", true) then return end
+	if not trySprinting and not client.isSprinting or trySprinting and client.isSprinting then return end
+	if client.isSprinting and (client.moveKey and not moveKey or not client.moveKey and moveKey) then return end
+
+	client.oldSprintProgress = client.sprintProgress
+	client.sprintMultiplier = trySprinting and (1 + GetGlobalFloat("ttt2_sprint_max", 0)) or nil
+	client.isSprinting = trySprinting
+	client.moveKey = moveKey
+
+	net.Start("TTT2SprintToggle")
+	net.WriteBool(trySprinting)
+	net.SendToServer()
+end
+
+local function UpdateSprintOverride()
+    local client
+
+	if CLIENT then
+		client = LocalPlayer()
+
+		if not IsValid(client) then return end
+	end
+
+	local plys = client and {client} or player.GetAll()
+
+	for i = 1, #plys do
+		local ply = plys[i]
+
+		if not ply:OnGround() then continue end
+
+		local wantsToMove 
+		if ply.controller and ply.controller["c_ply"] then
+			wantsToMove = ply.controller["c_ply"]:KeyDown(IN_FORWARD)   or ply.controller["c_ply"]:KeyDown(IN_BACK) or
+						  ply.controller["c_ply"]:KeyDown(IN_MOVERIGHT) or ply.controller["c_ply"]:KeyDown(IN_MOVELEFT)
+		else
+			wantsToMove = ply:KeyDown(IN_FORWARD) or ply:KeyDown(IN_BACK) or ply:KeyDown(IN_MOVERIGHT) or ply:KeyDown(IN_MOVELEFT)
+		end
+
+		if ply.sprintProgress == 1 and (not ply.isSprinting or not wantsToMove) then continue end
+		if ply.sprintProgress == 0 and ply.isSprinting and wantsToMove then
+			ply.sprintResetDelayCounter = ply.sprintResetDelayCounter + FrameTime()
+
+			-- If the player keeps sprinting even though they have no stamina, start refreshing stamina after 1.5 seconds automatically
+			if CLIENT and ply.sprintResetDelayCounter > 1.5 then
+				print("setting sprint to false")
+				PlayerSprint(false, ply.moveKey)
+			end
+
+			continue
+		end
+
+		ply.sprintResetDelayCounter = 0
+
+		local modifier = {1} -- Multiple hooking support
+
+		if not ply.isSprinting or not wantsToMove then
+			---
+			-- @realm shared
+			hook.Run("TTT2StaminaRegen", ply, modifier)
+
+			ply.sprintProgress = math.min((ply.oldSprintProgress or 0) + FrameTime() * modifier[1] * GetGlobalFloat("ttt2_sprint_stamina_regeneration"), 1)
+			ply.oldSprintProgress = ply.sprintProgress
+		elseif wantsToMove then
+			---
+			-- @realm shared
+			hook.Run("TTT2StaminaDrain", ply, modifier)
+
+			ply.sprintProgress = math.max((ply.oldSprintProgress or 0) - FrameTime() * modifier[1] * GetGlobalFloat("ttt2_sprint_stamina_consumption"), 0)
+
+			ply.oldSprintProgress = ply.sprintProgress
+		end
+	end
+end
+
+-- Override Shared version of UpdateSprint 
+function PlayerControl.overrideUpdateSprint(flag)
+    if flag == true then
+        UpdateSprint = UpdateSprintOverride
+    else
+        UpdateSprint = OldUpdateSprint
+    end    
+end
+
+function GM:Think()
+    if PlayerControl.updateSprintOverriden then
+        --print("overridden sprint")
+        UpdateSprintOverride()
+        if CLIENT then
+            EPOP:Think()
+        end
+    else
+        UpdateSprint()
+        if CLIENT then
+            EPOP:Think()
+        end
     end
 end
 

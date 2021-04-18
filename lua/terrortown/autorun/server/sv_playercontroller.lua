@@ -62,6 +62,7 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
         net.Receive("TTT2SprintToggle", PlayerControl.SprintToggleOverride)
 
         self.isActive = true
+        self.updateSprintOverriden = true
 
         -- Define Tables
         c_ply.controller = {}
@@ -128,6 +129,7 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
             end
             --
             --print("Wep:", wep, "ammotype:", ammotype, "ammo:", ammo, "clip:", clip)
+            --print("sprintProgress:", self.t_ply.sprintProgress)
 
             --print("Sending Player:", self.t_ply, "to Client:", self.t_ply:GetSubRole())
             PlayerControl.NetSend(self.c_ply, {
@@ -136,6 +138,7 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
                 role = self.t_ply:GetSubRole(),
                 credits = self.t_ply:GetCredits(),
                 drowning = nil,
+                --sprintProgress = self.t_ply.sprintProgress,
                 clip = clip,
                 ammo = ammo,
             })
@@ -200,6 +203,8 @@ function PlayerControl:EndControl()
 
         self.c_ply = nil
         self.t_ply = nil
+
+        self.updateSprintOverriden = false
 
         self.isActive = nil
 
@@ -425,8 +430,6 @@ function PlayerControl.SprintToggleOverride(_, ply)
     if not PlayerControl.sprintEnabled:GetBool() or not IsValid(ply) then return end
 
     local bool = net.ReadBool()
-
-    print("Sprinting bool:", bool)
 
     ply.oldSprintProgress = ply.sprintProgress
     ply.sprintMultiplier = bool and (1 + PlayerControl.maxSprintMul:GetFloat()) or nil

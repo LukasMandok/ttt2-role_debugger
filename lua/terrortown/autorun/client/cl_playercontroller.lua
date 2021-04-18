@@ -109,6 +109,9 @@ net.Receive("PlayerController:Net", function (len)
         -- If controlling Player
         if tbl.controlling then
             ply.controller["t_ply"] = tbl.player
+            ply.controller["t_ply"].controller = {}
+            ply.controller["t_ply"].controller["c_ply"] = ply
+            
             PlayerControl.c_ply = ply
             PlayerControl.t_ply = ply.controller["t_ply"]
 
@@ -137,9 +140,14 @@ net.Receive("PlayerController:Net", function (len)
 
             overrideFunctions(true)
 
+            -- Override Sprint Update
+            PlayerControl.updateSprintOverriden = true
+
         -- If the controlled Player
         else
             ply.controller["c_ply"] = tbl.player
+            ply.controller["c_ply"].controller["t_ply"] = ply
+
             PlayerControl.t_ply = ply
             PlayerControl.c_ply = ply.controller["c_ply"]
             -- hook.Add("CreateMove","PlayerController:TargetMovment",function(cmd)
@@ -176,6 +184,9 @@ net.Receive("PlayerController:Net", function (len)
         print("reversing to OldLocalPlayer")
         overrideFunctions(false)
 
+        -- back to previous Sprint update function
+        PlayerControl.updateSprintOverriden = false
+
         PlayerControl.camera:Stop()
         PlayerControl.camera = nil
         ply.controller = nil
@@ -206,6 +217,8 @@ net.Receive("PlayerController:Net", function (len)
 
             ply.controller["t_ply"]:SetRole(tbl.role)
             ply.controller["t_ply"].equipment_credits = tbl.credits
+            --ply.controller["t_ply"].sprintProgress = tbl.sprintProgress
+            --ply.controller["t_ply"].oldSprintProgress = tbl.sprintProgress
 
             local wep = ply.controller["t_ply"]:GetActiveWeapon()
             -- local clip = tbl.clip
