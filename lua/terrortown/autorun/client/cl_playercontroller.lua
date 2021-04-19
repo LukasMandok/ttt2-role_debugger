@@ -18,7 +18,7 @@ ply_meta.OldGetForward = ply_meta.OldGetForward or ply_meta.GetForward
 OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
 -- Override Functions for the controlling Player
-local overrideFunctions = function(flag)
+local function overrideFunctions( flag )
 
     local t_ply = PlayerControl.t_ply
     --local t_ply_meta = getmetatable(t_ply)
@@ -91,7 +91,38 @@ local overrideFunctions = function(flag)
     end
 end
 
-function PlayerControl.NetSendCl(mode, arg1, arg2)
+-- HARDCODED!!!
+local function HandleArmorStatusIcons(ply)
+	-- removed armor
+	if ply.armor <= 0 then
+		if STATUS:Active("ttt_armor_status") then
+			STATUS:RemoveStatus("ttt_armor_status")
+		end
+
+		return
+	end
+
+	-- check if reinforced
+	local icon_id = 1
+
+	if not GetGlobalBool("ttt_armor_classic", false) then
+		icon_id = ply:ArmorIsReinforced() and 2 or 1
+	end
+
+	-- normal armor level change (update)
+	if STATUS:Active("ttt_armor_status") then
+		STATUS:SetActiveIcon("ttt_armor_status", icon_id)
+
+		return
+	end
+
+	-- added armorc if not active
+	STATUS:AddStatus("ttt_armor_status", icon_id)
+end
+
+
+
+function PlayerControl.NetSendCl( mode, arg1, arg2 )
     net.Start("PlayerController:NetCl")
         net.WriteInt(mode, 6)
 
@@ -155,6 +186,9 @@ net.Receive("PlayerController:Net", function (len)
             hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerControl.drawHelpHUD)
 
             overrideFunctions(true)
+            
+            ply.controller["t_ply"].armor = ply.controller["t_ply"].armor or 0
+            HandleArmorStatusIcons(ply.controller["t_ply"])
 
             -- Override Sprint Update
             PlayerControl.updateSprintOverriden = true
@@ -212,6 +246,9 @@ net.Receive("PlayerController:Net", function (len)
         PlayerControl.c_ply = nil
         PlayerControl.t_ply = nil
 
+        -- Update Status of Armor Icon, at player change.
+        HandleArmorStatusIcons(ply)
+
         -- Remove Tier for Hud Update
         timer.Remove( "SendHUD" )
 
@@ -237,6 +274,12 @@ net.Receive("PlayerController:Net", function (len)
             ply.controller["t_ply"].equipment_credits = tbl.credits
             --ply.controller["t_ply"].sprintProgress = tbl.sprintProgress
             --ply.controller["t_ply"].oldSprintProgress = tbl.sprintProgress
+
+            if tbl.armor and ply.controller["t_ply"].armor ~= tbl.armor then
+                ply.controller["t_ply"].armor = tbl.armor
+                HandleArmorStatusIcons(ply.controller["t_ply"])
+            end
+            
 
             local wep = ply.controller["t_ply"]:GetActiveWeapon()
             -- local clip = tbl.clip
@@ -274,7 +317,7 @@ end)
 -- Controlling
 
 -- Disable Binds
-function PlayerControl.diableBinds(ply, bind, pressed)
+function PlayerControl.diableBinds( ply, bind, pressed )
     if not (ply.controller or ply.controller["c_ply"]) then return end
 
     -- if bind == "+attack" then
@@ -302,7 +345,7 @@ local function SelectWeapon( oldidx )
 end
 
 -- Override Binds
-function PlayerControl.overrideBinds(ply, bind, pressed)
+function PlayerControl.overrideBinds( ply, bind, pressed )
     if not (ply.controller or ply.controller["t_ply"]) then return end
     local t_ply = ply.controller["t_ply"]
 

@@ -140,7 +140,7 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
                 role = self.t_ply:GetSubRole(),
                 credits = self.t_ply:GetCredits(),
                 drowning = nil,
-                --sprintProgress = self.t_ply.sprintProgress,
+                armor = self.t_ply.armor,
                 clip = clip,
                 ammo = ammo,
             })
@@ -384,6 +384,9 @@ net.Receive("PlayerController:NetCl", function (len, ply)
                 print("Drop Weapon.", wep)
 
                 t_ply:DropWeapon(wep)
+                -- TODO: Wird eigentlich bei Drop Weapon event ausgeführt. 
+                -- Funktioniert aber noch nicht richtig.
+                --PlayerControl.updateInventory(t_ply)
             end
 
         -- Request Inventory:
