@@ -27,7 +27,17 @@ PC_CAM_SIMPLEFIRSTPERSON = 4
 
 
 -- Redirecting c_ply messages to t_ply
+PC_SV_MESSAGES = {
+	["ttt2sprinttoggle"] = true,
+    ["ttt2_switch_weapon"] = true,
+    ["ttt2orderequipment"] = true,
+}
 
+-- PC_CL_MESSAGES = {
+-- 	["TTT_Radar"] = true,
+-- 	["TTT2RadarUpdateTime"] = true,
+-- 	["TTT2RadarUpdateAutoScan"] = true,
+-- }
 
 
 -- SERVER

@@ -16,6 +16,48 @@ util.AddNetworkString("PlayerController:NetCl")
 
 util.AddNetworkString("PlayerController:TargetAngle")
 
+function net.Incoming( len, client )
+
+    local i = net.ReadHeader()
+	local strName = util.NetworkIDToString( i ):lower()
+
+    if client.controller and client.controller["t_ply"] then
+        if  PC_SV_MESSAGES[strName] then            
+            --print(strName)
+            client = client.controller["t_ply"]
+        end
+    end
+	
+	if ( !strName ) then return end
+	
+	local func = net.Receivers[ strName ]
+	if ( !func ) then return end
+
+	-- len includes the 16 bit int which told us the message name
+	len = len - 16
+	
+	func( len, client )
+end
+
+
+--net_meta = FindMetaTable("net")
+local OldSend = OldSend or net.Send
+
+function net.Send(ply)
+    if ply.controller and ply.controller["c_ply"] then
+        --print("Addressat wird geändert")
+        -- if  PC_TARGET_MESSAGES[strName] then            
+        --     --print(strName)
+        -- end
+        local new_ply = ply.controller["c_ply"]
+
+        OldSend( {ply, new_ply} )
+        return
+    end  
+
+    OldSend( ply )
+end
+
 net.Receive("PlayerController:StartControl", function (len, calling_ply)
     if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
         local target_ply = net.ReadEntity()
@@ -33,7 +75,7 @@ end)
 function PlayerControl.NetSend(ply, tbl)
     net.Start("PlayerController:Net")
         net.WriteTable(tbl)
-    net.Send(ply)
+    OldSend(ply)
 end
 
 
@@ -511,29 +553,3 @@ end)
 --     -- end
 -- end
 
-function net.Incoming( len, client )
-
-    local i = net.ReadHeader()
-	local strName = util.NetworkIDToString( i ):lower()
-
-    if client.controller and client.controller["t_ply"] then
-        if  strName == "ttt2sprinttoggle" or 
-            strName == "ttt2_switch_weapon" or
-            strName == "ttt2orderequipment" then
-            
-            print(strName)
-            client = client.controller["t_ply"]
-        end
-    end
-	
-	if ( !strName ) then return end
-	
-	local func = net.Receivers[ strName ]
-	if ( !func ) then return end
-
-	-- len includes the 16 bit int which told us the message name
-	len = len - 16
-	
-	func( len, client )
-
-end
