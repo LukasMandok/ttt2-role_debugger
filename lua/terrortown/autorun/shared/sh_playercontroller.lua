@@ -155,13 +155,14 @@ local function UpdateSprintOverride()
 	end
 end
 
-function PlayerControl.overrideUpdateSprint(flag)
-    if flag == true then
-        UpdateSprint = UpdateSprintOverride
-    else
-        UpdateSprint = OldUpdateSprint
-    end    
-end
+-- TODO: WIrd nicht benötigt (glaube ich)
+-- function PlayerControl.overrideUpdateSprint(flag)
+--     if flag == true then
+--         UpdateSprint = UpdateSprintOverride
+--     else
+--         UpdateSprint = OldUpdateSprint
+--     end    
+-- end
 
 function GM:Think()
     if PlayerControl.updateSprintOverriden then

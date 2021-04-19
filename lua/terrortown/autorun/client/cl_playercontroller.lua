@@ -152,6 +152,8 @@ net.Receive("PlayerController:Net", function (len)
                 PlayerControl.camera:CreateMove( cmd, ply, true)
             end)
 
+            hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerControl.drawHelpHUD)
+
             overrideFunctions(true)
 
             -- Override Sprint Update
@@ -194,6 +196,8 @@ net.Receive("PlayerController:Net", function (len)
 
         hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
         hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
+
+        hook.Remove("HUDPaint", "PlayerController:DrawHelpHUD")
 
         print("reversing to OldLocalPlayer")
         overrideFunctions(false)
@@ -281,6 +285,22 @@ function PlayerControl.diableBinds(ply, bind, pressed)
     return true
 end
 
+-- send current weapon to server and activate HelpHUD
+local function SelectWeapon( oldidx )
+    local idx = WSWITCH.Selected
+
+    -- if weapon did not change, do nothing
+    if oldidx and oldidx == WSWITCH.Selected then return end
+    
+    local wep = WSWITCH.WeaponCache[idx]
+
+    -- if wep.Initialize then
+    --     wep:Initialize()
+    -- end
+
+    PlayerControl.NetSendCl(PC_CL_WEAPON, wep:GetClass())
+end
+
 -- Override Binds
 function PlayerControl.overrideBinds(ply, bind, pressed)
     if not (ply.controller or ply.controller["t_ply"]) then return end
@@ -298,10 +318,7 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
         -- Select Next Weapon
         else
             WSWITCH:SelectNext()
-            local idx = WSWITCH.Selected
-
-            --print("FLAG:", PC_CL_WEAPON, "Class:", weps[active_w]:GetClass())
-            PlayerControl.NetSendCl(PC_CL_WEAPON, WSWITCH.WeaponCache[idx]:GetClass()) -- weps[active_w]
+            SelectWeapon()
         end
 
         return true
@@ -314,32 +331,39 @@ function PlayerControl.overrideBinds(ply, bind, pressed)
 
         -- Select Previous Weapon
         else
-
             WSWITCH:SelectPrev()
-            local idx = WSWITCH.Selected
-
-            --print("FLAG:", PC_CL_WEAPON, "Class:", weps[active_w]:GetClass())
-            PlayerControl.NetSendCl(PC_CL_WEAPON, WSWITCH.WeaponCache[idx]:GetClass()) --weps[active_w]
+            SelectWeapon()
         end
 
         return true
 
     -- Weapon Slot Number -> Select Slot 
     elseif string.sub(bind, 1, 4) == "slot" and pressed then
-        local inv = t_ply:GetInventory()
+        local oldidx = WSWITCH.Selected
+        --local inv = t_ply:GetInventory()
         local idx = tonumber(string.sub(bind, 5, - 1)) or 1
 
         WSWITCH:SelectSlot(idx)
 
-        if inv[idx][1] then
-            --print("name:", inv[idx][1]:GetClass())
-            PlayerControl.NetSendCl(PC_CL_WEAPON, inv[idx][1]:GetClass())
-            return true
-        end
+        SelectWeapon(oldidx)
+
+        -- if inv[idx][1] then
+        --     --print("name:", inv[idx][1]:GetClass())
+        --     PlayerControl.NetSendCl(PC_CL_WEAPON, inv[idx][1]:GetClass())
+        --     return true
+        -- end
 
     -- Q Button -> Drop Weapon
     elseif bind == "+menu" then
         PlayerControl.NetSendCl(PC_CL_DROP_WEAPON, t_ply:GetActiveWeapon())
         return true
+    end
+end
+
+-- Draws the help Hud for the active weapon
+function PlayerControl.drawHelpHUD()
+    local wep = PlayerControl.t_ply:GetActiveWeapon()
+    if IsValid(wep) then
+        PlayerControl.t_ply:GetActiveWeapon():DrawHUD()
     end
 end
