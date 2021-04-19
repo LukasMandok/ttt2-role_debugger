@@ -25,6 +25,11 @@ PC_CAM_THIRDPERSON = 2
 PC_CAM_FIRSTPERSON = 3
 PC_CAM_SIMPLEFIRSTPERSON = 4
 
+
+-- Redirecting c_ply messages to t_ply
+
+
+
 -- SERVER
 function PlayerControl.setupMove(ply, mv, cmd)
     if mv:KeyReleased( IN_SCORE ) then
@@ -64,13 +69,13 @@ end
 
 -- prevent the controller from bying something from the shop
 -- relay in net message since this hook is not called when the controlling player does not have the rights to by an item
-function PlayerControl.preventEquipmentOrder(ply, cls, is_item, credits)
-    -- allow, ignoreCost, message = hook.Run("TTT2CanOrderEquipment")
-    if ply.controller and ply.controller["t_ply"] then
-        print("Prevent Controller from bying something:", ply:Nick())
-        return false
-    end
-end
+-- function PlayerControl.preventEquipmentOrder(ply, cls, is_item, credits)
+--     -- allow, ignoreCost, message = hook.Run("TTT2CanOrderEquipment")
+--     if ply.controller and ply.controller["t_ply"] then
+--         print("Prevent Controller from bying something:", ply:Nick())
+--         return false
+--     end
+-- end
 
 -- SHARED
 

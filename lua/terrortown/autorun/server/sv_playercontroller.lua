@@ -53,15 +53,15 @@ function PlayerControl:StartControl(c_ply, t_ply, view_flag)
         hook.Add("WeaponEquip", "PlayerController:ItemPickedUp", PlayerControl.itemPickedUp) --PlayerCanPickupItem
         hook.Add("PlayerAmmoChanged", "PlayerController:AmmoPickedUp", PlayerControl.ammoPickedUp)
 
-        hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
+        --hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
 
         self.sprintEnabled = GetConVar( "ttt2_sprint_enabled" )
 	    self.maxSprintMul = GetConVar( "ttt2_sprint_enabled" )
 
         -- replace receiver for Equipment ordering
-        net.Receive("TTT2OrderEquipment", PlayerControl.NetOrderEquipmentOverride)
-        net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponOverride)
-        net.Receive("TTT2SprintToggle", PlayerControl.SprintToggleOverride)
+        --net.Receive("TTT2OrderEquipment", PlayerControl.NetOrderEquipmentOverride)
+        --net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponOverride)
+        --net.Receive("TTT2SprintToggle", PlayerControl.SprintToggleOverride)
 
         self.isActive = true
         self.updateSprintOverriden = true
@@ -176,7 +176,7 @@ function PlayerControl:EndControl()
         hook.Remove("WeaponEquip", "PlayerController:ItemPickedUp")
         hook.Remove("PlayerAmmoChanged", "PlayerController:AmmoPickedUp")
 
-        hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
+        --hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
 
         -- DO Some transition
 
@@ -418,56 +418,56 @@ end)
 
 -- Override Equipment Ordering to Forward to t_ply
 -- ATTENTION: THIS changes the definition of the 
-function PlayerControl.NetOrderEquipmentOverride(len, ply)
-    local cls = net.ReadString()
+-- function PlayerControl.NetOrderEquipmentOverride(len, ply)
+--     local cls = net.ReadString()
 
-    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
-        print("OrdereEquipment custom from:", ply:Nick())
+--     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+--         print("OrdereEquipment custom from:", ply:Nick())
 
-        concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
-    else
-        -- TODO: Error with passiv items!
-        concommand.Run( ply, "ttt_order_equipment", {cls}  )
-    end
-end
+--         concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
+--     else
+--         -- TODO: Error with passiv items!
+--         concommand.Run( ply, "ttt_order_equipment", {cls}  )
+--     end
+-- end
 
 
 --net.Receive("ttt2_switch_weapon", function(_, ply)
 
-function PlayerControl.PickupWeaponOverride(_, ply)
-    print("overridden Weapon Pickup")
-    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
-        ply = PlayerControl.t_ply
-    end
+-- function PlayerControl.PickupWeaponOverride(_, ply)
+--     print("overridden Weapon Pickup")
+--     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+--         ply = PlayerControl.t_ply
+--     end
 
-    -- player and wepaon must be valid
-    if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
+--     -- player and wepaon must be valid
+--     if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
 
-    -- handle weapon switch
-    local tracedWeapon = ply:GetEyeTrace().Entity
+--     -- handle weapon switch
+--     local tracedWeapon = ply:GetEyeTrace().Entity
 
-    if not IsValid(tracedWeapon) or not tracedWeapon:IsWeapon() then return end
+--     if not IsValid(tracedWeapon) or not tracedWeapon:IsWeapon() then return end
 
-    -- do not pickup weapon if too far away
-    if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
+--     -- do not pickup weapon if too far away
+--     if ply:GetPos():Distance(tracedWeapon:GetPos()) > 100 then return end
 
-    ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
-end
+--     ply:SafePickupWeapon(tracedWeapon, nil, nil, true) -- force pickup and drop blocking weapon as well
+-- end
 
--- Sprind override
-function PlayerControl.SprintToggleOverride(_, ply)
-    if PlayerControl.t_ply and ply == PlayerControl.c_ply then
-        ply = PlayerControl.t_ply
-    end
-    -- sprintEnabled:GetBoll()
-    if not PlayerControl.sprintEnabled:GetBool() or not IsValid(ply) then return end
+-- -- Sprind override
+-- function PlayerControl.SprintToggleOverride(_, ply)
+--     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+--         ply = PlayerControl.t_ply
+--     end
+--     -- sprintEnabled:GetBoll()
+--     if not PlayerControl.sprintEnabled:GetBool() or not IsValid(ply) then return end
 
-    local bool = net.ReadBool()
+--     local bool = net.ReadBool()
 
-    ply.oldSprintProgress = ply.sprintProgress
-    ply.sprintMultiplier = bool and (1 + PlayerControl.maxSprintMul:GetFloat()) or nil
-    ply.isSprinting = bool
-end
+--     ply.oldSprintProgress = ply.sprintProgress
+--     ply.sprintMultiplier = bool and (1 + PlayerControl.maxSprintMul:GetFloat()) or nil
+--     ply.isSprinting = bool
+-- end
 
 -- TODO: REMOVE Default PICKUP
 -- function PlayerControl.PickupWeaponDefault(_, ply)
@@ -510,3 +510,30 @@ end
 --     --     return true
 --     -- end
 -- end
+
+function net.Incoming( len, client )
+
+    local i = net.ReadHeader()
+	local strName = util.NetworkIDToString( i ):lower()
+
+    if client.controller and client.controller["t_ply"] then
+        if  strName == "ttt2sprinttoggle" or 
+            strName == "ttt2_switch_weapon" or
+            strName == "ttt2orderequipment" then
+            
+            print(strName)
+            client = client.controller["t_ply"]
+        end
+    end
+	
+	if ( !strName ) then return end
+	
+	local func = net.Receivers[ strName ]
+	if ( !func ) then return end
+
+	-- len includes the 16 bit int which told us the message name
+	len = len - 16
+	
+	func( len, client )
+
+end
