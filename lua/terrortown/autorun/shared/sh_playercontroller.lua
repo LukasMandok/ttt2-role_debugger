@@ -3,11 +3,11 @@ PlayerControl = PlayerControl or {}
 -- FLAGGS
 
 -- Server Network Flags
-PC_SV_START = 1
-PC_SV_END = 2
-PC_SV_MESSAGE = 3
-PC_SV_INVENTORY = 4
-PC_SV_PLAYER = 5
+PC_SV_START = 0
+PC_SV_END = 1
+PC_SV_MESSAGE = 2
+PC_SV_INVENTORY = 3
+PC_SV_PLAYER = 4
 
 -- Pickups
 PC_PICKUP_WEAPON = 0
@@ -15,22 +15,26 @@ PC_PICKUP_ITEM = 1
 PC_PICKUP_AMMO = 2
 
 -- Client Network Flags
-PC_CL_WEAPON = 1
-PC_CL_DROP_WEAPON = 2
-PC_CL_INVENTORY = 3
-PC_CL_MESSAGE = 4
+PC_CL_START = 0
+PC_CL_END = 1
+PC_CL_SWITCH = 2
 
-PC_CAM_ROAMING = 1
-PC_CAM_THIRDPERSON = 2
-PC_CAM_FIRSTPERSON = 3
-PC_CAM_SIMPLEFIRSTPERSON = 4
+PC_CL_WEAPON = 0
+PC_CL_DROP_WEAPON = 1
+PC_CL_INVENTORY = 2
+PC_CL_MESSAGE = 3
+
+PC_CAM_ROAMING = 0
+PC_CAM_THIRDPERSON = 1
+PC_CAM_FIRSTPERSON = 2
+PC_CAM_SIMPLEFIRSTPERSON = 3
 
 
 -- Redirecting c_ply messages to t_ply
-PC_SV_MESSAGES = {
+PC_SV_NET = {
 	["ttt2sprinttoggle"] = true,
-    ["ttt2_switch_weapon"] = true,
-    ["ttt2orderequipment"] = true,
+	["ttt2_switch_weapon"] = true,
+	["ttt2orderequipment"] = true,
 }
 
 -- PC_CL_MESSAGES = {
@@ -40,41 +44,45 @@ PC_SV_MESSAGES = {
 -- }
 
 
--- SERVER
-function PlayerControl.setupMove(ply, mv, cmd)
-    if mv:KeyReleased( IN_SCORE ) then
-        PlayerControl:EndControl()
-    end
+--
 
-    if ply.controller and ply.controller["t_ply"]  then
-         --print("SetupMove")
-         return true
-    end
+-- SERVER
+
+function PlayerControl.preventAnimations( ply, event, data )
+	if ply.controller and ply.controller["t_ply"] then
+		return ACT_INVALID
+	end
 end
 
+-- function PlayerControl.preventAttacking(ply, mv, cmd)
+-- 	if ply.controller and ply.controller["t_ply"] then
+-- 		cmd:ClearMovement()
+-- 		cmd:ClearButtons()
+-- 	end
+-- end
 
 -- Disable Movment for the controlling player
 function PlayerControl.disableMovment(ply, mv)
-    if ply.controller and ply.controller["t_ply"]  then
-        ply:SetFOV(ply.controller["t_ply"]:GetFOV())
-        return true
-    end
+	if ply.controller and ply.controller["t_ply"]  then
+		ply:SetFOV(ply.controller["t_ply"]:GetFOV())
+		return true
+	end
 end
+
 
 -- Disable Weapon Switch for the controlling Player
 function PlayerControl.disableWeaponSwitch(ply, oldWep, newWep )
-    print("Disable Weapon Switch:")
-    if ply.controller and ply.controller["t_ply"]  then
-        return true
-    end
+	if ply.controller and ply.controller["t_ply"]  then
+		return true
+	end
 end
 
 -- Prevents Controller from using Flashlight and toggles flashlight of target instead
 function PlayerControl.controlFlashlight( ply, enabled )
-    if ply.controller and ply.controller["t_ply"]  then
-        ply.controller["t_ply"]:Flashlight( not ply.controller["t_ply"]:FlashlightIsOn() )
-        return false
-    end
+	if ply.controller and ply.controller["t_ply"]  then
+		ply.controller["t_ply"]:Flashlight( not ply.controller["t_ply"]:FlashlightIsOn() )
+		return false
+	end
 end
 
 -- prevent the controller from bying something from the shop
@@ -111,7 +119,7 @@ local function PlayerSprint(trySprinting, moveKey)
 end
 
 local function UpdateSprintOverride()
-    local client
+	local client
 
 	if CLIENT then
 		client = LocalPlayer()
@@ -126,7 +134,7 @@ local function UpdateSprintOverride()
 
 		if not ply:OnGround() then continue end
 
-		local wantsToMove 
+		local wantsToMove
 		if ply.controller and ply.controller["c_ply"] then
 			wantsToMove = ply.controller["c_ply"]:KeyDown(IN_FORWARD)   or ply.controller["c_ply"]:KeyDown(IN_BACK) or
 						  ply.controller["c_ply"]:KeyDown(IN_MOVERIGHT) or ply.controller["c_ply"]:KeyDown(IN_MOVELEFT)
@@ -180,18 +188,18 @@ end
 -- end
 
 function GM:Think()
-    if PlayerControl.updateSprintOverriden then
-        --print("overridden sprint")
-        UpdateSprintOverride()
-        if CLIENT then
-            EPOP:Think()
-        end
-    else
-        UpdateSprint()
-        if CLIENT then
-            EPOP:Think()
-        end
-    end
+	if PlayerControl.updateSprintOverriden then
+		--print("overridden sprint")
+		UpdateSprintOverride()
+		if CLIENT then
+			EPOP:Think()
+		end
+	else
+		UpdateSprint()
+		if CLIENT then
+			EPOP:Think()
+		end
+	end
 end
 
 -- relay shop order from 

@@ -1,6 +1,11 @@
 PlayerControl = PlayerControl or {
     c_ply = nil,
     t_ply = nil,
+
+    camera = nil,
+
+    back_pressed = false,
+    e_pressed = false,
 }
 
 ply_meta = FindMetaTable("Player")
@@ -93,37 +98,37 @@ end
 
 -- HARDCODED!!!
 local function HandleArmorStatusIcons(ply)
-	-- removed armor
-	if ply.armor <= 0 then
-		if STATUS:Active("ttt_armor_status") then
-			STATUS:RemoveStatus("ttt_armor_status")
-		end
+    -- removed armor
+    if ply.armor <= 0 then
+        if STATUS:Active("ttt_armor_status") then
+            STATUS:RemoveStatus("ttt_armor_status")
+        end
 
-		return
-	end
+        return
+    end
 
-	-- check if reinforced
-	local icon_id = 1
+    -- check if reinforced
+    local icon_id = 1
 
-	if not GetGlobalBool("ttt_armor_classic", false) then
-		icon_id = ply:ArmorIsReinforced() and 2 or 1
-	end
+    if not GetGlobalBool("ttt_armor_classic", false) then
+        icon_id = ply:ArmorIsReinforced() and 2 or 1
+    end
 
-	-- normal armor level change (update)
-	if STATUS:Active("ttt_armor_status") then
-		STATUS:SetActiveIcon("ttt_armor_status", icon_id)
+    -- normal armor level change (update)
+    if STATUS:Active("ttt_armor_status") then
+        STATUS:SetActiveIcon("ttt_armor_status", icon_id)
 
-		return
-	end
+        return
+    end
 
-	-- added armorc if not active
-	STATUS:AddStatus("ttt_armor_status", icon_id)
+    -- added armorc if not active
+    STATUS:AddStatus("ttt_armor_status", icon_id)
 end
 
 
 
 function PlayerControl.NetSendCl( mode, arg1, arg2 )
-    net.Start("PlayerController:NetCl")
+    net.Start("PlayerController:NetCL")
         net.WriteInt(mode, 6)
 
         if mode == PC_CL_WEAPON then
@@ -139,7 +144,7 @@ function PlayerControl.NetSendCl( mode, arg1, arg2 )
     net.SendToServer()
 end
 
-net.Receive("PlayerController:Net", function (len)
+net.Receive("PlayerController:NetSV", function (len)
     local ply = OldLocalPlayer()
     if not IsValid(ply) then return end
     local tbl = net.ReadTable()
@@ -156,7 +161,7 @@ net.Receive("PlayerController:Net", function (len)
             ply.controller["t_ply"] = tbl.player
             ply.controller["t_ply"].controller = {}
             ply.controller["t_ply"].controller["c_ply"] = ply
-            
+
             PlayerControl.c_ply = ply
             PlayerControl.t_ply = ply.controller["t_ply"]
 
@@ -168,11 +173,15 @@ net.Receive("PlayerController:Net", function (len)
             -- create Camera
             PlayerControl.camera = PlayerControl.Camera(ply, ply.controller["t_ply"], view_flag)
 
-            hook.Add("Move", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
+            hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerControl.overrideBinds)
+            hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerControl.preventAnimations) -- CalcMainActivity
+
+            hook.Add("Move", "PlayerController:ButtonControls", PlayerControl.buttonControls)
+
+            --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerControl.preventAttacking)
+            hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
             hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerControl.disableWeaponSwitch)
             --hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerControl.disableMouse)
-
-            hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerControl.overrideBinds)
 
             hook.Add("CalcView", "PlayerController:CameraView", function(calling_ply, pos, angles, fov, znear, zfar)
                 local view = {origin = pos, angles = angles, fov = fov, znear = znear, zfar = zfar, drawviewer = true}
@@ -186,7 +195,7 @@ net.Receive("PlayerController:Net", function (len)
             hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerControl.drawHelpHUD)
 
             overrideFunctions(true)
-            
+
             ply.controller["t_ply"].armor = ply.controller["t_ply"].armor or 0
             HandleArmorStatusIcons(ply.controller["t_ply"])
 
@@ -206,7 +215,7 @@ net.Receive("PlayerController:Net", function (len)
             -- end)
 
             -- TODO: Disable all commands / or maybe not
-            hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerControl.diableBinds)
+            hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerControl.disableBinds)
 
             -- Timer to send Hud updates to the server and from there to the client.
             -- TODO: Remove Message
@@ -222,8 +231,12 @@ net.Receive("PlayerController:Net", function (len)
 
     -- END
     elseif tbl.mode == PC_SV_END then
-        hook.Remove("Move", "PlayerController:DisableControllerMovment")
+        hook.Remove("DoAnimationEvent", "PlayerController:PreventAnimations")
+        --hook.Remove("SetupMove", "PlayerController:SetupMove")
+        hook.Remove("FinishMove", "PlayerController:DisableControllerMovment")
         hook.Remove("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch")
+
+        hook.Remove("Move", "PlayerController:ButtonControls")
 
         hook.Remove("CalcView", "PlayerController:CameraView")
         hook.Remove("CreateMove", "PlayerController:ControllerMovment")
@@ -317,7 +330,7 @@ end)
 -- Controlling
 
 -- Disable Binds
-function PlayerControl.diableBinds( ply, bind, pressed )
+function PlayerControl.disableBinds( ply, bind, pressed )
     if not (ply.controller or ply.controller["c_ply"]) then return end
 
     -- if bind == "+attack" then
@@ -334,7 +347,7 @@ local function SelectWeapon( oldidx )
 
     -- if weapon did not change, do nothing
     if oldidx and oldidx == WSWITCH.Selected then return end
-    
+
     local wep = WSWITCH.WeaponCache[idx]
 
     -- if wep.Initialize then
@@ -400,6 +413,7 @@ function PlayerControl.overrideBinds( ply, bind, pressed )
     elseif bind == "+menu" then
         PlayerControl.NetSendCl(PC_CL_DROP_WEAPON, t_ply:GetActiveWeapon())
         return true
+
     end
 end
 
@@ -409,4 +423,81 @@ function PlayerControl.drawHelpHUD()
     if IsValid(wep) then
         PlayerControl.t_ply:GetActiveWeapon():DrawHUD()
     end
+end
+
+-- Button Controls
+function PlayerControl.buttonControls(ply, mv)
+
+    if not ply.controller and not ply.controller["t_ply"] then return end
+        -- end Control
+
+    if not input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_BACKSPACE) then
+        if PlayerControl.back_pressed == false then
+            print("End Player Control")
+            PlayerControl.back_pressed = true
+            net.Start("PlayerController:NetControl")
+            net.WriteInt(PC_CL_START , 6)
+            net.SendToServer()
+        end
+
+        return
+
+    -- switch to next player
+    elseif input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_BACKSPACE) then
+        if PlayerControl.back_pressed == false then
+            PlayerControl.back_pressed = true
+            local t_i, c_i
+            local alive_players = {}
+
+            for i, p in pairs(player.GetAll()) do
+                if p:Alive() then
+                    alive_players[#alive_players + 1] = p
+                    if p == PlayerControl.t_ply then t_i = #alive_players - 1
+                    elseif p == PlayerControl.c_ply then c_i = #alive_players - 1 end
+                end
+            end
+
+            local n = #alive_players
+            local next = (c_i ~= (t_i + 1) % n and (t_i + 1) % n or (t_i + 2) % n ) + 1
+
+            print("n", n, "t:", t_i, "c", c_i, "next:", next)
+
+            print("Switch through players.")
+
+            net.Start("PlayerController:NetControl")
+            net.WriteInt(PC_CL_SWITCH , 6)
+            net.WriteEntity(alive_players[next])
+            net.SendToServer()
+        end
+
+        return
+
+    -- switch to player in front
+    elseif input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_E) then
+        if PlayerControl.e_pressed == false then
+            PlayerControl.e_pressed = true
+            local ent = PlayerControl.camera.GetViewTargetEntity()
+
+            if IsValid(ent) and ent:IsPlayer() and ent:Alive() then
+                if ent == PlayerControl.c_ply then
+                    print("Terminating Control")
+                    net.Start("PlayerController:NetControl")
+                    net.WriteInt(PC_CL_END , 6)
+                    net.SendToServer()
+                else
+                    print("Switching to player:", ent:Nick())
+                    net.Start("PlayerController:NetControl")
+                    net.WriteInt(PC_CL_SWITCH , 6)
+                    net.WriteEntity(ent)
+                    net.SendToServer()
+                end
+            end
+        end
+
+        return
+    end
+
+    PlayerControl.back_pressed = false
+    PlayerControl.e_pressed = false
+
 end

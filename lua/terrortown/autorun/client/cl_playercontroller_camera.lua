@@ -8,7 +8,7 @@ PlayerControl = PlayerControl or {}
 
 -- Taunt Camera, shamelessly stolen from the garrysmod base.
 
-function GetRealEyeTrace(pos, ang, offset, filter)
+function GetRealEyeTrace(pos, ang, filter, offset)
     offset = offset or 10000
     local trace = {}
     trace.start = pos
@@ -77,8 +77,13 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
     end
 
     CAM.CorrectShotAngle = function( origin, angles )
-        local view_trace = GetRealEyeTrace(origin, angles, nil, {t_ply})
+        local view_trace = GetRealEyeTrace(origin, angles, {t_ply})
         return (view_trace.HitPos - t_ply:GetShootPos()):Angle()
+    end
+
+    CAM.GetViewTargetEntity = function()
+        local trace = GetRealEyeTrace(view_pos, view_angles, {t_ply})
+        return trace.Entity
     end
 
     CAM.CalcView = function( self, view, ply, on )
