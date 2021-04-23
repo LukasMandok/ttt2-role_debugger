@@ -193,6 +193,7 @@ net.Receive("PlayerController:NetSV", function (len)
             end)
 
             hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerControl.drawHelpHUD)
+            hook.Add("TTTRenderEntityInfo", "PlayerController:DrawTargetID", PlayerControl.drawTargetID)
 
             overrideFunctions(true)
 
@@ -245,6 +246,7 @@ net.Receive("PlayerController:NetSV", function (len)
         hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
 
         hook.Remove("HUDPaint", "PlayerController:DrawHelpHUD")
+        hook.Remove("TTTRenderEntityInfo", "PlayerController:DrawTargetID")
 
         print("reversing to OldLocalPlayer")
         overrideFunctions(false)
@@ -500,4 +502,26 @@ function PlayerControl.buttonControls(ply, mv)
     PlayerControl.back_pressed = false
     PlayerControl.e_pressed = false
 
+end
+
+-- Draw Target ID to switch to other players:
+function PlayerControl.drawTargetID(tData)
+    local ent = tData:GetEntity()
+
+    if not IsValid(ent) or not ent:IsPlayer() or not ent:Alive() then return end
+
+    local h_string, h_color = util.HealthToString(ent:Health(), ent:GetMaxHealth())
+
+    if ent == PlayerControl.c_ply then
+        tData:SetSubtitle(
+            LANG.TryTranslation(h_string) .. LANG.GetParamTranslation("target_end_conctrolled_player", {usekey = Key("+use", "USE"), name = ent:Nick()}),
+            h_color
+        )
+    else
+        tData:SetSubtitle(
+            LANG.TryTranslation(h_string) .. LANG.GetParamTranslation("target_switch_conctrolled_player", {usekey = Key("+use", "USE"), name = ent:Nick()}),
+            h_color
+        )
+    end
+    --tData:SetKeyBinding("+use")
 end
