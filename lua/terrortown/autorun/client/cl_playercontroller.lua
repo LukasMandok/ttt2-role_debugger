@@ -8,7 +8,10 @@ PlayerControl = PlayerControl or {
     e_pressed = false,
 }
 
-ply_meta = FindMetaTable("Player")
+local TryT = LANG.TryTranslation
+local ParT = LANG.GetParamTranslation
+
+local ply_meta = FindMetaTable("Player")
 
 ply_meta.OldSteamID64 = ply_meta.OldSteamID64 or ply_meta.SteamID64
 ply_meta.OldGetForward = ply_meta.OldGetForward or ply_meta.GetForward
@@ -202,6 +205,7 @@ net.Receive("PlayerController:NetSV", function (len)
 
             -- Override Sprint Update
             PlayerControl.updateSprintOverriden = true
+            PlayerControl:addHUDHelp()
 
         -- If the controlled Player
         else
@@ -217,16 +221,6 @@ net.Receive("PlayerController:NetSV", function (len)
 
             -- TODO: Disable all commands / or maybe not
             hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerControl.disableBinds)
-
-            -- Timer to send Hud updates to the server and from there to the client.
-            -- TODO: Remove Message
-            timer.Create("SendHUD", 1, 0, function()
-                --print("Sending message from t_ply")
-                local curHUD = HUDManager.GetHUD()
-                local curHUDTbl = huds.GetStored(curHUD)
-
-                PlayerControl.NetSendCl(PC_CL_MESSAGE)
-            end)
         end
 
 
@@ -252,6 +246,7 @@ net.Receive("PlayerController:NetSV", function (len)
         overrideFunctions(false)
 
         -- back to previous Sprint update function
+        PlayerControl:removeHUDHelp()
         PlayerControl.updateSprintOverriden = false
 
         PlayerControl.camera:Stop()
@@ -264,8 +259,6 @@ net.Receive("PlayerController:NetSV", function (len)
         -- Update Status of Armor Icon, at player change.
         HandleArmorStatusIcons(ply)
 
-        -- Remove Tier for Hud Update
-        timer.Remove( "SendHUD" )
 
     -- MESSAGE FROM SERVER
     elseif tbl.mode == PC_SV_MESSAGE then
@@ -294,7 +287,6 @@ net.Receive("PlayerController:NetSV", function (len)
                 ply.controller["t_ply"].armor = tbl.armor
                 HandleArmorStatusIcons(ply.controller["t_ply"])
             end
-            
 
             local wep = ply.controller["t_ply"]:GetActiveWeapon()
             -- local clip = tbl.clip
@@ -304,8 +296,6 @@ net.Receive("PlayerController:NetSV", function (len)
                 --print("Valid weapon -> set ammo and clip count")
                 ply.controller["t_ply"]:SetAmmo( tbl.ammo,  wep:GetPrimaryAmmoType() )
                 ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
-            else
-                print("Current weapon is not valid!")
             end
 
             --print("Role to set:", role)
@@ -313,7 +303,7 @@ net.Receive("PlayerController:NetSV", function (len)
         end
     elseif tbl.mode == PC_SV_PICKUP then
         if ply.controller and ply.controller["t_ply"] == tbl.player then
-            
+
             if tbl.type == PC_PICKUP_WEAPON then
                 hook.Run("HUDWeaponPickedUp", tbl.weapon)
 
@@ -420,11 +410,14 @@ function PlayerControl.overrideBinds( ply, bind, pressed )
 end
 
 -- Draws the help Hud for the active weapon
+-- and draws the control panel
 function PlayerControl.drawHelpHUD()
     local wep = PlayerControl.t_ply:GetActiveWeapon()
     if IsValid(wep) then
         PlayerControl.t_ply:GetActiveWeapon():DrawHUD()
     end
+
+    PlayerControl:drawHelp()
 end
 
 -- Button Controls
@@ -438,7 +431,7 @@ function PlayerControl.buttonControls(ply, mv)
             print("End Player Control")
             PlayerControl.back_pressed = true
             net.Start("PlayerController:NetControl")
-            net.WriteInt(PC_CL_START , 6)
+            net.WriteInt(PC_CL_END, 6)
             net.SendToServer()
         end
 
@@ -514,14 +507,103 @@ function PlayerControl.drawTargetID(tData)
 
     if ent == PlayerControl.c_ply then
         tData:SetSubtitle(
-            LANG.TryTranslation(h_string) .. LANG.GetParamTranslation("target_end_conctrolled_player", {usekey = Key("+use", "USE"), name = ent:Nick()}),
-            h_color
+            ParT("target_end_PC", {usekey = Key("+use", "USE"), name = ent:Nick()})
         )
     else
         tData:SetSubtitle(
-            LANG.TryTranslation(h_string) .. LANG.GetParamTranslation("target_switch_conctrolled_player", {usekey = Key("+use", "USE"), name = ent:Nick()}),
-            h_color
+            ParT("target_switch_PC", {usekey = Key("+use", "USE"), name = ent:Nick()})
         )
     end
+
+    tData:AddDescriptionLine(
+        TryT(h_string),
+        h_color
+    )
     --tData:SetKeyBinding("+use")
+end
+
+function PlayerControl:removeHUDHelp()
+    self.HUDHelp = nil
+end
+
+function PlayerControl:addHUDHelp()
+    self.HUDHelp = {
+        lines = {},
+        max_length = 0
+    }
+
+    self:addHUDHelpLine(TryT("help_hud_end_PC"), "BACK") -- Key("+reload", "R")
+    self:addHUDHelpLine(TryT("help_hud_switch_PC"), "SHIFT", "E" ) -- Key("+reload", "R")
+    self:addHUDHelpLine(TryT("help_hud_next_PC"), "SHIFT", "BACK" ) -- Key("+reload", "R")
+end
+
+function PlayerControl:addHUDHelpLine(text, key1, key2)
+    local width = draw.GetTextSize(text, "weapon_hud_help")
+
+    self.HUDHelp.lines[#self.HUDHelp.lines + 1] = {text = text, key1 = key1, key2 = key2}
+    self.HUDHelp.max_length = math.max(self.HUDHelp.max_length, width)
+end
+
+function PlayerControl:drawHelp()
+    if not self.HUDHelp then return end
+
+    local data = self.HUDHelp
+    local lines = data.lines
+    local x = ScrW() * 0.66 + data.max_length * 0.5
+    local y_start = ScrH() - 25
+    local y = y_start
+    local delta_y = 25
+    local valid_icon = false
+
+    for i = #lines, 1, -1 do
+        local line = lines[i]
+        local drawn_icon = self:drawHelpLine(x, y, line.text, line.key1, line.key2)
+        y = y - delta_y
+        valid_icon = valid_icon or drawn_icon
+    end
+
+    if valid_icon then
+        local line_x = x + 10
+        draw.ShadowedLine(line_x, y_start + 2, line_x, y + 8, COLOR_WHITE)
+    end
+end
+
+function PlayerControl:drawHelpLine(x, y, text, key1, key2)
+    local valid_icon = true
+
+    if isstring(key1) and key2 == nil then
+        self:drawKeyBox(x, y, key1)
+    elseif isstring(key1) and isstring(key2) then
+        local key2_width = draw.GetTextSize(key2, "weapon_hud_help_key")
+        self:drawKeyBox(x-25-key2_width, y, key1)
+        draw.ShadowedText("+", "weapon_hud_help", x-8-key2_width, y, COLOR_WHITE, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+        self:drawKeyBox(x, y, key2)
+    else
+        valid_icon = false
+    end
+
+    draw.ShadowedText(TryT(text), "weapon_hud_help", x + 20, y, COLOR_WHITE, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM)
+
+    return valid_icon
+end
+
+function PlayerControl:drawKeyBox(x, y, key)
+    local pad = 3
+    local pad2 = pad * 2
+
+    x = x - pad + 1
+    y = y - pad2 * 0.5 + 1
+
+    local key_box_w, key_box_h = draw.GetTextSize(key, "weapon_hud_help_key")
+
+    key_box_w = key_box_w + 3 * pad
+    key_box_h = key_box_h + pad2
+
+    local key_box_x = x - key_box_w + 1.5 * pad
+    local key_box_y = y - key_box_h + 0.5 * pad2
+
+    surface.SetDrawColor(0, 0, 0, 150)
+    surface.DrawRect(key_box_x, key_box_y, key_box_w, key_box_h)
+    draw.ShadowedText(key, "weapon_hud_help_key", x, y, COLOR_WHITE, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+    draw.OutlinedShadowedBox(key_box_x, key_box_y, key_box_w, key_box_h, 1, COLOR_WHITE)
 end
