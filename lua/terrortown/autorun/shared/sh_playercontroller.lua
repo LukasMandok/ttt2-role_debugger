@@ -1,4 +1,4 @@
-PlayerControl = PlayerControl or {}
+PlayerController = PlayerController or {}
 
 -- FLAGGS
 
@@ -48,38 +48,36 @@ PC_SV_NET = {
 
 -- SERVER
 
-function PlayerControl.preventAnimations( ply, event, data )
-	if ply.controller and ply.controller["t_ply"] then
+function PlayerController.preventAnimations( ply, event, data )
+	if ply:IsController() then
 		return ACT_INVALID
 	end
 end
 
--- function PlayerControl.preventAttacking(ply, mv, cmd)
--- 	if ply.controller and ply.controller["t_ply"] then
--- 		cmd:ClearMovement()
--- 		cmd:ClearButtons()
--- 	end
--- end
+function PlayerController.preventAttacking(ply, mv, cmd)
+	if ply:IsController() then
+		return true
+	end
+end
 
 -- Disable Movment for the controlling player
-function PlayerControl.disableMovment(ply, mv)
-	if ply.controller and ply.controller["t_ply"]  then
+function PlayerController.disableMovment(ply, mv)
+	if ply:IsController() then
 		ply:SetFOV(ply.controller["t_ply"]:GetFOV())
 		return true
 	end
 end
 
-
 -- Disable Weapon Switch for the controlling Player
-function PlayerControl.disableWeaponSwitch(ply, oldWep, newWep )
-	if ply.controller and ply.controller["t_ply"]  then
+function PlayerController.disableWeaponSwitch(ply, oldWep, newWep )
+	if ply:IsController() then
 		return true
 	end
 end
 
 -- Prevents Controller from using Flashlight and toggles flashlight of target instead
-function PlayerControl.controlFlashlight( ply, enabled )
-	if ply.controller and ply.controller["t_ply"]  then
+function PlayerController.controlFlashlight( ply, enabled )
+	if ply:IsController()  then
 		ply.controller["t_ply"]:Flashlight( not ply.controller["t_ply"]:FlashlightIsOn() )
 		return false
 	end
@@ -87,7 +85,7 @@ end
 
 -- prevent the controller from bying something from the shop
 -- relay in net message since this hook is not called when the controlling player does not have the rights to by an item
--- function PlayerControl.preventEquipmentOrder(ply, cls, is_item, credits)
+-- function PlayerController.preventEquipmentOrder(ply, cls, is_item, credits)
 --     -- allow, ignoreCost, message = hook.Run("TTT2CanOrderEquipment")
 --     if ply.controller and ply.controller["t_ply"] then
 --         print("Prevent Controller from bying something:", ply:Nick())
@@ -135,7 +133,7 @@ local function UpdateSprintOverride()
 		if not ply:OnGround() then continue end
 
 		local wantsToMove
-		if ply.controller and ply.controller["c_ply"] then
+		if ply:IsControlled() then
 			wantsToMove = ply.controller["c_ply"]:KeyDown(IN_FORWARD)   or ply.controller["c_ply"]:KeyDown(IN_BACK) or
 						  ply.controller["c_ply"]:KeyDown(IN_MOVERIGHT) or ply.controller["c_ply"]:KeyDown(IN_MOVELEFT)
 		else
@@ -179,7 +177,7 @@ local function UpdateSprintOverride()
 end
 
 -- TODO: WIrd nicht benötigt (glaube ich)
--- function PlayerControl.overrideUpdateSprint(flag)
+-- function PlayerController.overrideUpdateSprint(flag)
 --     if flag == true then
 --         UpdateSprint = UpdateSprintOverride
 --     else
@@ -188,18 +186,18 @@ end
 -- end
 
 function GM:Think()
-	if PlayerControl.updateSprintOverriden then
+	--if PlayerController.isActive then
 		--print("overridden sprint")
 		UpdateSprintOverride()
 		if CLIENT then
 			EPOP:Think()
 		end
-	else
-		UpdateSprint()
-		if CLIENT then
-			EPOP:Think()
-		end
-	end
+	-- else
+	-- 	UpdateSprint()
+	-- 	if CLIENT then
+	-- 		EPOP:Think()
+	-- 	end
+	-- end
 end
 
 -- relay shop order from 
@@ -209,29 +207,29 @@ end
 
 -- NETWORK VARIABLES
 
--- PlayerControl = PlayerControl or {}
-
--- local PLAYER = FindMetaTable("Player")
-
--- function PLAYER:SetupDataTables()
---     print("Called SetupDataTables by:", self:Name())
---     self:NetworkVar( "Angle", 0, "TargetViewAngle" )
--- end
 
 -- hook.Add("Move", "PlayerController:DisableControllerMovment", function(ply, mv)
 
 -- end)
 
--- hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerControl.disableMouse)
+-- hook.Add("InputMouseApply", "PlayerControllerler:DisableControllerMouse", PlayerController.disableMouse)
 
--- function GM:Move(ply, mv) 
---     if ply.controller and ply.controller["t_ply"] then
---         return true 
---     end
--- end
 
--- function GM:Move(ply, mv) 
---     if ply.controller and ply.controller["t_ply"] then
---         return true 
---     end
--- end
+-- Add is controller functino:
+local ply_meta = FindMetaTable("Player")
+
+function ply_meta:IsController(ply)
+	if ply then
+		return self.controller and self.controller.c_ply == self and self == ply
+	else
+		return self.controller and self.controller.c_ply == self
+	end
+end
+
+function ply_meta:IsControlled(ply)
+	if ply then
+		return self.controller and self.controller.t_ply == self and self == ply
+	else
+		return self.controller and self.controller.t_ply == self
+	end
+end

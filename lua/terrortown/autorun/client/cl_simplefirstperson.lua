@@ -1,6 +1,6 @@
-PlayerControl = PlayerControl or {}
+PlayerController = PlayerController or {}
 
-function PlayerControl.SimpleFirstPerson(c_ply, t_ply)
+function PlayerController.SimpleFirstPerson(c_ply, t_ply)
     local SimpleFirstPerson = {}
 
     local c_ply = c_ply

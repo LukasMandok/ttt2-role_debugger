@@ -1,24 +1,103 @@
-PlayerControl = PlayerControl or {
-    -- TODO: Diese Zuweisung bringt wahrscheinlich nichts
-    c_ply = nil,
-    t_ply = nil,
+-----------------------------------------------------
+------------------- Player Control ------------------
+-----------------------------------------------------
 
-    isActive = false,
+PlayerController = {}
+PlayerController.__index = PlayerController
 
-    spectator = nil,
-    previous_wep = nil,
+setmetatable(PlayerController, {
+    __call = function(cls, ...)
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
+    end,
+})
 
-    view_flag = nil,
-}
+-- PlayerController or {
+--     -- TODO: Diese Zuweisung bringt wahrscheinlich nichts
+--     c_ply = nil,
+--     t_ply = nil,
 
+--     isActive = false,
+
+--     spectator = nil,
+--     previous_wep = nil,
+
+--     view_flag = nil,
+-- }
+
+function PlayerController:__init(c_ply, t_ply, view_flag)
+    self:StartControl(c_ply, t_ply, view_flag)
+end
+
+-----------------------------------------------------
+------------------- Communication -------------------
+-----------------------------------------------------
+
+--util.AddNetworkString("PlayerController:StartControl") -- obsolete
+--util.AddNetworkString("PlayerController:EndControl") -- obsolete
 util.AddNetworkString("PlayerController:NetControl")
-util.AddNetworkString("PlayerController:StartControl") -- obsolete
-util.AddNetworkString("PlayerController:EndControl") -- obsolete
-util.AddNetworkString("PlayerController:NetSV")
-util.AddNetworkString("PlayerController:NetCL")
+util.AddNetworkString("PlayerController:NetToSV")
+util.AddNetworkString("PlayerController:NetToCL")
 
 util.AddNetworkString("PlayerController:TargetAngle")
 
+-- General PlayerController Managment 
+net.Receive("PlayerController:NetControl", function (len, calling_ply)
+    local mode = net.ReadInt(6)
+
+    -- if controller is already active 
+    if calling_ply:IsController() then
+        local controller = calling_ply.controller
+
+        -- Start Player Controller
+        if mode == PC_CL_START then
+            local target_ply = net.ReadEntity()
+
+            -- if aready controlling that person, or is that person
+            if target_ply == controller.t_ply or target_ply == calling_ply then return end
+
+            local view_flag = net.ReadInt(6)
+            controller:EndControl()
+
+            controller:StartControl(calling_ply, target_ply, view_flag)
+
+        -- Stop Player Controller
+        elseif mode == PC_CL_END then
+            controller:EndControl()
+
+        -- Switch t_ply in Player Controller
+        elseif mode == PC_CL_SWITCH then
+            local view_flag = calling_ply.controller.view_flag
+            local target_ply = net.ReadEntity()
+
+            print("Switching to player:", target_ply)
+            controller:EndControl()
+
+            controller:StartControl(calling_ply, target_ply, view_flag)
+        else
+            print(alling_ply:Nick() .. " is already controlling, but the control mode is not valid.")        
+        end
+
+    -- if calling player is not active controller yet 
+    -- and has adming rights
+    -- TODO: hook, für weitere sonstige Abfrage hinzufügen
+    elseif calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
+        if mode == PC_CL_START then
+            local target_ply = net.ReadEntity()
+            local view_flag = net.ReadInt(6)
+
+            -- create new PlayerController
+            PlayerController(calling_ply, target_ply, view_flag)
+        else
+            print(calling_ply:Nick() .. " has not valid control mode.")
+        end
+    else
+        print(calling_ply:Nick() .. " does not have the right to start a control.")
+    end
+end)
+
+-------------- Overriding Network Communication --------------
 
 function net.Incoming( len, client )
 
@@ -44,7 +123,6 @@ function net.Incoming( len, client )
 end
 
 
---net_meta = FindMetaTable("net")
 local OldSend = OldSend or net.Send
 
 function net.Send(ply)
@@ -62,183 +140,140 @@ function net.Send(ply)
     OldSend( ply )
 end
 
-net.Receive("PlayerController:NetControl", function (len, calling_ply)
-    if calling_ply:IsAdmin() or calling_ply:IsSuperAdmin() then
-        local mode = net.ReadInt(6)
 
-        -- Start Player Controller
-        if mode == PC_CL_START then
-            local target_ply = net.ReadEntity()
-            local view_flag = net.ReadInt(6)
-            PlayerControl:StartControl(calling_ply, target_ply, view_flag)
 
-        -- Stop Player Controller
-        elseif mode == PC_CL_END then
-            PlayerControl:EndControl()
+-- -- TODO: integrate into NetCOntrol
+-- net.Receive("PlayerController:StartControl", function (len, calling_ply)
+--     if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
+--         local target_ply = net.ReadEntity()
+--         local view_flag = net.ReadInt(6)
 
-        -- Switch t_ply in Player Controller
-        elseif mode == PC_CL_SWITCH and calling_ply == PlayerControl.c_ply then
-            local view_flag = calling_ply.controller.view_flag
-            local target_ply = net.ReadEntity()
+--         --PlayerController:StartControl(calling_ply, target_ply, view_flag)
+--     end
+-- end)
 
-            print("Switching to player:", target_ply)
-            PlayerControl:EndControl()
+-- net.Receive("PlayerController:EndControl", function (len, calling_ply)
+--     if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then -- or (calling_ply.controller and (calling_ply.controller["c_ply"]:IsAdmin() or calling_ply.controller["c_ply"]:IsSuperAdmin())) then
+--         PlayerController:EndControl()
+--     end
+-- end)
 
-            PlayerControl:StartControl(calling_ply, target_ply, view_flag)
-        end
-    end
-end)
-
--- TODO: integrate into NetCOntrol
-net.Receive("PlayerController:StartControl", function (len, calling_ply)
-    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then
-        local target_ply = net.ReadEntity()
-        local view_flag = net.ReadInt(6)
-        PlayerControl:StartControl(calling_ply, target_ply, view_flag)
-    end
-end)
-
-net.Receive("PlayerController:EndControl", function (len, calling_ply)
-    if (calling_ply:IsAdmin() or calling_ply:IsSuperAdmin()) then -- or (calling_ply.controller and (calling_ply.controller["c_ply"]:IsAdmin() or calling_ply.controller["c_ply"]:IsSuperAdmin())) then
-        PlayerControl:EndControl()
-    end
-end)
-
-function PlayerControl.NetSend(ply, tbl)
-    net.Start("PlayerController:NetSV")
+function PlayerController.NetSend(ply, tbl)
+    net.Start("PlayerController:NetToSV")
         net.WriteTable(tbl)
     OldSend(ply)
 end
 
+-----------------------------------------------------
+----------------- Control Functions -----------------
+-----------------------------------------------------
 
-function PlayerControl:StartControl(c_ply, t_ply, view_flag)
+function PlayerController:StartControl(c_ply, t_ply, view_flag)
 
-    if not self.isActive then
-        print("Running Server Hooks to start Control")
-        -- Add Controlling Hooks
-        hook.Add("StartCommand", "PlayerController:OverrideCommands", PlayerControl.overrideCommands)
-        hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerControl.preventAnimations)
-        --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerControl.preventAttacking)
-        hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
+    if self.isActive then return end
+    self.isActive = true
 
-        --hook.Add("PlayerButtonUp", "PlayerController:ButtonControls", PlayerControl.buttonControls)
+    -- Add Controlling Hooks
+    hook.Add("StartCommand", "PlayerController:OverrideCommands", PlayerController.overrideCommands)
+    hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations)
+    --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerController.preventAttacking)
+    hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerController.disableMovment)
 
-        hook.Add("PlayerDeath", "PlayerController:PlayerDied", PlayerControl.playerDied)
-        hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerControl.disableWeaponSwitch)
-        hook.Add("WeaponEquip", "PlayerController:UpdateTargetInventory", function(wep, ply) PlayerControl.updateInventory(ply, wep) end)
-        hook.Add("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory", PlayerControl.updateInventory)
-        hook.Add("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight", PlayerControl.controlFlashlight)
-        hook.Add("WeaponEquip", "PlayerController:ItemPickedUp", PlayerControl.itemPickedUp) --PlayerCanPickupItem
-        hook.Add("PlayerAmmoChanged", "PlayerController:AmmoPickedUp", PlayerControl.ammoPickedUp)
+    hook.Add("PlayerDeath", "PlayerController:PlayerDied", PlayerController.playerDied)
+    hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerController.disableWeaponSwitch)
+    hook.Add("WeaponEquip", "PlayerController:UpdateTargetInventory", function(wep, ply) PlayerController.updateInventory(ply, wep) end)
+    hook.Add("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory", PlayerController.updateInventory)
+    hook.Add("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight", PlayerController.controlFlashlight)
+    hook.Add("WeaponEquip", "PlayerController:ItemPickedUp", PlayerController.itemPickedUp) --PlayerCanPickupItem
+    hook.Add("PlayerAmmoChanged", "PlayerController:AmmoPickedUp", PlayerController.ammoPickedUp)
 
-        --hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerControl.preventEquipmentOrder)
+    --hook.Add("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder", PlayerController.preventEquipmentOrder)
 
-        self.sprintEnabled = GetConVar( "ttt2_sprint_enabled" )
-        self.maxSprintMul = GetConVar( "ttt2_sprint_enabled" )
+    self.sprintEnabled = GetConVar( "ttt2_sprint_enabled" )
+    self.maxSprintMul = GetConVar( "ttt2_sprint_max" )
 
-        -- replace receiver for Equipment ordering
-        --net.Receive("TTT2OrderEquipment", PlayerControl.NetOrderEquipmentOverride)
-        --net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponOverride)
-        --net.Receive("TTT2SprintToggle", PlayerControl.SprintToggleOverride)
+    -- replace receiver for Equipment ordering
+    --net.Receive("TTT2OrderEquipment", PlayerController.NetOrderEquipmentOverride)
+    --net.Receive("ttt2_switch_weapon", PlayerController.PickupWeaponOverride)
+    --net.Receive("TTT2SprintToggle", PlayerController.SprintToggleOverride)
 
-        self.isActive = true
-        self.updateSprintOverriden = true
+    -- Define Tables
+    c_ply.controller = self
+    self.c_ply = c_ply
 
-        -- Define Tables
-        c_ply.controller = {}
-        c_ply.controller["t_ply"] = t_ply
-        self.c_ply = c_ply
+    t_ply.controller = self
+    self.t_ply = t_ply
 
-        c_ply.controller.view_flag = view_flag
+    self.view_flag = view_flag
 
-        self.c_ply:SetCanWalk(false)
+    -- Make Transition
+    --self.spectator = StartPCSpectate(c_ply, t_ply, realFirstPerson)
 
-        t_ply.controller = {}
-        t_ply.controller["c_ply"] = c_ply
-        self.t_ply = t_ply
-
-        -- t_ply:InstallDataTable()
-        -- t_ply:SetupDataTables()
-
-        -- Make Transition
-        --self.spectator = StartPCSpectate(c_ply, t_ply, realFirstPerson)
+    hook.Run("PlayerController:StartTransition", self.c_ply, self.t_ply)
 
 
-        -- Send initial information to the clients
-        PlayerControl.NetSend(self.c_ply, {
-            mode = PC_SV_START,
+    -- Send initial information to the clients
+    PlayerController.NetSend(self.c_ply, {
+        mode = PC_SV_START,
+        player = self.t_ply,
+        view_flag = view_flag,
+        controlling = true,
+    })
+
+    PlayerController.NetSend(self.t_ply, {
+        mode = PC_SV_START,
+        player = self.c_ply,
+        controlling = false
+    })
+
+    -- Set Some Network Variables:
+    --self.t_ply:SetNWBool("PlayerController_Controlled", true)
+
+    -- make controlling player unarmed
+    --self.previous_wep = self.c_ply:GetActiveWeapon()
+    --local unarmed = self.c_ply:GetWeapon("weapon_ttt_unarmed")
+    --self.c_ply:SetActiveWeapon(unarmed)
+
+    self.updateInventory(self.t_ply)
+
+    -- update missing target player information on the controlling client
+    timer.Create("UpdatePlayerInformation", 0.1, 0, function ()
+
+        local wep = self.t_ply:GetActiveWeapon()
+
+        local ammo = 0
+        local clip = -1
+
+        if IsValid(wep) then
+            ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
+            clip = wep:Clip1()
+        end
+        --
+        --print("Wep:", wep, "ammotype:", ammotype, "ammo:", ammo, "clip:", clip)
+        --print("sprintProgress:", self.t_ply.sprintProgress)
+
+        --print("Sending Player:", self.t_ply, "to Client:", self.t_ply:GetSubRole())
+        PlayerController.NetSend(self.c_ply, {
+            mode = PC_SV_PLAYER,
             player = self.t_ply,
-            view_flag = view_flag,
-            controlling = true,
+            role = self.t_ply:GetSubRole(),
+            credits = self.t_ply:GetCredits(),
+            drowning = nil,
+            armor = self.t_ply.armor,
+            clip = clip,
+            ammo = ammo,
         })
-
-        PlayerControl.NetSend(self.t_ply, {
-            mode = PC_SV_START,
-            player = self.c_ply,
-            controlling = false
-        })
-
-        -- Set Some Network Variables:
-        self.t_ply:SetNWBool("playerController_Controlled", true)
-
-        -- make controlling player unarmed
-        -- TODO: Change to disable attacking instead of unarming the player
-        self.previous_wep = self.c_ply:GetActiveWeapon()
-        --local unarmed = self.c_ply:GetWeapon("weapon_ttt_unarmed")
-        --self.c_ply:SetActiveWeapon(unarmed)
-
-        -- Start driver:
-        --self.c_ply:SetViewEntity(self.t_ply)
-        --drive.Start(self.c_ply, self.t_ply)
-
-        --print("Update Inventory!")
-        self.updateInventory(self.t_ply)
-
-        timer.Create("UpdatePlayerInformation", 0.1, 0, function ()
-
-            -- TODO: Transfer POV
-            --print("POV:", self.t_ply:GetFOV())
-            local wep = self.t_ply:GetActiveWeapon()
-
-            --print("IronSight:", wep:GetIronsights())
-
-            --print("Zoom:", wep:GetZoom())
-
-            local ammo = 0
-            local clip = -1
-
-            if IsValid(wep) then
-                ammo = self.t_ply:GetAmmoCount(wep:GetPrimaryAmmoType())
-                clip = wep:Clip1()
-            end
-            --
-            --print("Wep:", wep, "ammotype:", ammotype, "ammo:", ammo, "clip:", clip)
-            --print("sprintProgress:", self.t_ply.sprintProgress)
-
-            --print("Sending Player:", self.t_ply, "to Client:", self.t_ply:GetSubRole())
-            PlayerControl.NetSend(self.c_ply, {
-                mode = PC_SV_PLAYER,
-                player = self.t_ply,
-                role = self.t_ply:GetSubRole(),
-                credits = self.t_ply:GetCredits(),
-                drowning = nil,
-                armor = self.t_ply.armor,
-                clip = clip,
-                ammo = ammo,
-            })
-        end)
-
-    end
+    end)
 end
 
-function PlayerControl:EndControl()
+function PlayerController:EndControl()
     -- Add Controlling Hooks
     if self.isActive then
 
         -- Delete Player Information Timer
         timer.Remove("UpdatePlayerInformation")
         -- Reset back to origional function
-        --net.Receive("ttt2_switch_weapon", PlayerControl.PickupWeaponDefault)
+        --net.Receive("ttt2_switch_weapon", PlayerController.PickupWeaponDefault)
 
         -- reset previous wepon 
         -- TODO: not needed if attacking is disabled
@@ -246,41 +281,37 @@ function PlayerControl:EndControl()
         --self.previous_wep = nil
 
         hook.Remove("StartCommand", "PlayerController:OverrideCommands")
-        --hook.Remove("StartCommand", "PlayerController:DisableAttacking")
         hook.Remove("DoAnimationEvent", "PlayerController:PreventAnimations")
         --hook.Remove("SetupMove", "PlayerController:SetupMove")
         hook.Remove("FinishMove", "PlayerController:DisableControllerMovment")
-
-        --hook.Remove("PlayerButtonUp", "PlayerController:ButtonControls")
 
         hook.Remove("PlayerDeath", "PlayerController:PlayerDied")
         hook.Remove("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch")
         hook.Remove("WeaponEquip", "PlayerController:UpdateTargetInventory")
         hook.Remove("PlayerDroppedWeapon", "PlayerController:UpdateTargetInventory")
         hook.Remove("PlayerSwitchFlashlight", "PlayerController:ControlFlashlight")
-
         hook.Remove("WeaponEquip", "PlayerController:ItemPickedUp")
         hook.Remove("PlayerAmmoChanged", "PlayerController:AmmoPickedUp")
 
         --hook.Remove("TTT2CanOrderEquipment", "PlayerController:PreventEquipmentOrder")
 
         -- DO Some transition
-
+        hook.Run("PlayerController:StopTransition", self.c_ply, self.t_ply)
 
         -- Send Message to CLients
-        PlayerControl.NetSend(self.c_ply, {
+        PlayerController.NetSend(self.c_ply, {
             mode = PC_SV_END,
         })
 
-        PlayerControl.NetSend(self.t_ply, {
+        PlayerController.NetSend(self.t_ply, {
             mode = PC_SV_END,
         })
 
         -- Rest Network Variables
-        self.c_ply:SetNWInt("playerController_Buttons", 0)
-        self.c_ply:SetNWInt("playerController_Impluse", 0)
+        self.c_ply:SetNWInt("PlayerController_Buttons", 0)
+        self.c_ply:SetNWInt("PlayerController_Impluse", 0)
 
-        self.t_ply:SetNWBool("playerController_Controlled", false) --TODO: Brauche ich das überhaupt?
+        --self.t_ply:SetNWBool("PlayerController_Controlled", false) --TODO: Brauche ich das überhaupt?
 
         self.c_ply:SetCanWalk(true)
 
@@ -291,13 +322,9 @@ function PlayerControl:EndControl()
         self.c_ply = nil
         self.t_ply = nil
 
-        self.updateSprintOverriden = false
+        --self.updateSprintOverriden = false
 
         self.isActive = nil
-
-        -- including sv_shop again to override the receiver!
-        -- NOT WORKING
-        --ttt_include("sv_shop")
     end
 end
 
@@ -311,19 +338,14 @@ end
 -- 4. SetupMove        -> SetupMove        (SERVER)  -- Allows to disable 
 -- 5. Move
 
-function PlayerControl.overrideCommands(ply, cmd)
+-- coverride Commands
+function PlayerController.overrideCommands(ply, cmd)
     -- Override for the controling Person
-    if ply.controller and ply.controller["t_ply"] then
+    if ply:IsController() then
         local c_ply = ply
-        local t_ply = ply.controller["t_ply"]
 
-        if not IsValid(t_ply) then return end
-
-        c_ply:SetNWInt("playerController_Buttons", cmd:GetButtons())
-        c_ply:SetNWInt("playerController_Impluse", cmd:GetImpulse())
-
-        --c_ply.controller["ViewAngles"] = cmd:GetViewAngles() --c_ply:EyeAngles()
-        --print("Controller: ViewAngles: ", cmd:GetViewAngles())
+        c_ply:SetNWInt("PlayerController_Buttons", cmd:GetButtons())
+        c_ply:SetNWInt("PlayerController_Impluse", cmd:GetImpulse())
 
         c_ply.controller["ForwardMove"] = cmd:GetForwardMove()
         c_ply.controller["SideMove"] = cmd:GetSideMove()
@@ -333,101 +355,67 @@ function PlayerControl.overrideCommands(ply, cmd)
         c_ply.controller["MouseX"] = cmd:GetMouseX()
         c_ply.controller["MouseY"] = cmd:GetMouseY()
 
-        --c_ply:SetFOV(t_ply:GetFOV())
-
         cmd:ClearMovement()
         cmd:ClearButtons()
 
-        --TODO: Clear Mouse Buttons
-
-
     -- Override for the controlled Person
-    elseif  ply.controller and ply.controller["c_ply"] then
+    elseif ply:IsControlled() then
         local t_ply = ply
         local c_ply = ply.controller["c_ply"]
 
         if not IsValid(c_ply) then return end
 
-        cmd:SetButtons(c_ply:GetNWInt("playerController_Buttons", 0))
-        cmd:SetImpulse(c_ply:GetNWInt("playerController_Impluse", 0))
-
-        --t_ply:SetEyeAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
-        --print("Target: ViewAngles:", c_ply.controller["ViewAngles"], t_ply:EyeAngles())
-
-        --cmd:SetViewAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
+        cmd:SetButtons(c_ply:GetNWInt("PlayerController_Buttons", 0))
+        cmd:SetImpulse(c_ply:GetNWInt("PlayerController_Impluse", 0))
 
         cmd:SetForwardMove(c_ply.controller["ForwardMove"] or 0)
         cmd:SetSideMove(c_ply.controller["SideMove"] or 0)
         cmd:SetUpMove(c_ply.controller["UpMove"] or 0)
 
         cmd:SetMouseWheel(c_ply.controller["MouseWheel"] or 0)
-        --cmd:SetMouseX(c_ply.controller["MouseX"] or 0)
-        --cmd:SetMouseY(c_ply.controller["MouseY"] or 0)
-
-
-    -- elseif ply == player.GetBots()[2] then
-    --     local t_ply = ply
-    --     local c_ply = PlayerControl.c_ply
-
-    --     if not IsValid(c_ply) then return end
-
-    --     cmd:SetButtons(c_ply:GetNWInt("playerController_Buttons", 0))
-    --     cmd:SetImpulse(c_ply:GetNWInt("playerController_Impluse", 0))
-
-    --     t_ply:SetEyeAngles(c_ply.controller["viewAngles"] or t_ply:EyeAngles())
-    --     --print("ViewAngles:", c_ply.controller["viewAngles"], t_ply:EyeAngles())
-
-    --     cmd:SetViewAngles(c_ply.controller["ViewAngles"] or t_ply:EyeAngles())
-
-    -- 	cmd:SetForwardMove(c_ply.controller["ForwardMove"] or 0)
-    --     cmd:SetSideMove(c_ply.controller["SideMove"] or 0)
-    -- 	cmd:SetUpMove(c_ply.controller["UpMove"] or 0)
-
-    -- 	cmd:SetMouseWheel(c_ply.controller["MouseWheel"] or 0)
-    -- 	cmd:SetMouseX(c_ply.controller["MouseX"] or 0)
-    -- 	cmd:SetMouseY(c_ply.controller["MouseY"] or 0)
+        cmd:SetMouseX(c_ply.controller["MouseX"] or 0)
+        cmd:SetMouseY(c_ply.controller["MouseY"] or 0)
     end
 end
 
--- Terminates PlayerControl if t_ply or c_ply dies
-function PlayerControl.playerDied(victim, inflictor, attacker)
-    if victim == PlayerControl.t_ply or victim == PlayerControl.c_ply then
-        PlayerControl:EndControl()
+-- Terminates PlayerController if t_ply or c_ply dies
+function PlayerController.playerDied(victim, inflictor, attacker)
+    if victim:IsController() or victim:IsControlled() then
+        victim.controller:EndControl()
     end
 end
 
 -- Update Target Inventory:
-function PlayerControl.updateInventory(ply, wep)
-    if IsValid(ply) and ply == PlayerControl.t_ply then
+function PlayerController.updateInventory(ply, wep)
+    if ply:IsControlled() then
         -- TODO: Error with Nick() not valid!)
-        print("SERVER: Updating Inventory:", PlayerControl.t_ply:Nick(), "Hat ", wep, "aufgehoben. Send to:", PlayerControl.c_ply:Nick())
+        --print("SERVER: Updating Inventory:", ply:Nick(), "Hat ", wep, "aufgehoben. Send to:", ply.controller.c_ply:Nick())
         timer.Simple(0.1, function()
-            PlayerControl.NetSend(PlayerControl.c_ply, {
+            PlayerController.NetSend(ply.controller.c_ply, {
                 mode = PC_SV_INVENTORY,
-                player = PlayerControl.t_ply,
-                inventory = PlayerControl.t_ply:GetInventory()
+                player = ply,
+                inventory = ply:GetInventory()
             })
         end)
     end
 end
 
 -- Weapon / Item Pickup
-function PlayerControl.itemPickedUp( item, ply )
-    print("Calling weponPickedUp", ply)
-    if ply.controller and ply.controller["c_ply"] and ply == PlayerControl.t_ply then
+function PlayerController.itemPickedUp( item, ply )
+    if ply:IsControlled() then
         print("Send message to client")
 
         if items.IsItem(item.id) then
-            PlayerControl.NetSend(PlayerControl.c_ply, {
+            PlayerController.NetSend(ply.controller.c_ply, {
                 mode = PC_SV_PICKUP,
-                player = PlayerControl.t_ply,
+                player = ply,
                 type = PC_PICKUP_ITEM,
                 item = item
             })
         else
-            PlayerControl.NetSend(PlayerControl.c_ply, {
+            PlayerController.NetSend(ply.controller.c_ply, {
                 mode = PC_SV_PICKUP,
-                player = PlayerControl.t_ply,
+                player = ply,
                 type = PC_PICKUP_WEAPON,
                 weapon = item
             })
@@ -436,46 +424,45 @@ function PlayerControl.itemPickedUp( item, ply )
 end
 
 -- Ammo Pickup
-function PlayerControl.ammoPickedUp(ply, ammoID, oldCount, newCount)
-    if ply.controller and ply.controller["c_ply"] and ply == PlayerControl.t_ply then
-        local difference = newCount - oldCount 
+function PlayerController.ammoPickedUp(ply, ammoID, oldCount, newCount)
+    if ply:IsControlled() then
+        local difference = newCount - oldCount
         if difference > 0 then
-           local name = game.GetAmmoName( ammoID ) 
-            PlayerControl.NetSend(PlayerControl.c_ply, {
+           local name = game.GetAmmoName( ammoID )
+            PlayerController.NetSend(ply.controller.c_ply, {
                 mode = PC_SV_PICKUP,
-                player = PlayerControl.t_ply,
+                player = ply,
                 type = PC_PICKUP_AMMO,
                 ammo = name,
                 count = difference
-            }) 
+            })
         end
     end
 end
 
-
 --- Communication
-
-net.Receive("PlayerController:TargetAngle", function (len, calling_ply)
+net.Receive("PlayerController:TargetAngle", function (len, ply)
     local angle = net.ReadAngle()
     --print("Setting Eye Angles", angle)
-    if calling_ply == PlayerControl.c_ply then
-        PlayerControl.t_ply:SetEyeAngles(angle or PlayerControl.t_ply:EyeAngles())
+    if ply:IsController() then
+        local t_ply = ply.controller.t_ply
+        t_ply:SetEyeAngles(angle or t_ply:EyeAngles())
     end
 end)
 
-net.Receive("PlayerController:NetCL", function (len, ply)
+net.Receive("PlayerController:NetToCL", function (len, ply)
     local mode = net.ReadInt(6)
 
     -- If message from Controlling Player
-    if ply == PlayerControl.c_ply then
+    if ply:IsController() then
 
-        local t_ply = PlayerControl.t_ply
+        local t_ply = ply.controller.t_ply
 
         -- Select Weapon
         if mode == PC_CL_WEAPON then
             local wep = net.ReadString()
 
-            print("Select Weapon:", wep)
+            --print("Select Weapon:", wep)
 
             t_ply:SelectWeapon(wep)
 
@@ -484,23 +471,19 @@ net.Receive("PlayerController:NetCL", function (len, ply)
             local wep = net.ReadEntity()
 
             if wep.AllowDrop then
-                print("Drop Weapon.", wep)
+                --print("Drop Weapon.", wep)
 
                 t_ply:DropWeapon(wep)
                 -- TODO: Wird eigentlich bei Drop Weapon event ausgeführt. 
                 -- Funktioniert aber noch nicht richtig.
-                --PlayerControl.updateInventory(t_ply)
+                --PlayerController.updateInventory(t_ply)
             end
 
         -- Request Inventory:
         elseif mode == PC_CL_INVENTORY then
-            print("NetCl: Send inventory of Player: " .. t_ply:Nick() .. " to player: ", c_ply:Nick())
-            PlayerControl.updateInventory(t_ply)
-            -- PlayerControl.NetSend(c_ply, {
-            --     mode = PC_SV_INVENTORY,
-            --     player = t_ply,
-            --     inventory = t_ply:GetInventory()
-            -- })
+            --print("NetCl: Send inventory of Player: " .. t_ply:Nick() .. " to player: ", c_ply:Nick())
+            PlayerController.updateInventory(t_ply)
+
         elseif mode == PC_CL_MESSAGE then
             print("Getting Message from wrong player")
 
@@ -508,7 +491,7 @@ net.Receive("PlayerController:NetCL", function (len, ply)
 
     -- if message from Target Player -- TODO: REMOVE
     -- Die Nachricht vom Bot kommt nicht an.
-    elseif ply == PlayerControl.t_ply then
+    elseif ply:IsControlled() then
         print("NetCl from t_ply.")
         if mode == PC_CL_MESSAGE then
             print("Got Message from Target Player:")
@@ -521,13 +504,13 @@ end)
 
 -- Override Equipment Ordering to Forward to t_ply
 -- ATTENTION: THIS changes the definition of the 
--- function PlayerControl.NetOrderEquipmentOverride(len, ply)
+-- function PlayerController.NetOrderEquipmentOverride(len, ply)
 --     local cls = net.ReadString()
 
---     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
+--     if PlayerController.t_ply and ply == PlayerController.c_ply then
 --         print("OrdereEquipment custom from:", ply:Nick())
 
---         concommand.Run( PlayerControl.t_ply, "ttt_order_equipment", {cls} )
+--         concommand.Run( PlayerController.t_ply, "ttt_order_equipment", {cls} )
 --     else
 --         -- TODO: Error with passiv items!
 --         concommand.Run( ply, "ttt_order_equipment", {cls}  )
@@ -537,10 +520,10 @@ end)
 
 --net.Receive("ttt2_switch_weapon", function(_, ply)
 
--- function PlayerControl.PickupWeaponOverride(_, ply)
+-- function PlayerController.PickupWeaponOverride(_, ply)
 --     print("overridden Weapon Pickup")
---     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
---         ply = PlayerControl.t_ply
+--     if PlayerController.t_ply and ply == PlayerController.c_ply then
+--         ply = PlayerController.t_ply
 --     end
 
 --     -- player and wepaon must be valid
@@ -558,22 +541,22 @@ end)
 -- end
 
 -- -- Sprind override
--- function PlayerControl.SprintToggleOverride(_, ply)
---     if PlayerControl.t_ply and ply == PlayerControl.c_ply then
---         ply = PlayerControl.t_ply
+-- function PlayerController.SprintToggleOverride(_, ply)
+--     if PlayerController.t_ply and ply == PlayerController.c_ply then
+--         ply = PlayerController.t_ply
 --     end
 --     -- sprintEnabled:GetBoll()
---     if not PlayerControl.sprintEnabled:GetBool() or not IsValid(ply) then return end
+--     if not PlayerController.sprintEnabled:GetBool() or not IsValid(ply) then return end
 
 --     local bool = net.ReadBool()
 
 --     ply.oldSprintProgress = ply.sprintProgress
---     ply.sprintMultiplier = bool and (1 + PlayerControl.maxSprintMul:GetFloat()) or nil
+--     ply.sprintMultiplier = bool and (1 + PlayerController.maxSprintMul:GetFloat()) or nil
 --     ply.isSprinting = bool
 -- end
 
 -- TODO: REMOVE Default PICKUP
--- function PlayerControl.PickupWeaponDefault(_, ply)
+-- function PlayerController.PickupWeaponDefault(_, ply)
     
 --     -- player and wepaon must be valid
 -- 	if not IsValid(ply) or not ply:IsTerror() or not ply:Alive() then return end
@@ -600,7 +583,7 @@ end)
 -- concommand.Add("ttt_order_equipment", ConCommandOrderEquipment)
 
 
--- function PlayerControl.finishMove(ply, mv)
+-- function PlayerController.finishMove(ply, mv)
 --     if ply.controller and ply.controller["t_ply"]  then
 --         print("finish Move")
 --         return true
@@ -613,4 +596,5 @@ end)
 --     --     return true
 --     -- end
 -- end
+
 

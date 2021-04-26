@@ -1,4 +1,4 @@
-PlayerControl = PlayerControl or {}
+PlayerController = PlayerController or {}
 
 -- hook.Add("InitPostEntity","exclserver.player.ready",function()
 --     timer.Simple(0,function()
@@ -17,7 +17,7 @@ function GetRealEyeTrace(pos, ang, filter, offset)
     return util.TraceLine(trace)
 end
 
-function PlayerControl.Camera(c_ply, t_ply, view_flag)
+function PlayerController.Camera(c_ply, t_ply, view_flag)
     print("Create Camer:", c_ply, t_ply, view_flag)
 
     local CAM = {}
@@ -49,11 +49,11 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
 
     CAM.Init = function()
         if view_flag == PC_CAM_ROAMING then
-
+            
         elseif view_flag == PC_CAM_THIRDPERSON then
-
+            
         elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
-            viewmode = PlayerControl.SimpleFirstPerson(c_ply, t_ply)
+            viewmode = PlayerController.SimpleFirstPerson(c_ply, t_ply)
             --c_ply:SetViewEntity(t_ply)
 
         elseif view_flag == PC_CAM_FIRSTPERSON then
@@ -194,7 +194,7 @@ function PlayerControl.Camera(c_ply, t_ply, view_flag)
 
         local corrected_angles = view_angles
 
-        if view_flag == PC_CAM_SIMPLEFIRSTPERSON or 
+        if view_flag == PC_CAM_SIMPLEFIRSTPERSON or
           (view_flag == PC_CAM_THIRDPERSON and (vertical_offset ~= 0 or horizontal_offset ~= 0)) then
             corrected_angles = CAM.CorrectShotAngle(view_pos, view_angles)
         end

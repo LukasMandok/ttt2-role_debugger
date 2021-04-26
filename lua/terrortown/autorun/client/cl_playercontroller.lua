@@ -1,4 +1,4 @@
-PlayerControl = PlayerControl or {
+PlayerController = PlayerController or {
     c_ply = nil,
     t_ply = nil,
 
@@ -28,7 +28,8 @@ OldLocalPlayer = OldLocalPlayer or LocalPlayer
 -- Override Functions for the controlling Player
 local function overrideFunctions( flag )
 
-    local t_ply = PlayerControl.t_ply
+    local t_ply = PlayerController.t_ply
+    local c_ply = PlayerController.c_ply
     --local t_ply_meta = getmetatable(t_ply)
 
     -- start override
@@ -56,7 +57,7 @@ local function overrideFunctions( flag )
                 --print("slf:", slf)
                 --print("old:", slf:OldSteamID64())
                 if slf == t_ply then
-                    return PlayerControl.c_ply:OldSteamID64()
+                    return c_ply:OldSteamID64()
                 else
                     return slf:OldSteamID64()
                 end
@@ -86,7 +87,7 @@ local function overrideFunctions( flag )
         LocalPlayer = OldLocalPlayer
 
         -- reset SteamID64 functino for bots
-        if PlayerControl.t_ply:IsBot() then
+        if t_ply:IsBot() then
             --player_manager.ClearPlayerClass(t_ply)
             ply_meta.SteamID64 = ply_meta.OldSteamID64
             -- = function(self)
@@ -130,8 +131,8 @@ end
 
 
 
-function PlayerControl.NetSendCl( mode, arg1, arg2 )
-    net.Start("PlayerController:NetCL")
+function PlayerController.NetSendCl( mode, arg1, arg2 )
+    net.Start("PlayerController:NetToCL")
         net.WriteInt(mode, 6)
 
         if mode == PC_CL_WEAPON then
@@ -147,7 +148,7 @@ function PlayerControl.NetSendCl( mode, arg1, arg2 )
     net.SendToServer()
 end
 
-net.Receive("PlayerController:NetSV", function (len)
+net.Receive("PlayerController:NetToSV", function (len)
     local ply = OldLocalPlayer()
     if not IsValid(ply) then return end
     local tbl = net.ReadTable()
@@ -165,8 +166,8 @@ net.Receive("PlayerController:NetSV", function (len)
             ply.controller["t_ply"].controller = {}
             ply.controller["t_ply"].controller["c_ply"] = ply
 
-            PlayerControl.c_ply = ply
-            PlayerControl.t_ply = ply.controller["t_ply"]
+            PlayerController.c_ply = ply
+            PlayerController.t_ply = ply.controller["t_ply"]
 
             local view_flag = tbl.view_flag or PC_CAM_FIRSTPERSON
 
@@ -174,29 +175,29 @@ net.Receive("PlayerController:NetSV", function (len)
             -- ply.controller["t_ply"]:SetupDataTables()
 
             -- create Camera
-            PlayerControl.camera = PlayerControl.Camera(ply, ply.controller["t_ply"], view_flag)
+            PlayerController.camera = PlayerController.Camera(ply, ply.controller["t_ply"], view_flag)
 
-            hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerControl.overrideBinds)
-            hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerControl.preventAnimations) -- CalcMainActivity
+            hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
+            hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations) -- CalcMainActivity
 
-            hook.Add("Move", "PlayerController:ButtonControls", PlayerControl.buttonControls)
+            hook.Add("Move", "PlayerController:ButtonControls", PlayerController.buttonControls)
 
-            --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerControl.preventAttacking)
-            hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerControl.disableMovment)
-            hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerControl.disableWeaponSwitch)
-            --hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerControl.disableMouse)
+            --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerController.preventAttacking)
+            hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerController.disableMovment)
+            hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerController.disableWeaponSwitch)
+            --hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerController.disableMouse)
 
             hook.Add("CalcView", "PlayerController:CameraView", function(calling_ply, pos, angles, fov, znear, zfar)
                 local view = {origin = pos, angles = angles, fov = fov, znear = znear, zfar = zfar, drawviewer = true}
-                if PlayerControl.camera:CalcView( view, calling_ply, true ) then return view end -- ply:IsPlayingTaunt()
+                if PlayerController.camera:CalcView( view, calling_ply, true ) then return view end -- ply:IsPlayingTaunt()
             end)
 
-            hook.Add("CreateMove","PlayerController:ControllerMovment",function(cmd)
-                PlayerControl.camera:CreateMove( cmd, ply, true)
+            hook.Add("CreateMove","PlayerController:CameraMovment",function(cmd)
+                PlayerController.camera:CreateMove( cmd, ply, true)
             end)
 
-            hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerControl.drawHelpHUD)
-            hook.Add("TTTRenderEntityInfo", "PlayerController:DrawTargetID", PlayerControl.drawTargetID)
+            hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerController.drawHelpHUD)
+            hook.Add("TTTRenderEntityInfo", "PlayerController:DrawTargetID", PlayerController.drawTargetID)
 
             overrideFunctions(true)
 
@@ -204,23 +205,23 @@ net.Receive("PlayerController:NetSV", function (len)
             HandleArmorStatusIcons(ply.controller["t_ply"])
 
             -- Override Sprint Update
-            PlayerControl.updateSprintOverriden = true
-            PlayerControl:addHUDHelp()
+            PlayerController.updateSprintOverriden = true
+            PlayerController:addHUDHelp()
 
         -- If the controlled Player
         else
             ply.controller["c_ply"] = tbl.player
             ply.controller["c_ply"].controller["t_ply"] = ply
 
-            PlayerControl.t_ply = ply
-            PlayerControl.c_ply = ply.controller["c_ply"]
+            PlayerController.t_ply = ply
+            PlayerController.c_ply = ply.controller["c_ply"]
             -- hook.Add("CreateMove","PlayerController:TargetMovment",function(cmd)
             --     print("Create Target Move:", ply:Nick())
             --     camera:CreateTargetMove( cmd, ply, true)
             -- end)
 
             -- TODO: Disable all commands / or maybe not
-            hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerControl.disableBinds)
+            hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerController.disableBinds)
         end
 
 
@@ -234,7 +235,7 @@ net.Receive("PlayerController:NetSV", function (len)
         hook.Remove("Move", "PlayerController:ButtonControls")
 
         hook.Remove("CalcView", "PlayerController:CameraView")
-        hook.Remove("CreateMove", "PlayerController:ControllerMovment")
+        hook.Remove("CreateMove", "PlayerController:CameraMovment")
 
         hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
         hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
@@ -246,15 +247,15 @@ net.Receive("PlayerController:NetSV", function (len)
         overrideFunctions(false)
 
         -- back to previous Sprint update function
-        PlayerControl:removeHUDHelp()
-        PlayerControl.updateSprintOverriden = false
+        PlayerController:removeHUDHelp()
+        PlayerController.updateSprintOverriden = false
 
-        PlayerControl.camera:Stop()
-        PlayerControl.camera = nil
+        PlayerController.camera:Stop()
+        PlayerController.camera = nil
         ply.controller = nil
 
-        PlayerControl.c_ply = nil
-        PlayerControl.t_ply = nil
+        PlayerController.c_ply = nil
+        PlayerController.t_ply = nil
 
         -- Update Status of Armor Icon, at player change.
         HandleArmorStatusIcons(ply)
@@ -322,7 +323,7 @@ end)
 -- Controlling
 
 -- Disable Binds
-function PlayerControl.disableBinds( ply, bind, pressed )
+function PlayerController.disableBinds( ply, bind, pressed )
     if not (ply.controller or ply.controller["c_ply"]) then return end
 
     -- if bind == "+attack" then
@@ -346,11 +347,11 @@ local function SelectWeapon( oldidx )
     --     wep:Initialize()
     -- end
 
-    PlayerControl.NetSendCl(PC_CL_WEAPON, wep:GetClass())
+    PlayerController.NetSendCl(PC_CL_WEAPON, wep:GetClass())
 end
 
 -- Override Binds
-function PlayerControl.overrideBinds( ply, bind, pressed )
+function PlayerController.overrideBinds( ply, bind, pressed )
     if not (ply.controller or ply.controller["t_ply"]) then return end
     local t_ply = ply.controller["t_ply"]
 
@@ -361,7 +362,7 @@ function PlayerControl.overrideBinds( ply, bind, pressed )
 
         -- Change Camera Distance
         if input.IsKeyDown( KEY_LSHIFT ) then -- If shift is pressed, change camera distance
-            PlayerControl.camera:ChangeOffset(10)
+            PlayerController.camera:ChangeOffset(10)
 
         -- Select Next Weapon
         else
@@ -375,7 +376,7 @@ function PlayerControl.overrideBinds( ply, bind, pressed )
     elseif bind == "invprev" and pressed then
         -- Change Camera Distance
         if input.IsKeyDown( KEY_LSHIFT ) then -- If shift is pressed, change camera distance
-            PlayerControl.camera:ChangeOffset(-10)
+            PlayerController.camera:ChangeOffset(-10)
 
         -- Select Previous Weapon
         else
@@ -397,13 +398,13 @@ function PlayerControl.overrideBinds( ply, bind, pressed )
 
         -- if inv[idx][1] then
         --     --print("name:", inv[idx][1]:GetClass())
-        --     PlayerControl.NetSendCl(PC_CL_WEAPON, inv[idx][1]:GetClass())
+        --     PlayerController.NetSendCl(PC_CL_WEAPON, inv[idx][1]:GetClass())
         --     return true
         -- end
 
     -- Q Button -> Drop Weapon
     elseif bind == "+menu" then
-        PlayerControl.NetSendCl(PC_CL_DROP_WEAPON, t_ply:GetActiveWeapon())
+        PlayerController.NetSendCl(PC_CL_DROP_WEAPON, t_ply:GetActiveWeapon())
         return true
 
     end
@@ -411,25 +412,25 @@ end
 
 -- Draws the help Hud for the active weapon
 -- and draws the control panel
-function PlayerControl.drawHelpHUD()
-    local wep = PlayerControl.t_ply:GetActiveWeapon()
+function PlayerController.drawHelpHUD()
+    local wep = PlayerController.t_ply:GetActiveWeapon()
     if IsValid(wep) then
-        PlayerControl.t_ply:GetActiveWeapon():DrawHUD()
+        PlayerController.t_ply:GetActiveWeapon():DrawHUD()
     end
 
-    PlayerControl:drawHelp()
+    PlayerController:drawHelp()
 end
 
 -- Button Controls
-function PlayerControl.buttonControls(ply, mv)
+function PlayerController.buttonControls(ply, mv)
 
-    if not ply.controller and not ply.controller["t_ply"] then return end
+    if not ply:IsController() then return end
         -- end Control
 
     if not input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_BACKSPACE) then
-        if PlayerControl.back_pressed == false then
+        if PlayerController.back_pressed == false then
             print("End Player Control")
-            PlayerControl.back_pressed = true
+            PlayerController.back_pressed = true
             net.Start("PlayerController:NetControl")
             net.WriteInt(PC_CL_END, 6)
             net.SendToServer()
@@ -439,16 +440,16 @@ function PlayerControl.buttonControls(ply, mv)
 
     -- switch to next player
     elseif input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_BACKSPACE) then
-        if PlayerControl.back_pressed == false then
-            PlayerControl.back_pressed = true
+        if PlayerController.back_pressed == false then
+            PlayerController.back_pressed = true
             local t_i, c_i
             local alive_players = {}
 
             for i, p in pairs(player.GetAll()) do
                 if p:Alive() then
                     alive_players[#alive_players + 1] = p
-                    if p == PlayerControl.t_ply then t_i = #alive_players - 1
-                    elseif p == PlayerControl.c_ply then c_i = #alive_players - 1 end
+                    if p == PlayerController.t_ply then t_i = #alive_players - 1
+                    elseif p == PlayerController.c_ply then c_i = #alive_players - 1 end
                 end
             end
 
@@ -469,12 +470,12 @@ function PlayerControl.buttonControls(ply, mv)
 
     -- switch to player in front
     elseif input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_E) then
-        if PlayerControl.e_pressed == false then
-            PlayerControl.e_pressed = true
-            local ent = PlayerControl.camera.GetViewTargetEntity()
+        if PlayerController.e_pressed == false then
+            PlayerController.e_pressed = true
+            local ent = PlayerController.camera.GetViewTargetEntity()
 
             if IsValid(ent) and ent:IsPlayer() and ent:Alive() then
-                if ent == PlayerControl.c_ply then
+                if ent == PlayerController.c_ply then
                     print("Terminating Control")
                     net.Start("PlayerController:NetControl")
                     net.WriteInt(PC_CL_END , 6)
@@ -492,20 +493,22 @@ function PlayerControl.buttonControls(ply, mv)
         return
     end
 
-    PlayerControl.back_pressed = false
-    PlayerControl.e_pressed = false
+    PlayerController.back_pressed = false
+    PlayerController.e_pressed = false
+
+    --return true
 
 end
 
 -- Draw Target ID to switch to other players:
-function PlayerControl.drawTargetID(tData)
+function PlayerController.drawTargetID(tData)
     local ent = tData:GetEntity()
 
     if not IsValid(ent) or not ent:IsPlayer() or not ent:Alive() then return end
 
     local h_string, h_color = util.HealthToString(ent:Health(), ent:GetMaxHealth())
 
-    if ent == PlayerControl.c_ply then
+    if ent == PlayerController.c_ply then
         tData:SetSubtitle(
             ParT("target_end_PC", {usekey = Key("+use", "USE"), name = ent:Nick()})
         )
@@ -522,11 +525,11 @@ function PlayerControl.drawTargetID(tData)
     --tData:SetKeyBinding("+use")
 end
 
-function PlayerControl:removeHUDHelp()
+function PlayerController:removeHUDHelp()
     self.HUDHelp = nil
 end
 
-function PlayerControl:addHUDHelp()
+function PlayerController:addHUDHelp()
     self.HUDHelp = {
         lines = {},
         max_length = 0
@@ -537,14 +540,14 @@ function PlayerControl:addHUDHelp()
     self:addHUDHelpLine(TryT("help_hud_next_PC"), "SHIFT", "BACK" ) -- Key("+reload", "R")
 end
 
-function PlayerControl:addHUDHelpLine(text, key1, key2)
+function PlayerController:addHUDHelpLine(text, key1, key2)
     local width = draw.GetTextSize(text, "weapon_hud_help")
 
     self.HUDHelp.lines[#self.HUDHelp.lines + 1] = {text = text, key1 = key1, key2 = key2}
     self.HUDHelp.max_length = math.max(self.HUDHelp.max_length, width)
 end
 
-function PlayerControl:drawHelp()
+function PlayerController:drawHelp()
     if not self.HUDHelp then return end
 
     local data = self.HUDHelp
@@ -568,7 +571,7 @@ function PlayerControl:drawHelp()
     end
 end
 
-function PlayerControl:drawHelpLine(x, y, text, key1, key2)
+function PlayerController:drawHelpLine(x, y, text, key1, key2)
     local valid_icon = true
 
     if isstring(key1) and key2 == nil then
@@ -587,7 +590,7 @@ function PlayerControl:drawHelpLine(x, y, text, key1, key2)
     return valid_icon
 end
 
-function PlayerControl:drawKeyBox(x, y, key)
+function PlayerController:drawKeyBox(x, y, key)
     local pad = 3
     local pad2 = pad * 2
 
