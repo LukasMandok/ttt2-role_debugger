@@ -18,7 +18,7 @@ function GetRealEyeTrace(pos, ang, filter, offset)
 end
 
 function PlayerController.Camera(c_ply, t_ply, view_flag)
-    print("Create Camer:", c_ply, t_ply, view_flag)
+    print("Create Camera:", c_ply, t_ply, view_flag)
 
     local CAM = {}
 
@@ -40,6 +40,8 @@ function PlayerController.Camera(c_ply, t_ply, view_flag)
     if view_angles.pitch > 90 then
         view_angles.pitch = view_angles.pitch - 360
     end
+    local corrected_angles = view_angles
+
     --print("Set initial view_angles:", t_ply:EyeAngles())
     local view_pos        = t_ply:GetShootPos()
     local c_ply_angles    = c_ply:EyeAngles()
@@ -68,8 +70,12 @@ function PlayerController.Camera(c_ply, t_ply, view_flag)
         return on or outLerp < 1
     end
 
-    CAM.GetCameraAngle = function( self )
+    CAM.GetCameraAngles = function( self )
         return view_angles
+    end
+
+    CAM.GetCorrectedAngles = function ( self )
+        return corrected_angles
     end
 
     CAM.ChangeOffset = function( self, d_offset )
@@ -96,7 +102,7 @@ function PlayerController.Camera(c_ply, t_ply, view_flag)
             view.origin = t_ply:GetShootPos() -- getThirdPersonPos(t_ply)
             view.angles = t_ply:EyeAngles()
 
-            if ( !ply:Alive() ) then on = false end
+            --if ( !ply:Alive() ) then on = false end
 
             if ( wasOn ~= on ) then
                 if ( on ) then inLerp = 0 end
@@ -174,7 +180,7 @@ function PlayerController.Camera(c_ply, t_ply, view_flag)
 
     CAM.CreateMove = function( self, cmd, ply, on )
 
-        if ( !ply:Alive() ) then on = false end
+        --if ( !ply:Alive() ) then on = false end
         if ( !on ) then return end
 
         if ( c_ply_angles == nil ) then
@@ -192,16 +198,16 @@ function PlayerController.Camera(c_ply, t_ply, view_flag)
         view_angles.yaw    = view_angles.yaw              - cmd:GetMouseX() * 0.01
         --end
 
-        local corrected_angles = view_angles
+        corrected_angles = view_angles
 
         if view_flag == PC_CAM_SIMPLEFIRSTPERSON or
           (view_flag == PC_CAM_THIRDPERSON and (vertical_offset ~= 0 or horizontal_offset ~= 0)) then
             corrected_angles = CAM.CorrectShotAngle(view_pos, view_angles)
         end
 
-        net.Start("PlayerController:TargetAngle")
-            net.WriteAngle(corrected_angles)
-        net.SendToServer()
+        -- net.Start("PlayerController:TargetAngle")
+        --     net.WriteAngle(corrected_angles)
+        -- net.SendToServer()
 
        --
         -- Lock the player's controls and angles

@@ -44,7 +44,28 @@ PC_SV_NET = {
 -- }
 
 
---
+-- Calculate t_ply moves:
+--function PlayerController.calculateMove()
+
+-- Add is controller functino:
+local ply_meta = FindMetaTable("Player")
+
+function ply_meta:IsController(ply)
+	if ply then
+		return self.controller and self.controller.c_ply == self and self.controller.t_ply == ply
+	else
+		return self.controller and self.controller.c_ply == self
+	end
+end
+
+function ply_meta:IsControlled(ply)
+	if ply then
+		return self.controller and self.controller.t_ply == self and self.controller.c_ply == ply
+	else
+		return self.controller and self.controller.t_ply == self
+	end
+end
+
 
 -- SERVER
 
@@ -216,21 +237,3 @@ end
 -- hook.Add("InputMouseApply", "PlayerControllerler:DisableControllerMouse", PlayerController.disableMouse)
 
 
--- Add is controller functino:
-local ply_meta = FindMetaTable("Player")
-
-function ply_meta:IsController(ply)
-	if ply then
-		return self.controller and self.controller.c_ply == self and self.controller.t_ply == ply
-	else
-		return self.controller and self.controller.c_ply == self
-	end
-end
-
-function ply_meta:IsControlled(ply)
-	if ply then
-		return self.controller and self.controller.t_ply == self and self.controller.c_ply == ply
-	else
-		return self.controller and self.controller.t_ply == self
-	end
-end

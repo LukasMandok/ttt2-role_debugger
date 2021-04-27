@@ -259,19 +259,37 @@ net.Receive("PlayerController:NetToSV", function (len)
     end
 end)
 
--- function PlayerController.NetSendCommands(ply, cmd)
---      net.Start()
---          net.WriteUInt(cmd:GetButtons(), 26)
---          net.WriteUInt(cmd:GetImpulse(), 8)
+function PlayerController.NetSendCommands(ply, cmd)
+    if not ply:IsController() then return end
 
---     print("forward Move:", cmd:GetForwardMove()) -- -10000 +10000
---     print("SideMove:", cmd:GetSideMove())        -- -10000 +10000
---     print("UpMove:", cmd:GetUpMove())
+    local camera = ply.controller.camera
+    local controller = ply.controller
 
---     print("MouseWheel:", cmd:GetMouseWheel())    -- -25 +25
---     print("MouseX:", cmd:GetMouseX())            -- +- 5000
---     print("MouseY:", cmd:GetMouseY())
+    controller["Buttons"] = cmd:GetButtons()
+    controller["Impluse"] = cmd:GetImpulse()
 
+    controller["ForwardMove"] = cmd:GetForwardMove()
+    controller["SideMove"] = cmd:GetSideMove()
+    controller["UpMove"] = cmd:GetUpMove()
+
+    controller["MouseWheel"] = cmd:GetMouseWheel()
+    controller["MouseX"] = cmd:GetMouseX()
+    controller["MouseY"] = cmd:GetMouseY()
+
+    net.Start("PlayerController:NetCommands")
+        net.WriteAngle(camera:GetCorrectedAngles())
+
+        net.WriteUInt(cmd:GetButtons(), 25)     -- 25: +33554431 (needs: 16777216)
+        net.WriteUInt(cmd:GetImpulse(), 8)      --  8: +255      (needs: +204)
+
+        net.WriteInt(cmd:GetForwardMove(), 15)  -- 15: +-16384   (needs: +-10000)
+        net.WriteInt(cmd:GetSideMove(), 15)     -- 15: +-16384   (needs: +-10000)
+        net.WriteInt(cmd:GetUpMove(), 15)       -- 15: +-16384   (needs: +-10000)
+
+        net.WriteInt(cmd:GetMouseWheel(), 6)    --  6: +-31      (needs: +-25)
+        net.WriteInt(cmd:GetMouseX(), 14)       -- 14: +-8191    (needs: +-5000)
+        net.WriteInt(cmd:GetMouseY(), 14)       -- 14: +-8191    (needs: +-5000)
+    net.SendToServer()
 --         -- c_ply.controller["ForwardMove"] = cmd:GetForwardMove()
 --         -- c_ply.controller["SideMove"] = cmd:GetSideMove()
 --         -- c_ply.controller["UpMove"] = cmd:GetUpMove()
@@ -279,11 +297,11 @@ end)
 --         -- c_ply.controller["MouseWheel"] = cmd:GetMouseWheel()
 --         -- c_ply.controller["MouseX"] = cmd:GetMouseX()
 --         -- c_ply.controller["MouseY"] = cmd:GetMouseY()
+    
 
---         -- cmd:ClearMovement()
---         -- cmd:ClearButtons()
---     -- net.SendToServer()
--- end
+    cmd:ClearMovement()
+    cmd:ClearButtons()
+end
 
 -----------------------------------------------------
 ----------------- Control Functions -----------------
@@ -309,7 +327,7 @@ function PlayerController:StartControl(tbl)
         -- create Camera
         self.camera = PlayerController.Camera(c_ply, t_ply, view_flag)
 
-        --hook.Add("StartCommand", "PlayerController:NetSendCommands", PlayerController.NetSendCommands)
+        hook.Add("StartCommand", "PlayerController:NetSendCommands", PlayerController.NetSendCommands)
         hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
         hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations) -- CalcMainActivity
 
@@ -377,7 +395,7 @@ function PlayerController:EndControl()
     hook.Remove("CalcView", "PlayerController:CameraView")
     hook.Remove("CreateMove", "PlayerController:CameraMovment")
 
-    --hook.Remove("StartCommand", "PlayerController:NetSendCommands")
+    hook.Remove("StartCommand", "PlayerController:NetSendCommands")
     hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
     hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
 
