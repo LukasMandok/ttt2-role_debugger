@@ -220,7 +220,7 @@ local ply_meta = FindMetaTable("Player")
 
 function ply_meta:IsController(ply)
 	if ply then
-		return self.controller and self.controller.c_ply == self and self == ply
+		return self.controller and self.controller.c_ply == self and self.controller.t_ply == ply
 	else
 		return self.controller and self.controller.c_ply == self
 	end
@@ -228,7 +228,7 @@ end
 
 function ply_meta:IsControlled(ply)
 	if ply then
-		return self.controller and self.controller.t_ply == self and self == ply
+		return self.controller and self.controller.t_ply == self and self.controller.c_ply == ply
 	else
 		return self.controller and self.controller.t_ply == self
 	end

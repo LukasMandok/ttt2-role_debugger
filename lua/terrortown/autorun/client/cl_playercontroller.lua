@@ -1,35 +1,54 @@
-PlayerController = PlayerController or {
-    c_ply = nil,
-    t_ply = nil,
+-----------------------------------------------------
+------------------- Player Control ------------------
+-----------------------------------------------------
 
-    camera = nil,
+PlayerController = {}
+PlayerController.__index = PlayerController
 
-    back_pressed = false,
-    e_pressed = false,
-}
+setmetatable(PlayerController, {
+    __call = function(cls, ...) 
+        print("Creating PlayerController")
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
+    end,
+})
+
+function PlayerController:__init(tbl)
+    -------------- Overriding Network Communication --------------
+
+    self:StartControl(tbl)
+end
+
+
+
+-- PlayerController = PlayerController or {
+--     c_ply = nil,
+--     t_ply = nil,
+
+--     camera = nil,
+
+--     back_pressed = false,
+--     e_pressed = false,
+-- }
 
 local TryT = LANG.TryTranslation
 local ParT = LANG.GetParamTranslation
+
+
 
 local ply_meta = FindMetaTable("Player")
 
 ply_meta.OldSteamID64 = ply_meta.OldSteamID64 or ply_meta.SteamID64
 ply_meta.OldGetForward = ply_meta.OldGetForward or ply_meta.GetForward
 
--- t_ply_meta.DisplayName = "t_ply"
--- t_ply_meta.SteamID64 = function(slf)
---     return 00000
--- end
-
--- player_manager.RegisterClass( "t_ply", t_ply_meta, {} )
-
 OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
 -- Override Functions for the controlling Player
-local function overrideFunctions( flag )
+function PlayerController:__overrideFunctions( flag )
 
-    local t_ply = PlayerController.t_ply
-    local c_ply = PlayerController.c_ply
+    local t_ply = self.t_ply
+    local c_ply = self.c_ply
     --local t_ply_meta = getmetatable(t_ply)
 
     -- start override
@@ -129,7 +148,9 @@ local function HandleArmorStatusIcons(ply)
     STATUS:AddStatus("ttt_armor_status", icon_id)
 end
 
-
+-----------------------------------------------------
+------------------- Communication -------------------
+-----------------------------------------------------
 
 function PlayerController.NetSendCl( mode, arg1, arg2 )
     net.Start("PlayerController:NetToCL")
@@ -158,116 +179,29 @@ net.Receive("PlayerController:NetToSV", function (len)
         --MsgC(Color(255, 64, 64), "[PLAYER CONTROLLER] ", Color(198, 198, 198), tbl.log.."\n")
 
         -- Set the table to the player
-        ply.controller = {}
-
-        -- If controlling Player
-        if tbl.controlling then
-            ply.controller["t_ply"] = tbl.player
-            ply.controller["t_ply"].controller = {}
-            ply.controller["t_ply"].controller["c_ply"] = ply
-
-            PlayerController.c_ply = ply
-            PlayerController.t_ply = ply.controller["t_ply"]
-
-            local view_flag = tbl.view_flag or PC_CAM_FIRSTPERSON
-
-            -- ply.controller["t_ply"]:InstallDataTable()
-            -- ply.controller["t_ply"]:SetupDataTables()
-
-            -- create Camera
-            PlayerController.camera = PlayerController.Camera(ply, ply.controller["t_ply"], view_flag)
-
-            hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
-            hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations) -- CalcMainActivity
-
-            hook.Add("Move", "PlayerController:ButtonControls", PlayerController.buttonControls)
-
-            --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerController.preventAttacking)
-            hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerController.disableMovment)
-            hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerController.disableWeaponSwitch)
-            --hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerController.disableMouse)
-
-            hook.Add("CalcView", "PlayerController:CameraView", function(calling_ply, pos, angles, fov, znear, zfar)
-                local view = {origin = pos, angles = angles, fov = fov, znear = znear, zfar = zfar, drawviewer = true}
-                if PlayerController.camera:CalcView( view, calling_ply, true ) then return view end -- ply:IsPlayingTaunt()
-            end)
-
-            hook.Add("CreateMove","PlayerController:CameraMovment",function(cmd)
-                PlayerController.camera:CreateMove( cmd, ply, true)
-            end)
-
-            hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerController.drawHelpHUD)
-            hook.Add("TTTRenderEntityInfo", "PlayerController:DrawTargetID", PlayerController.drawTargetID)
-
-            overrideFunctions(true)
-
-            ply.controller["t_ply"].armor = ply.controller["t_ply"].armor or 0
-            HandleArmorStatusIcons(ply.controller["t_ply"])
-
-            -- Override Sprint Update
-            PlayerController.updateSprintOverriden = true
-            PlayerController:addHUDHelp()
-
-        -- If the controlled Player
-        else
-            ply.controller["c_ply"] = tbl.player
-            ply.controller["c_ply"].controller["t_ply"] = ply
-
-            PlayerController.t_ply = ply
-            PlayerController.c_ply = ply.controller["c_ply"]
-            -- hook.Add("CreateMove","PlayerController:TargetMovment",function(cmd)
-            --     print("Create Target Move:", ply:Nick())
-            --     camera:CreateTargetMove( cmd, ply, true)
-            -- end)
-
-            -- TODO: Disable all commands / or maybe not
-            hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerController.disableBinds)
-        end
-
+        PlayerController(tbl)
 
     -- END
     elseif tbl.mode == PC_SV_END then
-        hook.Remove("DoAnimationEvent", "PlayerController:PreventAnimations")
-        --hook.Remove("SetupMove", "PlayerController:SetupMove")
-        hook.Remove("FinishMove", "PlayerController:DisableControllerMovment")
-        hook.Remove("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch")
+        local controller = ply.controller
 
-        hook.Remove("Move", "PlayerController:ButtonControls")
+        if not controller then
+            print("Contoler not valid for:", ply:Nick(), controller)
+            return
+        end
 
-        hook.Remove("CalcView", "PlayerController:CameraView")
-        hook.Remove("CreateMove", "PlayerController:CameraMovment")
-
-        hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
-        hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
-
-        hook.Remove("HUDPaint", "PlayerController:DrawHelpHUD")
-        hook.Remove("TTTRenderEntityInfo", "PlayerController:DrawTargetID")
-
-        print("reversing to OldLocalPlayer")
-        overrideFunctions(false)
-
-        -- back to previous Sprint update function
-        PlayerController:removeHUDHelp()
-        PlayerController.updateSprintOverriden = false
-
-        PlayerController.camera:Stop()
-        PlayerController.camera = nil
-        ply.controller = nil
-
-        PlayerController.c_ply = nil
-        PlayerController.t_ply = nil
-
-        -- Update Status of Armor Icon, at player change.
-        HandleArmorStatusIcons(ply)
-
+        print("Controller is valid and Terminating now.")
+        controller:EndControl()
 
     -- MESSAGE FROM SERVER
     elseif tbl.mode == PC_SV_MESSAGE then
+        -- TODO: Popup mit Inhalt und Dauer
+        print("received message from the server")
 
     -- Inventory Update of Target Player for Controlling Player
     elseif tbl.mode == PC_SV_INVENTORY then
         --print("CLIENT: Update Inventory")
-        if ply.controller and ply.controller["t_ply"] then
+        if ply:IsController() then
             ply.controller["t_ply"].inventory = tbl.inventory
             -- print("\n\nNew Inventory: ")
             -- PrintTable(ply.controller["t_ply"].inventory)
@@ -277,33 +211,34 @@ net.Receive("PlayerController:NetToSV", function (len)
 
     elseif tbl.mode == PC_SV_PLAYER then
         --print("Client: Update Target Information", ply.controller, ply.controller["t_ply"])
-        if ply.controller and ply.controller["t_ply"] == tbl.player then
+        if ply:IsController(tbl.player) then
+            local t_ply = ply.controller["t_ply"] 
 
-            ply.controller["t_ply"]:SetRole(tbl.role)
-            ply.controller["t_ply"].equipment_credits = tbl.credits
+            t_ply:SetRole(tbl.role)
+            t_ply.equipment_credits = tbl.credits
             --ply.controller["t_ply"].sprintProgress = tbl.sprintProgress
             --ply.controller["t_ply"].oldSprintProgress = tbl.sprintProgress
 
-            if tbl.armor and ply.controller["t_ply"].armor ~= tbl.armor then
-                ply.controller["t_ply"].armor = tbl.armor
-                HandleArmorStatusIcons(ply.controller["t_ply"])
+            if tbl.armor and t_ply.armor ~= tbl.armor then
+                t_ply.armor = tbl.armor
+                HandleArmorStatusIcons(t_ply)
             end
 
-            local wep = ply.controller["t_ply"]:GetActiveWeapon()
+            local wep = t_ply:GetActiveWeapon()
             -- local clip = tbl.clip
             -- local ammo = tbl.ammo
             -- print("ammo:", ammo, "clip:", clip)
             if IsValid(wep) then
                 --print("Valid weapon -> set ammo and clip count")
-                ply.controller["t_ply"]:SetAmmo( tbl.ammo,  wep:GetPrimaryAmmoType() )
-                ply.controller["t_ply"]:GetActiveWeapon():SetClip1(tbl.clip)
+                t_ply:SetAmmo( tbl.ammo,  wep:GetPrimaryAmmoType() )
+                t_ply:GetActiveWeapon():SetClip1(tbl.clip)
             end
 
             --print("Role to set:", role)
             --print("Role of t_ply:", ply.controller["t_ply"]:GetSubRole())
         end
     elseif tbl.mode == PC_SV_PICKUP then
-        if ply.controller and ply.controller["t_ply"] == tbl.player then
+        if ply:IsController(tbl.player) then
 
             if tbl.type == PC_PICKUP_WEAPON then
                 hook.Run("HUDWeaponPickedUp", tbl.weapon)
@@ -319,12 +254,131 @@ net.Receive("PlayerController:NetToSV", function (len)
     end
 end)
 
+-----------------------------------------------------
+----------------- Control Functions -----------------
+-----------------------------------------------------
 
--- Controlling
+function PlayerController:StartControl(tbl)
+    local ply = OldLocalPlayer()
 
--- Disable Binds
+    -- If controlling Player
+    if tbl.controlling then
+        local c_ply = ply
+        local t_ply = tbl.player
+
+        c_ply.controller = self
+        t_ply.controller = self
+
+        self.t_ply = t_ply
+        self.c_ply = c_ply
+
+        local view_flag = tbl.view_flag or PC_CAM_FIRSTPERSON
+
+
+        -- create Camera
+        self.camera = PlayerController.Camera(c_ply, t_ply, view_flag)
+
+        hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
+        hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations) -- CalcMainActivity
+
+        hook.Add("Move", "PlayerController:ButtonControls", PlayerController.buttonControls)
+
+        --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerController.preventAttacking)
+        hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerController.disableMovment)
+        hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerController.disableWeaponSwitch)
+        --hook.Add("InputMouseApply", "PlayerController:DisableControllerMouse", PlayerController.disableMouse)
+
+        hook.Add("CalcView", "PlayerController:CameraView", function(calling_ply, pos, angles, fov, znear, zfar)
+            local view = {origin = pos, angles = angles, fov = fov, znear = znear, zfar = zfar, drawviewer = true}
+            if self.camera:CalcView( view, calling_ply, true ) then return view end -- ply:IsPlayingTaunt()
+        end)
+
+        hook.Add("CreateMove","PlayerController:CameraMovment",function(cmd)
+            self.camera:CreateMove( cmd, c_ply, true)
+        end)
+
+        hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerController.drawHelpHUD)
+        hook.Add("TTTRenderEntityInfo", "PlayerController:DrawTargetID", PlayerController.drawTargetID)
+
+        self:__overrideFunctions(true)
+
+        t_ply.armor = t_ply.armor or 0
+        HandleArmorStatusIcons(t_ply)
+
+        -- Override Sprint Update
+        self.updateSprintOverriden = true
+        self:addHUDHelp()
+
+    -- If the controlled Player
+    else
+        local c_ply = tbl.player
+        local t_ply = ply
+
+        c_ply.controller = self
+        t_ply.controller = self
+
+        self.t_ply = t_ply
+        self.c_ply = c_ply
+
+        -- hook.Add("CreateMove","PlayerController:TargetMovment",function(cmd)
+        --     print("Create Target Move:", ply:Nick())
+        --     camera:CreateTargetMove( cmd, ply, true)
+        -- end)
+
+        -- TODO: Disable all commands / or maybe not
+        hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerController.disableBinds)
+    end
+end
+
+function PlayerController:EndControl()
+    local t_ply = self.t_ply
+    local c_ply = self.c_ply
+
+    --TODO: Distinguish between c_ply and t_ply 
+
+    hook.Remove("DoAnimationEvent", "PlayerController:PreventAnimations")
+    --hook.Remove("SetupMove", "PlayerController:SetupMove")
+    hook.Remove("FinishMove", "PlayerController:DisableControllerMovment")
+    hook.Remove("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch")
+
+    hook.Remove("Move", "PlayerController:ButtonControls")
+
+    hook.Remove("CalcView", "PlayerController:CameraView")
+    hook.Remove("CreateMove", "PlayerController:CameraMovment")
+
+    hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
+    hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
+
+    hook.Remove("HUDPaint", "PlayerController:DrawHelpHUD")
+    hook.Remove("TTTRenderEntityInfo", "PlayerController:DrawTargetID")
+
+    print("reversing to OldLocalPlayer")
+    self:__overrideFunctions(false)
+
+    -- back to previous Sprint update function
+    self:removeHUDHelp()
+    self.updateSprintOverriden = false
+
+    self.camera:Stop()
+    self.camera = nil
+    c_ply.controller = nil
+    t_ply.controller = nil
+
+    self.c_ply = nil
+    self.t_ply = nil
+
+    -- Update Status of Armor Icon, at player change.
+    HandleArmorStatusIcons(t_ply)
+end
+
+
+-----------------------------------------------------
+---------------- Overriding Functions ---------------
+-----------------------------------------------------
+
+-- Disable Binds for the target player
 function PlayerController.disableBinds( ply, bind, pressed )
-    if not (ply.controller or ply.controller["c_ply"]) then return end
+    if not (ply:IsControlled()) then return end
 
     -- if bind == "+attack" then
     --     --print("Player does an attack:")
@@ -352,8 +406,9 @@ end
 
 -- Override Binds
 function PlayerController.overrideBinds( ply, bind, pressed )
-    if not (ply.controller or ply.controller["t_ply"]) then return end
-    local t_ply = ply.controller["t_ply"]
+    if not (ply:IsController()) then return end
+
+    local controller = ply.controller
 
     --print("Command:", bind)
 
@@ -362,7 +417,7 @@ function PlayerController.overrideBinds( ply, bind, pressed )
 
         -- Change Camera Distance
         if input.IsKeyDown( KEY_LSHIFT ) then -- If shift is pressed, change camera distance
-            PlayerController.camera:ChangeOffset(10)
+            controller.camera:ChangeOffset(10)
 
         -- Select Next Weapon
         else
@@ -376,7 +431,7 @@ function PlayerController.overrideBinds( ply, bind, pressed )
     elseif bind == "invprev" and pressed then
         -- Change Camera Distance
         if input.IsKeyDown( KEY_LSHIFT ) then -- If shift is pressed, change camera distance
-            PlayerController.camera:ChangeOffset(-10)
+            controller.camera:ChangeOffset(-10)
 
         -- Select Previous Weapon
         else
@@ -402,23 +457,14 @@ function PlayerController.overrideBinds( ply, bind, pressed )
         --     return true
         -- end
 
+        return true
+
     -- Q Button -> Drop Weapon
     elseif bind == "+menu" then
-        PlayerController.NetSendCl(PC_CL_DROP_WEAPON, t_ply:GetActiveWeapon())
+        PlayerController.NetSendCl(PC_CL_DROP_WEAPON, controller.t_ply:GetActiveWeapon())
         return true
 
     end
-end
-
--- Draws the help Hud for the active weapon
--- and draws the control panel
-function PlayerController.drawHelpHUD()
-    local wep = PlayerController.t_ply:GetActiveWeapon()
-    if IsValid(wep) then
-        PlayerController.t_ply:GetActiveWeapon():DrawHUD()
-    end
-
-    PlayerController:drawHelp()
 end
 
 -- Button Controls
@@ -427,10 +473,12 @@ function PlayerController.buttonControls(ply, mv)
     if not ply:IsController() then return end
         -- end Control
 
+    local controller = ply.controller
+
     if not input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_BACKSPACE) then
-        if PlayerController.back_pressed == false then
+        if controller.back_pressed == false then
             print("End Player Control")
-            PlayerController.back_pressed = true
+            controller.back_pressed = true
             net.Start("PlayerController:NetControl")
             net.WriteInt(PC_CL_END, 6)
             net.SendToServer()
@@ -440,16 +488,16 @@ function PlayerController.buttonControls(ply, mv)
 
     -- switch to next player
     elseif input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_BACKSPACE) then
-        if PlayerController.back_pressed == false then
-            PlayerController.back_pressed = true
+        if controller.back_pressed == false then
+            controller.back_pressed = true
             local t_i, c_i
             local alive_players = {}
 
             for i, p in pairs(player.GetAll()) do
                 if p:Alive() then
                     alive_players[#alive_players + 1] = p
-                    if p == PlayerController.t_ply then t_i = #alive_players - 1
-                    elseif p == PlayerController.c_ply then c_i = #alive_players - 1 end
+                    if p == controller.t_ply then t_i = #alive_players - 1
+                    elseif p == controller.c_ply then c_i = #alive_players - 1 end
                 end
             end
 
@@ -461,8 +509,8 @@ function PlayerController.buttonControls(ply, mv)
             print("Switch through players.")
 
             net.Start("PlayerController:NetControl")
-            net.WriteInt(PC_CL_SWITCH , 6)
-            net.WriteEntity(alive_players[next])
+                net.WriteInt(PC_CL_SWITCH , 6)
+                net.WriteEntity(alive_players[next])
             net.SendToServer()
         end
 
@@ -470,12 +518,12 @@ function PlayerController.buttonControls(ply, mv)
 
     -- switch to player in front
     elseif input.IsKeyDown(KEY_LSHIFT) and input.WasKeyPressed(KEY_E) then
-        if PlayerController.e_pressed == false then
-            PlayerController.e_pressed = true
-            local ent = PlayerController.camera.GetViewTargetEntity()
+        if controller.e_pressed == false then
+            controller.e_pressed = true
+            local ent = controller.camera.GetViewTargetEntity()
 
             if IsValid(ent) and ent:IsPlayer() and ent:Alive() then
-                if ent == PlayerController.c_ply then
+                if ent == controller.c_ply then
                     print("Terminating Control")
                     net.Start("PlayerController:NetControl")
                     net.WriteInt(PC_CL_END , 6)
@@ -493,8 +541,8 @@ function PlayerController.buttonControls(ply, mv)
         return
     end
 
-    PlayerController.back_pressed = false
-    PlayerController.e_pressed = false
+    controller.back_pressed = false
+    controller.e_pressed = false
 
     --return true
 
@@ -502,13 +550,18 @@ end
 
 -- Draw Target ID to switch to other players:
 function PlayerController.drawTargetID(tData)
+    -- TODO: vieleicht unnötige Abfrage
+    if not OldLocalPlayer():IsController() then return end
+
+    local controller = OldLocalPlayer().controller
+
     local ent = tData:GetEntity()
 
     if not IsValid(ent) or not ent:IsPlayer() or not ent:Alive() then return end
 
     local h_string, h_color = util.HealthToString(ent:Health(), ent:GetMaxHealth())
 
-    if ent == PlayerController.c_ply then
+    if ent == controller.c_ply then
         tData:SetSubtitle(
             ParT("target_end_PC", {usekey = Key("+use", "USE"), name = ent:Nick()})
         )
@@ -545,6 +598,22 @@ function PlayerController:addHUDHelpLine(text, key1, key2)
 
     self.HUDHelp.lines[#self.HUDHelp.lines + 1] = {text = text, key1 = key1, key2 = key2}
     self.HUDHelp.max_length = math.max(self.HUDHelp.max_length, width)
+end
+
+
+-- Draws the help Hud for the active weapon
+-- and draws the control panel
+function PlayerController.drawHelpHUD()
+    if not OldLocalPlayer():IsController() then return end
+
+    local controller = OldLocalPlayer().controller
+
+    local wep = controller.t_ply:GetActiveWeapon()
+    if IsValid(wep) then
+        controller.t_ply:GetActiveWeapon():DrawHUD()
+    end
+
+    controller:drawHelp()
 end
 
 function PlayerController:drawHelp()
