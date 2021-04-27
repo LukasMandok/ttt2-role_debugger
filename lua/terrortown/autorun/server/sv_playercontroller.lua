@@ -388,10 +388,11 @@ end
 -- Update Target Inventory:
 function PlayerController.updateInventory(ply, wep)
     if ply:IsControlled() then
+        local c_ply = ply.controller.c_ply
         -- TODO: Error with Nick() not valid!)
         --print("SERVER: Updating Inventory:", ply:Nick(), "Hat ", wep, "aufgehoben. Send to:", ply.controller.c_ply:Nick())
-        timer.Simple(0.1, function()
-            PlayerController.NetSend(ply.controller.c_ply, {
+        timer.Simple(0.05, function()
+            PlayerController.NetSend(c_ply, {
                 mode = PC_SV_INVENTORY,
                 player = ply,
                 inventory = ply:GetInventory()
@@ -403,7 +404,7 @@ end
 -- Weapon / Item Pickup
 function PlayerController.itemPickedUp( item, ply )
     if ply:IsControlled() then
-        print("Send message to client")
+        -- print("Send message to client")
 
         if items.IsItem(item.id) then
             PlayerController.NetSend(ply.controller.c_ply, {

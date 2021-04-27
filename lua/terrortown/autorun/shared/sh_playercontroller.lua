@@ -54,11 +54,11 @@ function PlayerController.preventAnimations( ply, event, data )
 	end
 end
 
-function PlayerController.preventAttacking(ply, mv, cmd)
-	if ply:IsController() then
-		return true
-	end
-end
+-- function PlayerController.preventAttacking(ply, mv, cmd)
+-- 	if ply:IsController() then
+-- 		return true
+-- 	end
+-- end
 
 -- Disable Movment for the controlling player
 function PlayerController.disableMovment(ply, mv)
@@ -71,6 +71,7 @@ end
 -- Disable Weapon Switch for the controlling Player
 function PlayerController.disableWeaponSwitch(ply, oldWep, newWep )
 	if ply:IsController() then
+		print("Disable Weapon Switch for:", ply:Nick(), "from:", oldWep, "to:", newWep)
 		return true
 	end
 end
@@ -112,7 +113,7 @@ local function PlayerSprint(trySprinting, moveKey)
 	client.moveKey = moveKey
 
 	net.Start("TTT2SprintToggle")
-	net.WriteBool(trySprinting)
+		net.WriteBool(trySprinting)
 	net.SendToServer()
 end
 

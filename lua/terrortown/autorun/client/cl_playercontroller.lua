@@ -42,6 +42,8 @@ local ply_meta = FindMetaTable("Player")
 ply_meta.OldSteamID64 = ply_meta.OldSteamID64 or ply_meta.SteamID64
 ply_meta.OldGetForward = ply_meta.OldGetForward or ply_meta.GetForward
 
+WSWITCH.OldConfirmSelection = WSWITCH.OldConfirmSelection or WSWITCH.ConfirmSelection
+
 OldLocalPlayer = OldLocalPlayer or LocalPlayer
 
 -- Override Functions for the controlling Player
@@ -62,9 +64,8 @@ function PlayerController:__overrideFunctions( flag )
             end
         end
 
-        -- Admin RIghts
-
-
+        -- WSITCH 
+        WSWITCH.ConfirmSelection = function() end
 
         -- SteamID for Bots
         if t_ply:IsBot() then
@@ -104,6 +105,9 @@ function PlayerController:__overrideFunctions( flag )
     else
         -- reset LocalPlayer function
         LocalPlayer = OldLocalPlayer
+
+        -- reset WSWITCH
+        WSWITCH.ConfirmSelection = WSWITCH.OldConfirmSelection
 
         -- reset SteamID64 functino for bots
         if t_ply:IsBot() then
@@ -169,6 +173,7 @@ function PlayerController.NetSendCl( mode, arg1, arg2 )
     net.SendToServer()
 end
 
+
 net.Receive("PlayerController:NetToSV", function (len)
     local ply = OldLocalPlayer()
     if not IsValid(ply) then return end
@@ -190,7 +195,7 @@ net.Receive("PlayerController:NetToSV", function (len)
             return
         end
 
-        print("Controller is valid and Terminating now.")
+        print("Controller is valid and Terminating now:", controller.camera)
         controller:EndControl()
 
     -- MESSAGE FROM SERVER
@@ -254,6 +259,32 @@ net.Receive("PlayerController:NetToSV", function (len)
     end
 end)
 
+-- function PlayerController.NetSendCommands(ply, cmd)
+--      net.Start()
+--          net.WriteUInt(cmd:GetButtons(), 26)
+--          net.WriteUInt(cmd:GetImpulse(), 8)
+
+--     print("forward Move:", cmd:GetForwardMove()) -- -10000 +10000
+--     print("SideMove:", cmd:GetSideMove())        -- -10000 +10000
+--     print("UpMove:", cmd:GetUpMove())
+
+--     print("MouseWheel:", cmd:GetMouseWheel())    -- -25 +25
+--     print("MouseX:", cmd:GetMouseX())            -- +- 5000
+--     print("MouseY:", cmd:GetMouseY())
+
+--         -- c_ply.controller["ForwardMove"] = cmd:GetForwardMove()
+--         -- c_ply.controller["SideMove"] = cmd:GetSideMove()
+--         -- c_ply.controller["UpMove"] = cmd:GetUpMove()
+
+--         -- c_ply.controller["MouseWheel"] = cmd:GetMouseWheel()
+--         -- c_ply.controller["MouseX"] = cmd:GetMouseX()
+--         -- c_ply.controller["MouseY"] = cmd:GetMouseY()
+
+--         -- cmd:ClearMovement()
+--         -- cmd:ClearButtons()
+--     -- net.SendToServer()
+-- end
+
 -----------------------------------------------------
 ----------------- Control Functions -----------------
 -----------------------------------------------------
@@ -278,11 +309,11 @@ function PlayerController:StartControl(tbl)
         -- create Camera
         self.camera = PlayerController.Camera(c_ply, t_ply, view_flag)
 
+        --hook.Add("StartCommand", "PlayerController:NetSendCommands", PlayerController.NetSendCommands)
         hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
         hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations) -- CalcMainActivity
 
         hook.Add("Move", "PlayerController:ButtonControls", PlayerController.buttonControls)
-
         --hook.Add("SetupMove", "PlayerController:SetupMove", PlayerController.preventAttacking)
         hook.Add("FinishMove", "PlayerController:DisableControllerMovment", PlayerController.disableMovment)
         hook.Add("PlayerSwitchWeapon", "PlayerController:DisableWeaponSwitch", PlayerController.disableWeaponSwitch)
@@ -346,13 +377,13 @@ function PlayerController:EndControl()
     hook.Remove("CalcView", "PlayerController:CameraView")
     hook.Remove("CreateMove", "PlayerController:CameraMovment")
 
+    --hook.Remove("StartCommand", "PlayerController:NetSendCommands")
     hook.Remove("PlayerBindPress", "PlayerController:OverrideControllerBinds")
     hook.Remove("PlayerBindPress", "PlayerController:DisableTargetBinds")
 
     hook.Remove("HUDPaint", "PlayerController:DrawHelpHUD")
     hook.Remove("TTTRenderEntityInfo", "PlayerController:DrawTargetID")
 
-    print("reversing to OldLocalPlayer")
     self:__overrideFunctions(false)
 
     -- back to previous Sprint update function
@@ -410,7 +441,7 @@ function PlayerController.overrideBinds( ply, bind, pressed )
 
     local controller = ply.controller
 
-    --print("Command:", bind)
+    print("Carrying out binds:")
 
     -- Next Weapon Slot / Camera Distance
     if bind == "invnext" and pressed then
@@ -425,6 +456,7 @@ function PlayerController.overrideBinds( ply, bind, pressed )
             SelectWeapon()
         end
 
+        print("prevent Scrollup bind")
         return true
 
     -- Previous Weapon Slot
@@ -457,6 +489,7 @@ function PlayerController.overrideBinds( ply, bind, pressed )
         --     return true
         -- end
 
+        print("prevent number bind")
         return true
 
     -- Q Button -> Drop Weapon
@@ -480,7 +513,7 @@ function PlayerController.buttonControls(ply, mv)
             print("End Player Control")
             controller.back_pressed = true
             net.Start("PlayerController:NetControl")
-            net.WriteInt(PC_CL_END, 6)
+                net.WriteInt(PC_CL_END, 6)
             net.SendToServer()
         end
 
@@ -544,7 +577,7 @@ function PlayerController.buttonControls(ply, mv)
     controller.back_pressed = false
     controller.e_pressed = false
 
-    --return true
+    return true
 
 end
 
