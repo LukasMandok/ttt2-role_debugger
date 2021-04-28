@@ -2,7 +2,7 @@
 ------------------- Player Control ------------------
 -----------------------------------------------------
 
-PlayerController = {}
+PlayerController = PlayerController or {}
 PlayerController.__index = PlayerController
 
 setmetatable(PlayerController, {
@@ -104,7 +104,9 @@ function PlayerController:__overrideFunctions( flag )
     -- reset back to previous
     else
         -- reset LocalPlayer function
-        LocalPlayer = OldLocalPlayer
+        if LocalPlayer != OldLocalPlayer then
+            LocalPlayer = OldLocalPlayer
+        end
 
         -- reset WSWITCH
         WSWITCH.ConfirmSelection = WSWITCH.OldConfirmSelection
@@ -119,7 +121,9 @@ function PlayerController:__overrideFunctions( flag )
         end
 
         -- reset GetForward function
-        ply_meta.GetForward = ply_meta.OldGetForward
+        if ply_meta.GetForward != ply_meta.OldGetForward then
+            ply_meta.GetForward = ply_meta.OldGetForward
+        end
     end
 end
 
@@ -325,7 +329,7 @@ function PlayerController:StartControl(tbl)
 
 
         -- create Camera
-        self.camera = PlayerController.Camera(c_ply, t_ply, view_flag)
+        self.camera = PlayerCamera(c_ply, t_ply, view_flag)
 
         hook.Add("StartCommand", "PlayerController:NetSendCommands", PlayerController.NetSendCommands)
         hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
@@ -375,7 +379,7 @@ function PlayerController:StartControl(tbl)
         -- end)
 
         -- TODO: Disable all commands / or maybe not
-        hook.Add("PlayerBindPress", "PlayerController:DisableTargetBinds", PlayerController.disableBinds)
+        hook.Add("StartCommand", "PlayerController:DisableTargetBinds", PlayerController.disableBinds)
     end
 end
 
@@ -425,8 +429,8 @@ end
 ---------------- Overriding Functions ---------------
 -----------------------------------------------------
 
--- Disable Binds for the target player
-function PlayerController.disableBinds( ply, bind, pressed )
+-- Disable Binds for the target player    --  bind, pressed
+function PlayerController.disableBinds( ply, cmd )
     if not (ply:IsControlled()) then return end
 
     -- if bind == "+attack" then
@@ -434,7 +438,10 @@ function PlayerController.disableBinds( ply, bind, pressed )
     --     return true
     -- end
 
-    return true
+    cmd:ClearButtons()
+    cmd:ClearMovement()
+
+    --return true
 end
 
 -- send current weapon to server and activate HelpHUD

@@ -1,6 +1,7 @@
-PlayerController = PlayerController or {}
+PlayerCamera = PlayerCamera or {}
 
-function PlayerController.SimpleFirstPerson(c_ply, t_ply)
+function PlayerCamera.SimpleFirstPerson(c_ply, t_ply)
+    print("Creating Simple First Person")
     local SimpleFirstPerson = {}
 
     local c_ply = c_ply

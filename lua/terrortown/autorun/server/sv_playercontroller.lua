@@ -2,7 +2,7 @@
 ------------------- Player Control ------------------
 -----------------------------------------------------
 
-PlayerController = {}
+PlayerController = PlayerController or {}
 PlayerController.__index = PlayerController
 
 setmetatable(PlayerController, {
@@ -127,7 +127,7 @@ end
 local OldSend = OldSend or net.Send
 
 function net.Send(ply)
-    if ply.controller and ply.controller["t_ply"] then
+    if ply.controller and ply.controller["c_ply"] then
         --print("Addressat wird geändert")
         -- if  PC_TARGET_MESSAGES[strName] then            
         --     --print(strName)
@@ -362,6 +362,9 @@ function PlayerController.overrideCommands(ply, cmd)
     elseif ply:IsControlled() then
         local t_ply = ply
         local controller = ply.controller
+
+        cmd:ClearButtons()
+        cmd:ClearMovement()
 
         --if not IsValid(c_ply) then return end
 

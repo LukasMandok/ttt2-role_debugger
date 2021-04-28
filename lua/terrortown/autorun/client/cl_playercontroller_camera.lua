@@ -1,4 +1,54 @@
-PlayerController = PlayerController or {}
+PlayerCamera = PlayerCamera or {}
+PlayerCamera.__index = PlayerCamera
+
+setmetatable(PlayerCamera, {
+    __call = function(cls, ...)
+        print("Creating PlayerCamera")
+        local obj = setmetatable({}, cls)
+        obj:__init(...)
+        return obj
+    end,
+})
+
+function PlayerCamera:__init(c_ply, t_ply, view_flag)
+    self.c_ply = c_ply
+    self.t_ply = t_ply
+
+    self.view_flag        = view_flag
+
+    self.offset           = 100
+    self.v_offset  = 5
+    self.h_offset = 10
+
+    -- THird Person Mode
+    self.wasOn            = false
+    self.inLerp           = 0
+    self.outLerp          = 1
+
+
+    self.view_angles     = self.t_ply:EyeAngles()
+    if self.view_angles.pitch > 90 then
+        self.view_angles.pitch = self.view_angles.pitch - 360
+    end
+    self.corrected_angles = self.view_angles
+
+    --print("Set initial view_angles:", t_ply:EyeAngles())
+    self.view_pos        = self.t_ply:GetShootPos()
+    self.c_ply_angles    = self.c_ply:EyeAngles()
+
+    if self.view_flag == PC_CAM_ROAMING then
+        -- Start Roamin
+    elseif self.view_flag == PC_CAM_THIRDPERSON then
+        -- Start Thirdperson
+    elseif self.view_flag == PC_CAM_SIMPLEFIRSTPERSON then
+        self.viewmode = PlayerCamera.SimpleFirstPerson(self.c_ply, self.t_ply)
+        --c_ply:SetViewEntity(t_ply)
+
+    elseif self.view_flag == PC_CAM_FIRSTPERSON then
+        -- start Real first person
+    end
+end
+
 
 -- hook.Add("InitPostEntity","exclserver.player.ready",function()
 --     timer.Simple(0,function()
@@ -17,227 +67,171 @@ function GetRealEyeTrace(pos, ang, filter, offset)
     return util.TraceLine(trace)
 end
 
-function PlayerController.Camera(c_ply, t_ply, view_flag)
-    print("Create Camera:", c_ply, t_ply, view_flag)
 
-    local CAM = {}
+function PlayerCamera:ShouldDrawLocalPlayer( ply, on )
+    return on or self.outLerp < 1
+end
 
-    -- 
-    local c_ply            = c_ply
-    local t_ply            = t_ply
+function PlayerCamera:GetCameraAngles()
+    return self.view_angles
+end
 
-    local view_flag        = view_flag
-    local viewmode         = nil
+function PlayerCamera:GetCorrectedAngles()
+    return self.corrected_angles
+end
 
-    local offset           = 100
-    local vertical_offset  = 5
-    local horizontal_offset = 10
+function PlayerCamera:ChangeOffset( d_offset )
+    self.offset = self.offset + d_offset
+end
 
-    -- THird Person Mode
-    local wasOn            = false
+function PlayerCamera:CorrectShotAngle()
+    local view_trace = GetRealEyeTrace(self.view_pos, self.view_angles, {self.t_ply})
+    self.corrected_angles = (view_trace.HitPos - self.t_ply:GetShootPos()):Angle()
+end
 
-    local view_angles     = t_ply:EyeAngles()
-    if view_angles.pitch > 90 then
-        view_angles.pitch = view_angles.pitch - 360
-    end
-    local corrected_angles = view_angles
+function PlayerCamera:GetViewTargetEntity()
+    local trace = GetRealEyeTrace(self.view_pos, self.view_angles, {self.t_ply})
+    return trace.Entity
+end
 
-    --print("Set initial view_angles:", t_ply:EyeAngles())
-    local view_pos        = t_ply:GetShootPos()
-    local c_ply_angles    = c_ply:EyeAngles()
+function PlayerCamera:CalcView(view, ply, on )
 
-    local inLerp           = 0
-    local outLerp          = 1
+    --local view = c_view
 
-    CAM.Init = function()
-        if view_flag == PC_CAM_ROAMING then
-            
-        elseif view_flag == PC_CAM_THIRDPERSON then
-            
-        elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
-            viewmode = PlayerController.SimpleFirstPerson(c_ply, t_ply)
-            --c_ply:SetViewEntity(t_ply)
+    -- if Third Person
+    if view_flag == PC_CAM_THIRDPERSON then
 
-        elseif view_flag == PC_CAM_FIRSTPERSON then
-
-        end
-    end
-
-    CAM:Init()
-
-
-    CAM.ShouldDrawLocalPlayer = function( self, ply, on )
-        return on or outLerp < 1
-    end
-
-    CAM.GetCameraAngles = function( self )
-        return view_angles
-    end
-
-    CAM.GetCorrectedAngles = function ( self )
-        return corrected_angles
-    end
-
-    CAM.ChangeOffset = function( self, d_offset )
-        offset = offset + d_offset
-    end
-
-    CAM.CorrectShotAngle = function( origin, angles )
-        local view_trace = GetRealEyeTrace(origin, angles, {t_ply})
-        return (view_trace.HitPos - t_ply:GetShootPos()):Angle()
-    end
-
-    CAM.GetViewTargetEntity = function()
-        local trace = GetRealEyeTrace(view_pos, view_angles, {t_ply})
-        return trace.Entity
-    end
-
-    CAM.CalcView = function( self, view, ply, on )
-
-        --local view = c_view
-
-        -- if Third Person
-        if view_flag == PC_CAM_THIRDPERSON then
-
-            view.origin = t_ply:GetShootPos() -- getThirdPersonPos(t_ply)
-            view.angles = t_ply:EyeAngles()
-
-            --if ( !ply:Alive() ) then on = false end
-
-            if ( wasOn ~= on ) then
-                if ( on ) then inLerp = 0 end
-                if ( !on ) then outLerp = 0 end
-                wasOn = on
-            end
-
-            if ( !on and outLerp >= 1 ) then
-                view_angles = view.angles * 1
-                c_ply_angles = nil
-                inLerp = 0
-                return
-            end
-
-            if ( c_ply_angles == nil ) then return end
-            trace = {}
-            trace.start  = view.origin + Vector(0, 0, vertical_offset) + view_angles:Right() * horizontal_offset
-            trace.endpos = view.origin + Vector(0, 0, vertical_offset) + view_angles:Right() * horizontal_offset - view_angles:Forward() * offset
-            trace.filter = {t_ply}
-
-            trace = util.TraceLine(trace)
-            view_pos = trace.HitPos + trace.HitNormal * 2
-
-            if ( inLerp < 1 ) then
-                inLerp = inLerp + FrameTime() * 5.0
-                view.origin = LerpVector( inLerp, view.origin, view_pos )
-                view.angles = LerpAngle( inLerp, c_ply_angles, view_angles )
-                return true
-            end
-
-            if ( outLerp < 1 ) then
-                outLerp = outLerp + FrameTime() * 3.0
-                view.origin = LerpVector( 1-outLerp, view.origin, view_pos )
-                view.angles = LerpAngle( 1-outLerp, c_ply_angles, view_angles )
-                return true
-            end
-
-            -- if vertical_offset > 0 then
-            --     view_angles = CAM.CompensateOffset(view_pos, view_angles)
-            -- end
-
-            view.angles = view_angles * 1
-            view.origin = view_pos
-            return true
-
-        -- If Simple First Person
-        elseif view_flag == PC_CAM_SIMPLEFIRSTPERSON then
-            if !on then
-                view_angles = t_ply:EyeAngles()
-                view_pos = t_ply:GetShootPos()
-                on = true
-            end
-
-            --view.origin = t_ply:GetShootPos() + view_angles:Up() * offset / 10
-            view.angles = view_angles
-
-            view = viewmode.CalcView(view, t_ply)
-
-            view_angles = view.angles
-            view_pos = view.origin
-
-            return true
-
-        -- If complex First Person
-        elseif view_flag == PC_CAM_FIRSTPERSON then
-            return
-
-        -- If Roaming
-        elseif view_flag == PC_CAM_ROAMING then
-            print("Calc roaming view")
-            return
-        end
-    end
-
-
-    CAM.CreateMove = function( self, cmd, ply, on )
+        view.origin = self.t_ply:GetShootPos() -- getThirdPersonPos(t_ply)
+        view.angles = self.t_ply:EyeAngles()
 
         --if ( !ply:Alive() ) then on = false end
-        if ( !on ) then return end
 
-        if ( c_ply_angles == nil ) then
-            c_ply_angles = c_ply:EyeAngles() --view_angles * 1
+        if ( self.wasOn ~= on ) then
+            if ( on ) then self.inLerp = 0 end
+            if ( !on ) then self.outLerp = 0 end
+            self.wasOn = on
         end
 
-        --
-        -- Rotate our view
-        --
-        --if thirdperson then
-            -- view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01 -90, 90)
-            -- view_angles.yaw    = view_angles.yaw        - cmd:GetMouseX() * 0.01
-        --else
-        view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01, -85, 85)
-        view_angles.yaw    = view_angles.yaw              - cmd:GetMouseX() * 0.01
-        --end
-
-        corrected_angles = view_angles
-
-        if view_flag == PC_CAM_SIMPLEFIRSTPERSON or
-          (view_flag == PC_CAM_THIRDPERSON and (vertical_offset ~= 0 or horizontal_offset ~= 0)) then
-            corrected_angles = CAM.CorrectShotAngle(view_pos, view_angles)
+        if ( !on and outLerp >= 1 ) then
+            self.view_angles = view.angles * 1
+            self.c_ply_angles = nil
+            self.inLerp = 0
+            return
         end
 
-        -- net.Start("PlayerController:TargetAngle")
-        --     net.WriteAngle(corrected_angles)
-        -- net.SendToServer()
+        if ( self.c_ply_angles == nil ) then return end
+        local trace = {}
+        trace.start  = view.origin + Vector(0, 0, self.v_offset) + self.view_angles:Right() * self.h_offset
+        trace.endpos = view.origin + Vector(0, 0, self.v_offset) + self.view_angles:Right() * self.h_offset - self.view_angles:Forward() * self.offset
+        trace.filter = {self.t_ply}
 
-       --
-        -- Lock the player's controls and angles
-        --
-        cmd:SetViewAngles( c_ply_angles )
+        trace = util.TraceLine(trace)
+        self.view_pos = trace.HitPos + trace.HitNormal * 2
 
-        -- net.Start("PlayerController:TargetAngle")
-        --     net.WriteAngle(view_angles)
-        -- net.SendToServer()
+        if ( self.inLerp < 1 ) then
+            self.inLerp = self.inLerp + FrameTime() * 5.0
+            view.origin = LerpVector( self.inLerp, view.origin, self.view_pos )
+            view.angles = LerpAngle( self.inLerp, self.c_ply_angles, self.view_angles )
+            return true
+        end
 
-        --cmd:ClearButtons()
-        --cmd:ClearMovement()
+        if ( self.outLerp < 1 ) then
+            self.outLerp = self.outLerp + FrameTime() * 3.0
+            view.origin = LerpVector( 1-self.outLerp, view.origin, self.view_pos )
+            view.angles = LerpAngle( 1-self.outLerp, self.c_ply_angles, self.view_angles )
+            return true
+        end
+
+        -- if v_offset > 0 then
+        --     view_angles = CAM.CompensateOffset(view_pos, view_angles)
+        -- end
+
+        view.angles = self.view_angles * 1
+        view.origin = self.view_pos
+        return true
+
+    -- If Simple First Person
+    elseif self.view_flag == PC_CAM_SIMPLEFIRSTPERSON then
+        if !on then
+            self.view_angles = self.t_ply:EyeAngles()
+            self.view_pos = self.t_ply:GetShootPos()
+            on = true
+        end
+
+        --view.origin = t_ply:GetShootPos() + view_angles:Up() * offset / 10
+        view.angles = self.view_angles
+
+        view = self.viewmode.CalcView(view, self.t_ply)
+
+        self.view_angles = view.angles
+        self.view_pos = view.origin
 
         return true
 
-    end
+    -- If complex First Person
+    elseif self.view_flag == PC_CAM_FIRSTPERSON then
+        return
 
-    CAM.Stop = function(self)
-        if viewmode ~= nil then
-            viewmode:Stop()
-        end
+    -- If Roaming
+    elseif self.view_flag == PC_CAM_ROAMING then
+        print("Calc roaming view")
+        return
     end
-
-    return CAM
 end
 
 
+function PlayerCamera:CreateMove( cmd, ply, on )
 
+    --if ( !ply:Alive() ) then on = false end
+    if ( !on ) then return end
 
+    if ( self.c_ply_angles == nil ) then
+        self.c_ply_angles = self.c_ply:EyeAngles() --view_angles * 1
+    end
 
+    --
+    -- Rotate our view
+    --
+    --if thirdperson then
+        -- view_angles.pitch  = math.Clamp(view_angles.pitch + cmd:GetMouseY() * 0.01 -90, 90)
+        -- view_angles.yaw    = view_angles.yaw        - cmd:GetMouseX() * 0.01
+    --else
+    self.view_angles.pitch  = math.Clamp(self.view_angles.pitch + cmd:GetMouseY() * 0.01, -85, 85)
+    self.view_angles.yaw    = self.view_angles.yaw              - cmd:GetMouseX() * 0.01
+    --end
+
+    self.corrected_angles = self.view_angles
+
+    if self.view_flag == PC_CAM_SIMPLEFIRSTPERSON or
+        (self.view_flag == PC_CAM_THIRDPERSON and (self.v_offset ~= 0 or self.h_offset ~= 0)) then
+        self:CorrectShotAngle()
+    end
+
+    -- net.Start("PlayerController:TargetAngle")
+    --     net.WriteAngle(corrected_angles)
+    -- net.SendToServer()
+
+    --
+    -- Lock the player's controls and angles
+    --
+    cmd:SetViewAngles( self.c_ply_angles )
+
+    -- net.Start("PlayerController:TargetAngle")
+    --     net.WriteAngle(view_angles)
+    -- net.SendToServer()
+
+    --cmd:ClearButtons()
+    --cmd:ClearMovement()
+
+    return true
+
+end
+
+function PlayerCamera:Stop()
+    if self.viewmode ~= nil then
+        self.viewmode:Stop()
+    end
+end
 
 
 -- hook.Add("CreateMove","ES.Taunt.HandleMove",function()
