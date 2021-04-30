@@ -108,22 +108,22 @@ function PlayerController:__overrideFunctions( flag )
             LocalPlayer = OldLocalPlayer
         end
 
-        -- reset WSWITCH
-        WSWITCH.ConfirmSelection = WSWITCH.OldConfirmSelection
+        -- -- reset WSWITCH
+        -- WSWITCH.ConfirmSelection = WSWITCH.OldConfirmSelection
 
-        -- reset SteamID64 functino for bots
-        if t_ply:IsBot() then
-            --player_manager.ClearPlayerClass(t_ply)
-            ply_meta.SteamID64 = ply_meta.OldSteamID64
-            -- = function(self)
-            --     return nil
-            -- end
-        end
+        -- -- reset SteamID64 functino for bots
+        -- if t_ply:IsBot() then
+        --     --player_manager.ClearPlayerClass(t_ply)
+        --     ply_meta.SteamID64 = ply_meta.OldSteamID64
+        --     -- = function(self)
+        --     --     return nil
+        --     -- end
+        -- end
 
-        -- reset GetForward function
-        if ply_meta.GetForward != ply_meta.OldGetForward then
-            ply_meta.GetForward = ply_meta.OldGetForward
-        end
+        -- -- reset GetForward function
+        -- if ply_meta.GetForward != ply_meta.OldGetForward then
+        --     ply_meta.GetForward = ply_meta.OldGetForward
+        -- end
     end
 end
 
@@ -250,13 +250,17 @@ net.Receive("PlayerController:NetToSV", function (len)
         if ply:IsController(tbl.player) then
 
             if tbl.type == PC_PICKUP_WEAPON then
-                hook.Run("HUDWeaponPickedUp", tbl.weapon)
+                print("\n\n Callinf HUDPWeaponPickedUp")
+                GAMEMODE:HUDWeaponPickedUp(tbl.weapon)
+                --gamemode.Call("HUDWeaponPickedUp", tbl.weapon)
 
             elseif tbl.type == PC_PICKUP_ITEM then
-                hook.Run("HUDItemPickedUp", tbl.item)
+                GAMEMODE:HUDItemPickedUp(tbl.item)
+                --gamemode.Call("HUDItemPickedUp", tbl.item)
 
             elseif tbl.type == PC_PICKUP_AMMO then
-                hook.Run("HUDAmmoPickedUp", tbl.ammo, tbl.count)
+                GAMEMODE:HUDAmmoPickedUp(tbl.ammo, tbl.count)
+                --gamemode.Call("HUDAmmoPickedUp", tbl.ammo, tbl.count)
             end
 
         end
@@ -330,7 +334,10 @@ function PlayerController:StartControl(tbl)
 
         -- create Camera
         self.camera = PlayerCamera(c_ply, t_ply, view_flag)
-
+        print("camera1:", self.camera)
+        print("camera2:", c_ply.controller.camera)
+        print("camera3:", self.c_ply.controller.camera)
+        print("camera4:", t_ply.controller.camera)
         hook.Add("StartCommand", "PlayerController:NetSendCommands", PlayerController.NetSendCommands)
         hook.Add("PlayerBindPress", "PlayerController:OverrideControllerBinds", PlayerController.overrideBinds)
         hook.Add("DoAnimationEvent", "PlayerController:PreventAnimations", PlayerController.preventAnimations) -- CalcMainActivity
@@ -352,6 +359,9 @@ function PlayerController:StartControl(tbl)
 
         hook.Add("HUDPaint", "PlayerController:DrawHelpHUD", PlayerController.drawHelpHUD)
         hook.Add("TTTRenderEntityInfo", "PlayerController:DrawTargetID", PlayerController.drawTargetID)
+        hook.Add("HUDWeaponPickedUp", "PlayerController:WeaponPickupNotification", PlayerController.pickupNotification)
+        hook.Add("HUDItemPickedUp", "PlayerController:ItemPickupNotification", PlayerController.pickupNotification)
+        hook.Add("HUDAmmoPickedUp", "PlayerController:AmmoPickupNotification", PlayerController.pickupNotification)
 
         self:__overrideFunctions(true)
 
@@ -405,6 +415,9 @@ function PlayerController:EndControl()
 
     hook.Remove("HUDPaint", "PlayerController:DrawHelpHUD")
     hook.Remove("TTTRenderEntityInfo", "PlayerController:DrawTargetID")
+    hook.Remove("HUDWeaponPickedUp", "PlayerController:WeaponPickupNotification")
+    hook.Remove("HUDItemPickedUp", "PlayerController:ItemPickupNotification")
+    hook.Remove("HUDAmmoPickedUp", "PlayerController:AmmoPickupNotification")
 
     self:__overrideFunctions(false)
 
@@ -412,13 +425,14 @@ function PlayerController:EndControl()
     self:removeHUDHelp()
     self.updateSprintOverriden = false
 
-    self.camera:Stop()
-    self.camera = nil
     c_ply.controller = nil
     t_ply.controller = nil
 
     self.c_ply = nil
     self.t_ply = nil
+
+    self.camera:Stop()
+    self.camera = nil
 
     -- Update Status of Armor Icon, at player change.
     HandleArmorStatusIcons(t_ply)
@@ -736,4 +750,9 @@ function PlayerController:drawKeyBox(x, y, key)
     surface.DrawRect(key_box_x, key_box_y, key_box_w, key_box_h)
     draw.ShadowedText(key, "weapon_hud_help_key", x, y, COLOR_WHITE, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
     draw.OutlinedShadowedBox(key_box_x, key_box_y, key_box_w, key_box_h, 1, COLOR_WHITE)
+end
+
+-- Disable Pickup Notification for the c_ply
+function PlayerController.pickupNotification()
+    return false
 end

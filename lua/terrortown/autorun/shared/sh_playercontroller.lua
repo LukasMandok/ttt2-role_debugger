@@ -1,5 +1,7 @@
 PlayerController = PlayerController or {}
 
+print("Load In sh_playercontroller")
+
 -- FLAGGS
 
 -- Server Network Flags
@@ -52,17 +54,17 @@ local ply_meta = FindMetaTable("Player")
 
 function ply_meta:IsController(ply)
 	if ply then
-		return self.controller and self.controller.c_ply == self and self.controller.t_ply == ply
+		return self.controller and self.controller.c_ply == self and self.controller.t_ply == ply or false
 	else
-		return self.controller and self.controller.c_ply == self
+		return self.controller and self.controller.c_ply == self or false
 	end
 end
 
 function ply_meta:IsControlled(ply)
 	if ply then
-		return self.controller and self.controller.t_ply == self and self.controller.c_ply == ply
+		return self.controller and self.controller.t_ply == self and self.controller.c_ply == ply or false
 	else
-		return self.controller and self.controller.t_ply == self
+		return self.controller and self.controller.t_ply == self or false
 	end
 end
 
@@ -155,9 +157,10 @@ local function UpdateSprintOverride()
 		if not ply:OnGround() then continue end
 
 		local wantsToMove
-		if ply:IsControlled() then
-			wantsToMove = ply.controller["c_ply"]:KeyDown(IN_FORWARD)   or ply.controller["c_ply"]:KeyDown(IN_BACK) or
-						  ply.controller["c_ply"]:KeyDown(IN_MOVERIGHT) or ply.controller["c_ply"]:KeyDown(IN_MOVELEFT)
+		if ply:IsControlled() and IsValid(ply.controller["c_ply"]) then
+			local c_ply = ply.controller["c_ply"]
+			wantsToMove = c_ply:KeyDown(IN_FORWARD)   or c_ply:KeyDown(IN_BACK) or
+						  c_ply:KeyDown(IN_MOVERIGHT) or c_ply:KeyDown(IN_MOVELEFT)
 		else
 			wantsToMove = ply:KeyDown(IN_FORWARD) or ply:KeyDown(IN_BACK) or ply:KeyDown(IN_MOVERIGHT) or ply:KeyDown(IN_MOVELEFT)
 		end

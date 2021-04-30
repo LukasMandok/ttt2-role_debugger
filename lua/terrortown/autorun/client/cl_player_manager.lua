@@ -74,7 +74,7 @@ function RoleManager:__init()
     -- Role List
     net.Receive("RoleManagerCurrentRolesPlayer", function ()
         local len = net.ReadInt(10)
-        local current_roles = {}
+        --local current_roles = {}
         for i = 1, len do
             local name = net.ReadString()
             local cur_role = net.ReadString()
@@ -85,7 +85,7 @@ function RoleManager:__init()
 
     net.Receive("RoleManagerCurrentRolesBot", function ()
         local len = net.ReadInt(10)
-        local current_roles = {}
+        --local current_roles = {}
         for i = 1, len do
             local cur_name = net.ReadString()
             local cur_role = net.ReadString()
@@ -346,23 +346,23 @@ function RoleManager:getRoleIcons()
 end
 
 function RoleManager:drawOverHeadRoleIcon()
+    -- Players
     local len = #self.playerList.list
     for i = 1, len do
-        local name = self.playerList.list[i].name
         local role = self.playerList.list[i].currentRole
-        if role and self.playerList.list[i].ent:Alive() then
+        if role and IsValid(self.playerList.list[i].ent) and self.playerList.list[i].ent:Alive() then
             local rd = self.roleList:getByName(role)
-            DrawOverheadRoleIcon(self.playerList.list[i].ent, rd.iconMaterial, rd.color) 
+            DrawOverheadRoleIcon(self.playerList.list[i].ent, rd.iconMaterial, rd.color)
         end
     end
- 
+
+    -- Bots
     len = self.botList.exist_index
     for i = 1, len do
-        local name = self.botList.list[i].name
         local role = self.botList.list[i].currentRole
         if role and IsValid(self.botList.list[i].ent) and self.botList.list[i].ent:Alive() and self.botList.list[i].ent:IsSpec() == false then
             local rd = self.roleList:getByName(role)
-            DrawOverheadRoleIcon(self.botList.list[i].ent, rd.iconMaterial, rd.color) 
+            DrawOverheadRoleIcon(self.botList.list[i].ent, rd.iconMaterial, rd.color)
         end
     end
 end

@@ -2,6 +2,8 @@
 ------------------- Player Control ------------------
 -----------------------------------------------------
 
+print("loadin sv_playercontroller!")
+
 PlayerController = PlayerController or {}
 PlayerController.__index = PlayerController
 
@@ -105,11 +107,8 @@ function net.Incoming( len, client )
     local i = net.ReadHeader()
     local strName = util.NetworkIDToString( i ):lower()
 
-    if client.controller and client.controller["t_ply"] then
-        if  PC_SV_NET[strName] then            
-            --print(strName)
-            client = client.controller["t_ply"]
-        end
+    if client.controller and client.controller["t_ply"] and PC_SV_NET[strName] then
+        client = client.controller["t_ply"]
     end
 
     if ( !strName ) then return end
@@ -135,9 +134,10 @@ function net.Send(ply)
         local new_ply = ply.controller["c_ply"]
 
         OldSend( {ply, new_ply} )
-    else
-        OldSend( ply )
+        return
     end
+
+    OldSend( ply )
 end
 
 
@@ -313,7 +313,7 @@ function PlayerController:EndControl()
 
         --self.t_ply:SetNWBool("PlayerController_Controlled", false) --TODO: Brauche ich das überhaupt?
 
-        self.c_ply:SetCanWalk(true)
+        --self.c_ply:SetCanWalk(true)
 
         -- Reset Entries in Players:
         self.c_ply.controller = nil
