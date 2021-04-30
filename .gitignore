@@ -41,3 +41,7 @@ luac.out
 
 *.bat
 *.bat
+
+
+# ignore Old renamed files:
+*.lu
