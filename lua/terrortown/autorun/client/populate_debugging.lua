@@ -80,7 +80,7 @@ local function PopulateRolePanel(parent)
     })
 
     local updateButton = formControl:MakeDoubleButton({
-        label1 = LANG.GetTranslation("debugging_roles_control_update"),
+        label1 = LANG.GetTranslation("debugging_roles_control_refresh"),
         OnClick1 = function(_)
             roleManager:setCurrentRoles()
         end,
@@ -147,7 +147,7 @@ local function PopulateRolePanel(parent)
     end
 
     local updateButton, _, lock = formPlayer:MakeDoubleButton({
-        label1 = LANG.GetTranslation("debugging_roles_player_update"),
+        label1 = LANG.GetTranslation("debugging_roles_player_refresh"),
         OnClick1 = function(_)
             roleManager:setCurrentPlayerRoles()
         end,
@@ -249,7 +249,7 @@ local function PopulateRolePanel(parent)
     -- List of Bots above.
     -- Removes all entries above if the values of the slider is reduced.
     local botSlider, lock = formBot:MakeButtonSlider({
-        label = LANG.GetTranslation("debugging_roles_bot_update"),
+        label = LANG.GetTranslation("debugging_roles_bot_refresh"),
         min = 0,
         max = game.MaxPlayers() - #playerList,
         decimal = 0,
@@ -370,6 +370,10 @@ local function PopulateBotPanel(parent)
         end,
     })
 
+end
+
+local function PopulateControlPanel(parent)
+
     local playerList = player.GetAll()
 
     local playerListNames = {}
@@ -392,7 +396,7 @@ local function PopulateBotPanel(parent)
     local view_flag = PC_CAM_SIMPLEFIRSTPERSON
 
     formPlayer:MakeComboBox({
-        label = "Control Player",
+        label = LANG.GetTranslation("header_debugging_controller_player"),
         choices = playerListNames,
         data = playerList,
         selectName = playerListNames[1],
@@ -405,7 +409,7 @@ local function PopulateBotPanel(parent)
     local sfp_check, fp_check, tp_check, r_check
 
     sfp_check = formPlayer:MakeCheckBox({
-        label = "Simple First Person",
+        label = LANG.GetTranslation("debugging_controller_simple_firstperson"),
         initial = true,
         default = true,
         OnChange = function(_, value)
@@ -419,7 +423,7 @@ local function PopulateBotPanel(parent)
     })
 
     fp_check = formPlayer:MakeCheckBox({
-        label = "Real First Person View (not implemented yet)",
+        label = LANG.GetTranslation("debugging_controller_firstperson") .. " (not implented yet)",
         initial = false,
         default = false,
         disabled = true,
@@ -434,7 +438,7 @@ local function PopulateBotPanel(parent)
     })
 
     tp_check = formPlayer:MakeCheckBox({
-        label = "Third Person",
+        label = LANG.GetTranslation("debugging_controller_thirdperson"),
         initial = false,
         default = false,
         OnChange = function(_, value)
@@ -448,7 +452,7 @@ local function PopulateBotPanel(parent)
     })
 
     r_check = formPlayer:MakeCheckBox({
-        label = "Free Roaming (not implemented yet)",
+        label = LANG.GetTranslation("debugging_controller_roaming") .. " (not implented yet)",
         initial = false,
         default = false,
         disabled = true,
@@ -463,7 +467,7 @@ local function PopulateBotPanel(parent)
     })
 
     local controlButton = formPlayer:MakeDoubleButton({
-        label1 = "Start Control Player",
+        label1 = LANG.GetTranslation("debugging_controller_start"),
         OnClick1 = function(_)
             print("Start Control of Player:", target_ply:Nick())
             net.Start("PlayerController:NetControl")
@@ -472,7 +476,7 @@ local function PopulateBotPanel(parent)
                 net.WriteInt(view_flag, 6)
             net.SendToServer()
         end,
-        label2 = "End Control Player",
+        label2 = LANG.GetTranslation("debugging_controller_end"),
         OnClick2 = function(_)
             print("End Control")
             net.Start("PlayerController:NetControl")
@@ -508,9 +512,16 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
     wepData:PopulatePanel(PopulateWeaponPanel)
 
     -- bots
-    local botData = helpData:PopulateSubMenu(id .. "_bots")
-    botData:SetTitle(LANG.GetTranslation("submenu_debugging_bots_title"))
-    botData:PopulatePanel(PopulateBotPanel)
+    -- local botData = helpData:PopulateSubMenu(id .. "_bots")
+    -- botData:SetTitle(LANG.GetTranslation("submenu_debugging_bots_title"))
+    -- botData:PopulatePanel(PopulateBotPanel)
+
+    -- control
+    if PlayerController ~= nil then
+        local botData = helpData:PopulateSubMenu(id .. "_bots")
+        botData:SetTitle(LANG.GetTranslation("submenu_debugging_controller_title"))
+        botData:PopulatePanel(PopulateControlPanel)
+    end
 end
 
 hook.Add("TTT2ModifyHelpMainMenu", "Populate Help Main Menu with Debugging Panel", function(helpData)

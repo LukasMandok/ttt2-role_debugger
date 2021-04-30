@@ -20,17 +20,17 @@ L["submenu_debugging_random_role"] = "Random"
 L["header_debugging_roles_control"] = "Control"
 L["debugging_roles_control_apply"] = "Apply roles"
 L["debugging_roles_control_apply_nr"] = "Apply roles next round"
-L["debugging_roles_control_update"] = "Update all roles"
+L["debugging_roles_control_refresh"] = "Refresh all roles"
 L["debugging_roles_control_restart"] = "Restart round"
 
 
 -- Player
 L["header_debugging_roles_player"] = "Player roles"
-L["debugging_roles_player_update"] = "Update player roles"
+L["debugging_roles_player_refresh"] = "Refresh player roles"
 
 -- Bots
 L["header_debugging_roles_bot"] = "Bot roles"
-L["debugging_roles_bot_update"] = "Update bot roles"
+L["debugging_roles_bot_refresh"] = "Refresh bot roles"
 
 ----- Settings -----
 L["header_debugging_roles_settings"] = "Settings"
@@ -73,3 +73,18 @@ L["submenu_debugging_bots_title"] = "Bots"
 L["header_debugging_bots_settings"] = "Settings"
 
 L["debugging_bots_settings_moving"] = "Enable moving bots"
+
+
+----------------------------
+---- Controlling Players ---
+----------------------------
+L["submenu_debugging_controller_title"] = "Player control"
+
+L["header_debugging_controller_player"] = "Player"
+L["debugging_controller_simple_firstperson"] = "Simple First-Person"
+L["debugging_controller_firstperson"] = "First-Person"
+L["debugging_controller_thirdperson"] = "Third-Person"
+L["debugging_controller_roaming"] = "Free roaming"
+
+L["debugging_controller_start"] = "Start player control"
+L["debugging_controller_end"] = "End player control"

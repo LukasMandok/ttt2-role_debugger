@@ -20,17 +20,17 @@ L["submenu_debugging_random_role"] = "Zufällig"
 L["header_debugging_roles_control"] = "Konrolle"
 L["debugging_roles_control_apply"] = "Rollen übernehmen"
 L["debugging_roles_control_apply_nr"] = "Rollen nächste Runde übernehmen"
-L["debugging_roles_control_update"] = "Alle Rollen aktualisieren"
+L["debugging_roles_control_refresh"] = "Alle Rollen aktualisieren"
 L["debugging_roles_control_restart"] = "Runde neustarten"
 
 
 -- Player
 L["header_debugging_roles_player"] = "Spieler Rollen"
-L["debugging_roles_player_update"] = "Spieler Rollen aktualisieren"
+L["debugging_roles_player_refresh"] = "Spieler Rollen aktualisieren"
 
 -- Bots
 L["header_debugging_roles_bot"] = "Bot Rollen"
-L["debugging_roles_bot_update"] = "Bot Rollen aktualisieren"
+L["debugging_roles_bot_refresh"] = "Bot Rollen aktualisieren"
 
 ----- Settings -----
 L["header_debugging_roles_settings"] = "Einstellungen"
@@ -72,3 +72,18 @@ L["submenu_debugging_bots_title"] = "Bots"
 L["header_debugging_bots_settings"] = "Einstellungen"
 
 L["debugging_bots_settings_moving"] = "Bot Bewegung einschalten"
+
+
+----------------------------
+---- Controlling Players ---
+----------------------------
+L["submenu_debugging_controller_title"] = "Spieler Kontrolle"
+
+L["header_debugging_controller_player"] = "Spieler"
+L["debugging_controller_simple_firstperson"] = "Einfache First-Person Perspektive"
+L["debugging_controller_firstperson"] = "First-Person Perspektive"
+L["debugging_controller_thirdperson"] = "Third-Person Perspektive"
+L["debugging_controller_roaming"] = "Freie Kamera"
+
+L["debugging_controller_start"] = "Starte Spieler Kontrolle"
+L["debugging_controller_end"] = "Beende Spieler Kontrolle"
