@@ -393,7 +393,8 @@ local function PopulateControlPanel(parent)
     formPlayer:Dock(TOP)
 
     local target_ply = playerList[1]
-    local view_flag = PC_CAM_SIMPLEFIRSTPERSON
+    local view_flag  = PC_CAM_SIMPLEFIRSTPERSON
+    local net_flag   = PC_SERVERSIDE
 
     formPlayer:MakeComboBox({
         label = LANG.GetTranslation("header_debugging_controller_player"),
@@ -466,23 +467,49 @@ local function PopulateControlPanel(parent)
         end,
     })
 
+    net_check = formPlayer:MakeCheckBox({
+        label = LANG.GetTranslation("debugging_controller_net_mode"),
+        initial = false,
+        default = false,
+        OnChange = function(_, value)
+            if value == false then
+                net_flag = PC_SERVERSIDE
+            else
+                net_flag = PC_CLIENTSIDE
+            end
+        end,
+    })
+
+
     local controlButton = formPlayer:MakeDoubleButton({
         label1 = LANG.GetTranslation("debugging_controller_start"),
         OnClick1 = function(_)
             print("Start Control of Player:", target_ply:Nick())
             net.Start("PlayerController:NetControl")
-                net.WriteInt( PC_CL_START, 6)
+                net.WriteUInt( PC_CL_START, 3)
                 net.WriteEntity(target_ply)
-                net.WriteInt(view_flag, 6)
+                net.WriteUInt(view_flag, 2)
+                net.WriteUInt(net_flag, 1)
             net.SendToServer()
         end,
         label2 = LANG.GetTranslation("debugging_controller_end"),
         OnClick2 = function(_)
             print("End Control")
             net.Start("PlayerController:NetControl")
-            net.WriteInt( PC_CL_END, 6)
+                net.WriteUInt( PC_CL_END, 3)
             net.SendToServer()
         end,
+    })
+
+    local controlButton_debug = formPlayer:MakeDoubleButton({
+        label1 = "(Debugging!) Bot1 Control LocalPlayer",
+        OnClick1 = function(_)
+            print("Start Control of Player:", target_ply:Nick())
+            net.Start("PlayerController:NetControlTest")
+                net.WriteUInt(view_flag, 2)
+                net.WriteUInt(net_flag, 1)
+            net.SendToServer()
+        end
     })
 
 

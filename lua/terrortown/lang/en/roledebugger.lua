@@ -86,5 +86,7 @@ L["debugging_controller_firstperson"] = "First-Person"
 L["debugging_controller_thirdperson"] = "Third-Person"
 L["debugging_controller_roaming"] = "Free roaming"
 
+L["debugging_controller_net_mode"] = "[Serverside | Clientside] calculations"
+
 L["debugging_controller_start"] = "Start player control"
 L["debugging_controller_end"] = "End player control"

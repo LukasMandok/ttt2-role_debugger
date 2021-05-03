@@ -85,5 +85,7 @@ L["debugging_controller_firstperson"] = "First-Person Perspektive"
 L["debugging_controller_thirdperson"] = "Third-Person Perspektive"
 L["debugging_controller_roaming"] = "Freie Kamera"
 
+L["debugging_controller_net_mode"] = "[Serverside | Clientside] Berechnungen"
+
 L["debugging_controller_start"] = "Starte Spieler Kontrolle"
 L["debugging_controller_end"] = "Beende Spieler Kontrolle"
