@@ -91,7 +91,7 @@ net.Receive("RoleManagerSpawnBot", function (len, calling_ply)
 end)
 
 -- functino to find a corpse
-function corpse_find(ply)
+local function corpse_find(ply)
     for _, ent in pairs(ents.FindByClass("prop_ragdoll")) do
         if ent.uqid == ply:UniqueID() and IsValid(ent) then
             return ent or false
@@ -100,7 +100,7 @@ function corpse_find(ply)
 end
 
 -- function zto remove a corpse
-function corpse_remove(corpse)
+local function corpse_remove(corpse)
     CORPSE.SetFound(corpse, false)
 
     if string.find(corpse:GetModel(), "zm_", 6, true) then
@@ -283,7 +283,7 @@ net.Receive("RoleManagerApplyRoleNextRound", function (len, calling_ply)
 
         local sid64 = tostring(target_ply:SteamID64())
 
-        if role_name == ROLE_RANDOM.name then
+        if role_name == RD_ROLE_RANDOM.name then
             --print("Apply Random ROle")
             --if IsValid(roleselection.finalRoles[sid64]) then
             roleselection.finalRoles[target_ply] = nil -- sid64] = nil

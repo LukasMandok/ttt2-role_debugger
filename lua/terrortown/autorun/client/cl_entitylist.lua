@@ -182,7 +182,7 @@ end
 
 -- initializes the RoleList again
 function RoleList:refresh()
-    self.list = {[1] = ROLE_RANDOM}
+    self.list = {[1] = RD_ROLE_RANDOM}
     self.list = {unpack(self.list), unpack(roles.GetSortedRoles())}
 
     self:__initRevList()
@@ -212,8 +212,8 @@ end
 
 -- TODO: Schöner schreiben
 function RoleList:getRoleCategory(role)
-    if (role.name == ROLE_RANDOM.name) then
-        return ROLE_RANDOM.id, ROLE_RANDOM.index
+    if (role.name == RD_ROLE_RANDOM.name) then
+        return RD_ROLE_RANDOM.id, RD_ROLE_RANDOM.index
     end
 
     local team = role.defaultTeam
@@ -227,16 +227,16 @@ function RoleList:getRoleCategory(role)
     elseif (baserole == ROLE_ACCOMPLICE) then
         return ROLE_TRAITOR, ROLE_TRAITOR + 1
     elseif (baserole == ROLE_SIDEKICK) then
-        return ROLE_KILLERS.id, ROLE_KILLERS.index
+        return RD_ROLE_KILLERS.id, RD_ROLE_KILLERS.index
     elseif (baserole == role.index and (team == TEAM_NONE or team == TEAM_UNASSIGNED or team == TEAM_JESTER or team == TEAM_INNOCENT)) or (baserole == ROLE_MARKER) then
         --print("NEUTRAL Role:", role.name, "Baserole:", baserole)
-        return ROLE_NEUTRAL.id, ROLE_NEUTRAL.index
+        return RD_ROLE_NEUTRAL.id, RD_ROLE_NEUTRAL.index
     elseif (baserole == role.index and team ~= TEAM_NONE and team ~= TEAM_UNASSIGNED) or (baserole == ROLE_MIMIC or baserole == ROLE_PIRATE or baserole == ROLE_NECROMANCER) then
         --print("KILLER Role:", role.name, "Baserole:", baserole)
-        return ROLE_KILLERS.id, ROLE_KILLERS.index
+        return RD_ROLE_KILLERS.id, RD_ROLE_KILLERS.index
     else
         --print("UNKNOWN Role:", role.name, "Baserole:", baserole)
-        return ROLE_RANDOM.id, ROLE_RANDOM.index
+        return RD_ROLE_RANDOM.id, RD_ROLE_RANDOM.index
     end
 end
 

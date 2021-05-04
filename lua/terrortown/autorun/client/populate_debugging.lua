@@ -110,7 +110,7 @@ local function PopulateRolePanel(parent)
             choices = roleList,
             data = roleManager:getRoleCategories(),
             selectName = roleManager:getRoleOfPlayer(playerList[i]),
-            default = ROLE_RANDOM.name,
+            default = RD_ROLE_RANDOM.name,
             locked = roleManager:getPlayerLocked(playerList[i]),
             OnChange = function(_, _, value, data, flag)
                 roleManager:setPlayerRole(playerList[i], value)
@@ -209,7 +209,7 @@ local function PopulateRolePanel(parent)
                 choices = roleList,
                 data = roleManager:getRoleCategories(),
                 selectName = roleManager:getRoleOfBot(newBotListEntries[i]),
-                default = ROLE_RANDOM.name,
+                default = RD_ROLE_RANDOM.name,
                 locked = roleManager:getBotLocked(newBotListEntries[i]),
                 OnChange = function(_, _, value, data)
                     roleManager:setBotRole(newBotListEntries[i], value)
@@ -348,11 +348,11 @@ local function PopulateRolePanel(parent)
     roleManager:refresh()
 end
 
-local function PopulateClassPanel(parent)
-end
+-- local function PopulateClassPanel(parent)
+-- end
 
-local function PopulateWeaponPanel(parent)
-end
+-- local function PopulateWeaponPanel(parent)
+-- end
 
 local function PopulateBotPanel(parent)
    	local form = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_bots_settings"))
@@ -529,14 +529,14 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
     roleData:PopulatePanel(PopulateRolePanel)
 
     -- classes
-    local classData = helpData:PopulateSubMenu(id .. "_classes")
-    classData:SetTitle(LANG.GetTranslation("submenu_debugging_classes_title"))
-    classData:PopulatePanel(PopulateClassPanel)
+    -- local classData = helpData:PopulateSubMenu(id .. "_classes")
+    -- classData:SetTitle(LANG.GetTranslation("submenu_debugging_classes_title"))
+    -- classData:PopulatePanel(PopulateClassPanel)
 
-    -- weapons
-    local wepData = helpData:PopulateSubMenu(id .. "_weapons")
-    wepData:SetTitle(LANG.GetTranslation("submenu_debugging_weapons_title"))
-    wepData:PopulatePanel(PopulateWeaponPanel)
+    -- -- weapons
+    -- local wepData = helpData:PopulateSubMenu(id .. "_weapons")
+    -- wepData:SetTitle(LANG.GetTranslation("submenu_debugging_weapons_title"))
+    -- wepData:PopulatePanel(PopulateWeaponPanel)
 
     -- bots
     -- local botData = helpData:PopulateSubMenu(id .. "_bots")

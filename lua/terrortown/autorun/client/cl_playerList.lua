@@ -48,7 +48,7 @@ function PlayerList:setRole(name, role)
 end
 
 function PlayerList:setAllRoles(role)
-    local role = role or ROLE_RANDOM.name
+    local role = role or RD_ROLE_RANDOM.name
     for _,entry in pairs(self.list) do
         entry:setRole(role)
     end
@@ -166,7 +166,7 @@ function HumanList:__init(init)
     for i = 1, #players do
         self:addPlayer(players[i]:Nick(),
                        players[i],
-                       ROLE_RANDOM.name)
+                       RD_ROLE_RANDOM.name)
     end
 end
 
@@ -203,7 +203,7 @@ function HumanList:refresh()
     local players = player.GetHumans()
     for _,p in ipairs(players) do
         if not self.revList[p:Nick()] then
-            self:addPlayer(p:Nick(), p, ROLE_RANDOM.name)
+            self:addPlayer(p:Nick(), p, RD_ROLE_RANDOM.name)
         end
     end
 
@@ -270,14 +270,14 @@ function BotList:__initExistingBots()
                 name = name,
                 currentName = existingBots[i]:Nick(),
                 ent = existingBots[i],
-                role = ROLE_RANDOM.name,
+                role = RD_ROLE_RANDOM.name,
                 spawn = false,
                 delete = false})
         else
             self.list[i] = BotEntry({
                 name = name,
                 ent = nil,
-                role = ROLE_RANDOM.name,
+                role = RD_ROLE_RANDOM.name,
                 spawn = false,
                 delete = false})
         end

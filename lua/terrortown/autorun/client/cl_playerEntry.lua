@@ -22,11 +22,11 @@ function PlayerEntry:__init(data)
     self.ent = data.ent or nil
 
     self.currentRole = nil
-    self.role = data.role or ROLE_RANDOM.name
+    self.role = data.role or RD_ROLE_RANDOM.name
     self.role_locked = data.role_locked or false
 
     self.currentClass = nil
-    self.class = data.class or CLASS_RANDOM.name
+    self.class = data.class or RD_CLASS_RANDOM.name
     self.class_locked = data.class_locked or false
 end
 
