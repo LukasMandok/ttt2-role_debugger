@@ -33,11 +33,11 @@ gameevent.Listen( "player_disconnect" )
 hook.Add( "player_connect", "player_connect_example", function( data )
     if data.bot == false then
         net.Start("RoleManagerPlayerConnected")
-        net.WriteString(data.name)
+            net.WriteString(data.name)
         net.Broadcast()
     else
         net.Start("RoleManagerBotConnected")
-        net.WriteString(data.name)
+            net.WriteString(data.name)
         net.Broadcast()
     end
 

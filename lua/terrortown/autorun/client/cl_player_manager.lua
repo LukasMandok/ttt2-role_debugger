@@ -26,21 +26,19 @@ function RoleManager:__init()
     self.auto_refresh = CreateConVar( "ttt_rolemanager_auto_refresh", 0, FCVAR_ARCHIVE, "Automatically updates the roles, if the debug menu is opened.", 0, 1 )
 
     self.overhead_role_icons = CreateConVar( "ttt_rolemanager_overhead_icons", 1, FCVAR_ARCHIVE, "Show overhead role icons during round.", 0, 1 )
-
-
     -------------- Communication --------------
 
     -- Request Convars at beginning
-    net.Start("RoleManagerRequestBoolConvar")
-        net.WriteString("bot_zombie")
-    net.SendToServer()
+    -- net.Start("RoleManagerRequestBoolConvar")
+    --     net.WriteString("bot_zombie")
+    -- net.SendToServer()
 
-    net.Receive("RoleManagerGetBoolConvar", function ()
-        local convar = net.ReadString()
-        if convar == "bot_zombie" then
-            self.moving_bots = net.ReadBool()
-        end
-    end)
+    -- net.Receive("RoleManagerGetBoolConvar", function ()
+    --     local convar = net.ReadString()
+    --     if convar == "bot_zombie" then
+    --         self.moving_bots = net.ReadBool()
+    --     end
+    -- end)
 
     net.Receive("RoleManagerPlayerConnected", function ()
         local name = net.ReadString()
@@ -136,6 +134,12 @@ function RoleManager:__init()
             self:drawOverHeadRoleIcon()
         end
     end)
+end
+
+function RoleManager:close()
+    hook.Remove("TTTBeginRound", "Update Roles at round start")
+    hook.Remove("TTTPrepareRound", "Create Bots before round start")
+    hook.Remove("PostDrawTranslucentRenderables", "Draw Overhead Role Icons")
 end
 
 -----------------------------------------------------

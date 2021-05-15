@@ -126,12 +126,11 @@ end ]]
 ---
 -- @ignore
 function PANEL:Paint(w, h)
-	if self:ChildCount() > 0 then
+	if self:GetPaintBackground() then
 	--derma.SkinHook("Paint", "ContainerTTT2", self, w, h)
 		derma.SkinHook("Paint", "ContentPanelTTT2", self, w, h)
-	else
-		derma.SkinHook("Paint", "ContentPanelTTT2", self, w, h)
 	end
+
 	return false
 end
 

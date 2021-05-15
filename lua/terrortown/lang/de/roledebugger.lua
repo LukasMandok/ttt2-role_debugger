@@ -8,6 +8,7 @@ L["random"] = "Zufällig"
 ----- Debuging Menu -----
 L["menu_debugging_title"] = "Debuggen"
 L["menu_debugging_description"] = "Stellt verschiedene Debugging Funktionen bereit."
+L["debugging_roles_activate"] = "Einschalten"
 
 ----------------------------
 ----- Debugging Roles ------

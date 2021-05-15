@@ -1,10 +1,14 @@
 local materialIcon = Material("vgui/ttt/vskin/helpscreen/debugging_large")
 
 -- Moved to end of cl_player_manager.lua 
-
+local activated = CreateConVar( "ttt_rolemanager_activated", 1, FCVAR_ARCHIVE, "Activates the RoleManager", 0, 1 )
 roleManager = nil
 
 local function PopulateRolePanel(parent)
+
+    --if activated == false then return end
+
+    if activated:GetBool() == false then return end
 
     -- create Role Manager Object if not created yet
     roleManager = roleManager or RoleManager()
@@ -354,23 +358,23 @@ end
 -- local function PopulateWeaponPanel(parent)
 -- end
 
-local function PopulateBotPanel(parent)
-   	local form = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_bots_settings"))
+-- local function PopulateBotPanel(parent)
+--    	local form = vgui.CreateTTT2Form(parent, LANG.GetTranslation("header_debugging_bots_settings"))
 
-    form:MakeCheckBox({
-        label = LANG.GetTranslation("debugging_bots_settings_moving"),
-        initial = roleManager.moving_bots,
-        default = roleManager.moving_bots,
-        OnChange = function(_, value)
-            roleManager.moving_bots = moving_bots
-            net.Start("RoleManagerSetBoolConvar")
-                net.WriteString("bot_zombie")
-                net.WriteBool(value)
-            net.SendToServer()
-        end,
-    })
+--     form:MakeCheckBox({
+--         label = LANG.GetTranslation("debugging_bots_settings_moving"),
+--         initial = roleManager.moving_bots,
+--         default = roleManager.moving_bots,
+--         OnChange = function(_, value)
+--             roleManager.moving_bots = moving_bots
+--             net.Start("RoleManagerSetBoolConvar")
+--                 net.WriteString("bot_zombie")
+--                 net.WriteBool(value)
+--             net.SendToServer()
+--         end,
+--     })
 
-end
+-- end
 
 local function PopulateControlPanel(parent)
 
@@ -515,6 +519,44 @@ local function PopulateControlPanel(parent)
 
 end
 
+local function addActivationButton(parent, roleData)
+
+    local navPanel, contPanel
+    for _,p in pairs(HELPSCRN.menuFrame:GetChildren()) do
+        --print("name:", p:GetName())
+        if p:GetName() == "DNavPanelTTT2" then
+            navPanel = p
+        elseif p:GetName() == "DContentPanelTTT2" then
+            contPanel = p
+        end
+    end
+
+    if navPanel and contPanel and roleData then
+        local container = vgui.CreateTTT2Container_extended(navPanel)
+        container:SetPaintBackground(false)
+        container:Dock(BOTTOM)
+
+        container:MakeCheckBox({
+            label    = LANG.GetTranslation("debugging_roles_activate"),
+            convar   = "ttt_rolemanager_activated",
+            OnChange = function(_, value)
+                if value == false and roleManager then
+                    roleManager:close()
+                    roleManager = nil               
+                end
+                --HELPSCRN:ShowSubMenu(parent.menuTbl[1])
+
+                HELPSCRN:SetupContentArea(contPanel, roleData)
+                HELPSCRN:BuildContentArea()
+
+                
+
+            end,
+        })
+    end
+
+end
+
 HELPSCRN.populate["ttt2_debugging"] = function(helpData, id)
     local bindingsData = helpData:RegisterSubMenu(id)
     bindingsData:SetTitle(LANG.GetTranslation("menu_debugging_title"))
@@ -545,10 +587,20 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
 
     -- control
     if PlayerController ~= nil then
-        local botData = helpData:PopulateSubMenu(id .. "_bots")
-        botData:SetTitle(LANG.GetTranslation("submenu_debugging_controller_title"))
-        botData:PopulatePanel(PopulateControlPanel)
+        local controlData = helpData:PopulateSubMenu(id .. "_control")
+        controlData:SetTitle(LANG.GetTranslation("submenu_debugging_controller_title"))
+        controlData:PopulatePanel(PopulateControlPanel)
     end
+
+    PrintTable(roleData)
+
+    print(roleData:)
+
+    local activate_Button = addActivationButton(helpData, roleData)
+    -- if HELPSCRN.currentMenuId == "ttt2_debugging_roles" then
+        
+    -- end
+
 end
 
 hook.Add("TTT2ModifyHelpMainMenu", "Populate Help Main Menu with Debugging Panel", function(helpData)
