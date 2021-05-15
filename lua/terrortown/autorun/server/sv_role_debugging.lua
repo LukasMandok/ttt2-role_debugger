@@ -23,7 +23,7 @@ util.AddNetworkString( "RoleManagerRequestBoolConvar" )
 util.AddNetworkString( "RoleManagerGetBoolConvar" )
 util.AddNetworkString( "RoleManagerSetBoolConvar" )
 
-local bool_to_number={ [true]=1, [false]=0 }
+local bool_to_number = { [true] = 1, [false] = 0 }
 
 -- Player connecting / disconnecting
 
@@ -54,6 +54,13 @@ hook.Add( "player_disconnect", "player_connect_example", function( data )
         net.Broadcast()
     end
 
+end)
+
+timer.Create("Test RoleSelection", 1, 0, function()
+    print("\n-------------------------------\n Role Selection:\n")
+    for p,r in pairs(roleselection.finalRoles) do
+        print("\t" .. p:Nick() .. ":  " .. roles.GetByIndex(r).name)
+    end
 end)
 
 -- Role List
@@ -152,7 +159,7 @@ local function respawn(calling_ply, target_ply)
         local spawnPos = spawnEntity:GetPos()
         local spawnEyeAngle = spawnEntity:EyeAngles()
 
-        local corpse = target_ply:FindCorpse()-- remove corpse
+        local corpse = target_ply:FindCorpse() -- remove corpse
         if corpse then
             corpse_remove(corpse)
         end

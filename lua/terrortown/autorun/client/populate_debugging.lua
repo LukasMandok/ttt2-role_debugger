@@ -61,6 +61,7 @@ local function PopulateRolePanel(parent)
         label1 = LANG.GetTranslation("debugging_roles_control_apply"),
         OnClick1 = function(_)
             --print("Apply Roles")
+            roleManager:clearRolesNextRound()
             roleManager:applyPlayerRoles()
             roleManager:applyBotRoles()
         end,

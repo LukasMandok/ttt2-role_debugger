@@ -211,7 +211,7 @@ function RoleManager:setCurrentPlayerRoles()
 end
 
 function RoleManager:applyPlayerRoles(name)
-    self:clearRolesNextRound()
+    --self:clearRolesNextRound()
     --print("Applying Player Roles")
     -- Apply
     self.playerList:applyRoles(name)
@@ -286,7 +286,7 @@ end
 
 
 function RoleManager:applyBotRoles(name)
-    self:clearRolesNextRound()
+    --self:clearRolesNextRound()
     self.botList:spawnEntities(name, true)
 
     -- TODO: add name for updateStatus?
