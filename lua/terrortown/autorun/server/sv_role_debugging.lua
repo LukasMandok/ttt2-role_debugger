@@ -56,12 +56,12 @@ hook.Add( "player_disconnect", "player_connect_example", function( data )
 
 end)
 
-timer.Create("Test RoleSelection", 1, 0, function()
-    print("\n-------------------------------\n Role Selection:\n")
-    for p,r in pairs(roleselection.finalRoles) do
-        print("\t" .. p:Nick() .. ":  " .. roles.GetByIndex(r).name)
-    end
-end)
+-- timer.Create("Test RoleSelection", 1, 0, function()
+--     print("\n-------------------------------\n Role Selection:\n")
+--     for p,r in pairs(roleselection.finalRoles) do
+--         print("\t" .. p:Nick() .. ":  " .. roles.GetByIndex(r).name)
+--     end
+-- end)
 
 -- Role List
 net.Receive( "RoleManagerCurrentRolesRequest" , function (len, calling_ply)
@@ -322,10 +322,10 @@ net.Receive("RoleManagerSetBoolConvar", function (len, ply)
     if ply:IsUserGroup("superadmin") then
         local convar = net.ReadString()
         local state = net.ReadBool()
-        print("Get Convar Message from Client: Setting " .. convar .. " to state " .. tostring(state))
+        --print("Get Convar Message from Client: Setting " .. convar .. " to state " .. tostring(state))
         -- TODO: Funktioniert noch nicht
         --GetConVar( convar ):SetBool( state )
-        print("Set Convar:", convar , "to:", tostring(bool_to_number[state]))
+        --print("Set Convar:", convar , "to:", tostring(bool_to_number[state]))
         RunConsoleCommand( convar, tostring(bool_to_number[state]) )
     end
 end)

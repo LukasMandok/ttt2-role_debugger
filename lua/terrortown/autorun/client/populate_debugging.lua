@@ -557,10 +557,10 @@ local function addActivationButton(parent, roleData)
 end
 
 HELPSCRN.populate["ttt2_debugging"] = function(helpData, id)
-    local bindingsData = helpData:RegisterSubMenu(id)
-    bindingsData:SetTitle(LANG.GetTranslation("menu_debugging_title"))
-    bindingsData:SetDescription(LANG.GetTranslation("menu_debugging_description"))
-    bindingsData:SetIcon(materialIcon)
+    local debuggingData = helpData:RegisterSubMenu(id)
+    debuggingData:SetTitle(LANG.GetTranslation("menu_debugging_title"))
+    debuggingData:SetDescription(LANG.GetTranslation("menu_debugging_description"))
+    debuggingData:SetIcon(materialIcon)
 end
 
 HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
