@@ -520,12 +520,12 @@ local function PopulateControlPanel(parent)
 end
 
 local function addActivationButton(parent, roleData)
-
     local navPanel, contPanel
     for _,p in pairs(HELPSCRN.menuFrame:GetChildren()) do
         --print("name:", p:GetName())
         if p:GetName() == "DNavPanelTTT2" then
             navPanel = p
+
         elseif p:GetName() == "DContentPanelTTT2" then
             contPanel = p
         end
@@ -542,17 +542,15 @@ local function addActivationButton(parent, roleData)
             OnChange = function(_, value)
                 if value == false and roleManager then
                     roleManager:close()
-                    roleManager = nil               
+                    roleManager = nil
                 end
                 --HELPSCRN:ShowSubMenu(parent.menuTbl[1])
 
                 HELPSCRN:SetupContentArea(contPanel, roleData)
                 HELPSCRN:BuildContentArea()
-
-                
-
             end,
         })
+        return container
     end
 
 end
@@ -592,17 +590,41 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
         controlData:PopulatePanel(PopulateControlPanel)
     end
 
-    PrintTable(roleData)
+    local activate_Button
+    hook.Add("TTT2OnHelpSubMenuClear", "Popupate Aktivation Button for Roles", function(parent, currentMenuId, lastMenuData, menuData)
+        print("Calling TTT2OnHelpSubMenuClear", HELPSCRN:GetOpenMenu(), activate_Button)
 
-    print(roleData:)
+        --timer.Simple(0.1, function ()
+        -- print(lastMenuData, currentMenuId)
+        -- print("not lastMenuData:", not lastMenuData)
+        -- if lastMenuData then
+        --     --PrintTable(lastMenuData)
+        --     print(not lastMenuData, currentMenuId, lastMenuData.id)
+        -- end
+        if HELPSCRN:GetOpenMenu() == "ttt2_debugging_roles" then
+            if not activate_Button then
+                print("Add Activated Button")
+                activate_Button = addActivationButton(helpData, roleData)
+            end
+        elseif activate_Button then
+            print("Remove Activate Button")
+            activate_Button:Remove()
+            activate_Button = nil
+        end
 
-    local activate_Button = addActivationButton(helpData, roleData)
-    -- if HELPSCRN.currentMenuId == "ttt2_debugging_roles" then
-        
-    -- end
+        -- if (not lastMenuData or HELPSCRN:GetOpenMenu() ~= lastMenuData.id) and  then
+        --     if activate_Button then
+                
+        --     end
+            
+        --     return false
+        -- end
+        --end)
+    end)
 
 end
 
 hook.Add("TTT2ModifyHelpMainMenu", "Populate Help Main Menu with Debugging Panel", function(helpData)
     HELPSCRN.populate["ttt2_debugging"](helpData, "ttt2_debugging")
 end)
+
