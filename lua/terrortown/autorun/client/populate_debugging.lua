@@ -593,7 +593,7 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
 
     local activate_Button
     hook.Add("TTT2OnHelpSubMenuClear", "Popupate Aktivation Button for Roles", function(parent, currentMenuId, lastMenuData, menuData)
-        print("Calling TTT2OnHelpSubMenuClear", HELPSCRN:GetOpenMenu(), activate_Button)
+        --print("Calling TTT2OnHelpSubMenuClear", HELPSCRN:GetOpenMenu(), activate_Button)
 
         --timer.Simple(0.1, function ()
         -- print(lastMenuData, currentMenuId)
@@ -604,11 +604,11 @@ HELPSCRN.subPopulate["ttt2_debugging"] = function(helpData, id)
         -- end
         if HELPSCRN:GetOpenMenu() == "ttt2_debugging_roles" then
             if not activate_Button then
-                print("Add Activated Button")
+                --print("Add Activated Button")
                 activate_Button = addActivationButton(helpData, roleData)
             end
         elseif activate_Button then
-            print("Remove Activate Button")
+            --print("Remove Activate Button")
             activate_Button:Remove()
             activate_Button = nil
         end
