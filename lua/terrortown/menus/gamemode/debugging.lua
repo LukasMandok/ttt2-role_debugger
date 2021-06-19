@@ -8,7 +8,7 @@ CLGAMEMODEMENU.description = "menu_debugging_description"
 CLGAMEMODEMENU.priority = 1
 
 function CLGAMEMODEMENU:IsAdminMenu()
-	return true
+	return false
 end
 
 local function addActivationButton(roleData)
