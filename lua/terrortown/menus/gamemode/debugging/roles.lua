@@ -353,8 +353,6 @@ local activated = CreateConVar( "ttt2_rolemanager_activated", 1, FCVAR_ARCHIVE, 
 
 function CLGAMEMODESUBMENU:Populate(parent)
 
-    print("populate Submenu:", self)
-
     if activated:GetBool() == false then return end
 
     PopulateRolePanel(parent)
